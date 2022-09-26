@@ -6,12 +6,13 @@
 #include <sstream>
 #include "robot.h"
 #include "helpers.h"
+#include "debug.h"
 
 #ifndef _DRIVER_H_
 #define _DRIVER_H_
 
-#define CREATE_DRIVER_UNIMP(return_type, name, return_val) \
-	static return_type DRIVER##_##name() \
+#define CREATE_DRIVER_UNIMP(return_type, name, return_val, ...) \
+	static return_type DRIVER##_##name(__VA_ARGS__) \
 	{ \
 		if(is_simulation) std::cout << "SIM: "; \
 		std::cout << "FIXME: unimplemented " << "driver::" << #name << std::endl;	\
@@ -56,9 +57,7 @@ namespace driver
 				}
 				else{
 					std::cerr << "ERROR: Cannot move forward!" << std::endl;
-#ifdef DEBUG
-					HELPER_print_robot_debug_info(bot);
-#endif
+					debug::print_robot_info(bot);
 					return false;
 				}
 				break;
@@ -74,9 +73,7 @@ namespace driver
 				}
 				else{
 					std::cerr << "ERROR: Cannot move forward!" << std::endl;
-#ifdef DEBUG
-					HELPER_print_robot_debug_info(bot);
-#endif
+					debug::print_robot_info(bot);
 					return false;
 				}
 				break;
@@ -92,9 +89,7 @@ namespace driver
 				}
 				else{
 					std::cerr << "ERROR: Cannot move forward!" << std::endl;
-#ifdef DEBUG
-					HELPER_print_robot_debug_info(bot);
-#endif
+					debug::print_robot_info(bot);
 					return false;
 				}
 				break;
@@ -111,10 +106,8 @@ namespace driver
 				else
 				{
 					std::cerr << "ERROR: Cannot move forward!" << std::endl;
-#ifdef DEBUG
-					HELPER_print_robot_debug_info(bot);
-#endif
-				return false;
+					debug::print_robot_info(bot);
+					return false;
 				}
 				break;
 			}

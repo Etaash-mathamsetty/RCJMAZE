@@ -10,7 +10,7 @@ all:	run
 run:	CFLAGS += -O2
 run:	BFS
 
-debug:	CFLAGS += -DDEBUG -g
+debug:	CFLAGS += -g
 debug:	BFS
 
 BFS:	$(OBJS)

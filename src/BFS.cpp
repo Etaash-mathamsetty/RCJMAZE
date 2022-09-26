@@ -1,4 +1,3 @@
-//#define SIMULATION
 #include <iostream>
 #include <string>
 #include <fstream>
@@ -10,42 +9,8 @@
 #include "link-list.h"
 #include "driver.h"
 #include "globals.h"
-
-
-void print_map(){
-	for(int i = 0; i < vert_size; i++){
-		for(int l = 0; l < horz_size; l++){
-			putchar('+');
-			if(nodes[get_index(i,l)].N)
-				putchar('-');
-			else
-				putchar(' ');
-		}
-		putchar('\n');
-		//FIXME: missing spaces
-		for(int l = 0; l < horz_size; l++){
-			if(nodes[get_index(i,l)].W)
-				putchar('|');
-			else
-				putchar(' ');
-			if(nodes[get_index(i,l)].bot)
-				putchar('x');
-			if(nodes[get_index(i,l)].vic)
-				putchar('v');
-			if(!nodes[get_index(i,l)].bot && !nodes[get_index(i,l)].vic)
-				putchar(' ');
-		}
-		putchar('\n');
-	}
-	for(int l = 0; l < horz_size; l++){
-		putchar('+');
-		if(nodes[get_index(vert_size-1,l)].S)
-			putchar('-');
-		else
-			putchar(' ');
-	}
-	putchar('\n');
-}
+#include "debug.h"
+#include "helpers.h"
 
 void read_map_from_file(){
 	std::ifstream in("field.txt");
@@ -68,7 +33,7 @@ void read_map_from_file(){
 		if(v > 0){
 			for(int i = 0; i < horz_size; i++){
 				//probably wont be necessary on an actual robot, but we need it to read from the field.txt properly
-				nodes[get_index(v,i)].N = nodes[get_index(v-1,i)].S;
+				nodes[helper::get_index(v,i)].N = nodes[helper::get_index(v-1,i)].S;
 			}
 		}
 		//printf("loop 1\n");
@@ -79,17 +44,17 @@ void read_map_from_file(){
 			in.get(x);
 			//printf("x: %c i: %d\n", x, i);
 			if(x == '\0')
-				goto pls_dont_be_mad_at_me_for_using_a_goto;
+				return;
 			if(x == '\n')
 				break;
 			if(x == '+') continue;
-			node& node = nodes[get_index(v,i)];
+			node& node = nodes[helper::get_index(v,i)];
 			node.N = (x == '-');
 			node.bot |= (tolower(x) == 'x');
 			node.vis |= node.bot;
 			node.vic |= (tolower(x) == 'v');
 			if(node.bot)
-				robot.index = get_index(v,i);
+				robot.index = helper::get_index(v,i);
 			//print_node(nodes[get_index(v,i)]);
 			//nodes[get_index(v,i)] = node;
 			//horz_size++;
@@ -99,16 +64,16 @@ void read_map_from_file(){
 			in.get(x);
 			//printf("x: %c\n", x);
 			if(x == '\0')
-				goto pls_dont_be_mad_at_me_for_using_a_goto;
+				return;
 			if(x == '\n')
 				break;
 			//if(x == ' ') { i--; continue; }
-			node& node = nodes[get_index(v,i)];
+			node& node = nodes[helper::get_index(v,i)];
 			if(x == '|') {
 				if((int)i > 0)
 				{
 					node.W = true;
-					nodes[get_index(v,i-1)].E = true;
+					nodes[helper::get_index(v,i-1)].E = true;
 				}
 				else{
 					node.W = true;
@@ -118,28 +83,27 @@ void read_map_from_file(){
 			node.vis |= node.bot;
 			node.vic |= (tolower(x) == 'v');
 			if(node.bot)
-				robot.index = get_index(v,i);
+				robot.index = helper::get_index(v,i);
 		}
 		//printf("loop 3\n");
 		for(float i = 0; i < horz_size; i+=0.5){
 			in.get(x);
 			//printf("x: %c\n", x);
 			if(x == '\0')
-				goto pls_dont_be_mad_at_me_for_using_a_goto;
+				return;
 			if(x == '\n')
 				break;
 			if(x == '+') continue;
-			node& node = nodes[get_index(v,i)];
+			node& node = nodes[helper::get_index(v,i)];
 			node.S = (x == '-');
 			node.bot |= (tolower(x) == 'x');
 			node.vis |= node.bot;
 			node.vic |= (tolower(x) == 'v');
 			if(node.bot)
-				robot.index = get_index(v,i);
+				robot.index = helper::get_index(v,i);
 		}
 		//v++;
 	}
-	pls_dont_be_mad_at_me_for_using_a_goto:
 	return;
 }
 
@@ -176,10 +140,10 @@ int main(){
 	robot& robot = *bot;
 	driver::get_sensor_data();
 	printf("node[%d]\n", robot.index);
-	print_node(nodes[robot.index]);
+	debug::print_node(nodes[robot.index]);
 	//WHY EAST ALL OF A SUDDEN????
 	//print_node(nodes[robot.index]);
-	print_map();
+	debug::print_map();
 	std::cout << (std::string)robot.get_nearest() << std::endl;
 	//alr BFS time
 
@@ -191,14 +155,14 @@ int main(){
 	driver::turn_to(DIR::E);
 	while(robot.forward())
 	{
-		print_map();
+		debug::print_map();
 		//std::cout << (std::string)robot.get_nearest() << std::endl;
 
 	}
 	driver::turn_to(DIR::S);
 	while(robot.forward())
 	{
-		print_map();
+		debug::print_map();
 	}
 	//DRIVER_turn_east();
 	//std::cout << (std::string)robot << std::endl;

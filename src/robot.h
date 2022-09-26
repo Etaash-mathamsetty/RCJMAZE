@@ -2,8 +2,7 @@
 #include <sstream>
 #include <string.h>
 #include "globals.h"
-
-
+#include "helpers.h"
 
 #ifndef _ROBOT
 #define _ROBOT
@@ -50,10 +49,10 @@ class robot{
 		{
 			nearest_quad quad;
 			//std::cout << ((is_valid_index((int)index-1) && !map[index].W) ? index-1 : 0u) << std::endl;
-			quad[0] = ((is_valid_index(_index+1) && !map[_index].E) ? _index+1 : -1);
-			quad[1] = ((is_valid_index(_index-1) && !map[_index].W) ? _index-1 : -1);
-			quad[2] = ((is_valid_index(_index+horz_size) && !map[_index].S) ? _index+horz_size : -1);
-			quad[3] = ((is_valid_index(_index-horz_size) && !map[_index].N) ? _index-horz_size : -1);
+			quad[0] = ((helper::is_valid_index(_index+1) && !map[_index].E) ? _index+1 : -1);
+			quad[1] = ((helper::is_valid_index(_index-1) && !map[_index].W) ? _index-1 : -1);
+			quad[2] = ((helper::is_valid_index(_index+horz_size) && !map[_index].S) ? _index+horz_size : -1);
+			quad[3] = ((helper::is_valid_index(_index-horz_size) && !map[_index].N) ? _index-horz_size : -1);
 			return quad;
 		}
 
@@ -66,7 +65,7 @@ class robot{
 		explicit operator std::string(){
 			std::stringstream x;
 			x << "Robot Info: ";
-			x << "DIR: " << dir_to_string(dir) << ", ";
+			x << "DIR: " << helper::dir_to_string(dir) << ", ";
 			x << "Index: " << index;
 			return x.str();
 		}
