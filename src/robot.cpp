@@ -4,6 +4,7 @@
 #include <string.h>
 #include <algorithm>
 #include "driver.h"
+#include "globals.h"
 
 robot::robot(){
 #ifdef SIMULATION
@@ -21,8 +22,15 @@ robot::robot(){
 #else
 		node node;
 		map.Push(node);
-		DRIVER_get_sensor_data();
+		driver::get_sensor_data();
 #endif
+
+#ifdef DEBUG
+	std::cout << "INFO: Debugging is ENABLED" << std::endl;
+#else
+	std::cout << "INFO: Debugging is DISABLED" << std::endl;
+#endif
+
 }
 
 bool robot::forward(){
