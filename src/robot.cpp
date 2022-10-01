@@ -6,6 +6,8 @@
 #include "driver.h"
 #include "globals.h"
 
+static robot* instance = NULL;
+
 robot::robot(){
 #ifdef SIMULATION
 		//FIXME: use the same value as non simulation
@@ -26,11 +28,26 @@ robot::robot(){
 #endif
 
 #ifdef DEBUG
-	std::cout << "INFO: Debugging is ENABLED" << std::endl;
+	std::cout << "INFO: Debug info is ENABLED" << std::endl;
 #else
-	std::cout << "INFO: Debugging is DISABLED" << std::endl;
+	std::cout << "INFO: Debug info is DISABLED" << std::endl;
 #endif
 
+	instance = this;
+}
+
+robot::~robot()
+{
+#ifdef SIMULATION
+	delete[] map;
+#endif
+}
+
+robot* robot::get_instance()
+{
+	if(!instance)
+		instance = new robot();
+	return instance;
 }
 
 bool robot::forward(){

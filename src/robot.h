@@ -36,11 +36,7 @@ class robot{
 
 		robot();
 
-		~robot(){
-#ifdef SIMULATION
-			delete[] map;
-#endif
-		}
+		~robot(); 
 
 		//helper funcs
 		bool forward();
@@ -70,5 +66,6 @@ class robot{
 			return x.str();
 		}
 
+		static robot* get_instance();
 };
 #endif

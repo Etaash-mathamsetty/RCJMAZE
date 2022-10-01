@@ -39,6 +39,6 @@ inline int vert_size = 40;
 const static bool is_simulation = false;
 #endif
 
-#define CHECK(ptr) assert(bot)
+#define CHECK(ptr) assert(ptr)
 
 #endif

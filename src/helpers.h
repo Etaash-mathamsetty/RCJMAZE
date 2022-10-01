@@ -27,7 +27,41 @@ namespace helper
                 return "Invalid Direction";
         }
     }
+    
+    inline DIR char_to_dir(const char& c)
+    {
+        switch(tolower(c))
+        {
+            case 'n':
+                return DIR::N;
+            case 'e':
+                return DIR::E;
+            case 's':
+                return DIR::S;
+            case 'w':
+                return DIR::W;
+            default: 
+                return DIR::N;
+        }
+    }
 
+    inline DIR prev_dir(const DIR& dir)
+    {
+        if(dir == DIR::N)
+			return DIR::W;
+		else
+			//can't do dir-- so...
+			return DIR(int(dir)-1);
+    }
+
+    inline DIR next_dir(const DIR& dir)
+    {
+        if(dir == DIR::W)
+			return DIR::N;
+		else
+			//can't do dir++ so...
+			return DIR(int(dir)+1);
+    }
 };
 
 #endif
