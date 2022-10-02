@@ -138,6 +138,7 @@ namespace sim
                 }
                 cur_cmd.clear();
                 cur_cmd += c;
+                continue;
             }
             if(c == 'e' || c == 'w' || c == 's' || c == 'n')
             {
@@ -178,6 +179,8 @@ namespace sim
                         std::cerr << "ERR: Invalid Parameter" << std::endl;
                     }
                 }
+                cur_cmd.clear();
+                continue;
             }
         }
         return true;
