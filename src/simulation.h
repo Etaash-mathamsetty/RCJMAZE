@@ -10,7 +10,7 @@
 namespace sim
 {
 
-    void read_map_from_file();
+    void read_map_from_file(std::string name);
 
     bool run_command();
 };

@@ -38,10 +38,13 @@ Queue<int> BFS(robot& robot)
 	return path;
 }
 
-int main(){
+int main(int argc, char* argv[]){
 	driver::init_robot();
 #ifdef SIMULATION
-	sim::read_map_from_file();
+	if(argc > 1)
+		sim::read_map_from_file(argv[1]);
+	else
+		sim::read_map_from_file("field.txt");
 #endif
 	robot& robot = *robot::get_instance();
 	driver::get_sensor_data();
@@ -62,7 +65,7 @@ int main(){
 		std::cout << "Autnomous? (y/n):";
 		std::string x;
 		std::cin >> x;
-		if(x[0] == 'n')
+		if(tolower(x[0]) == 'n')
 			while(sim::run_command()){ debug::print_map(); }
 		else
 		{

@@ -5,12 +5,12 @@
 namespace sim
 {
 
-    void read_map_from_file()
+    void read_map_from_file(std::string name)
     {
-        std::ifstream in("field.txt");
-        if(in.bad())
+        std::ifstream in(name);
+        if(in.fail())
         {
-            std::cerr << "cannot open field.txt" << std::endl;
+            std::cerr << "ERR: Cannot open " << name << std::endl;
             return;
         }
         robot& robot = *robot::get_instance();
