@@ -23,7 +23,8 @@ namespace sim
         //int horz_size;
         //int v = 0;
         in.get(x);
-        for(int v = 0; v < vert_size; v++){
+        for(int v = 0; v < vert_size; v++)
+        {
             if(v > 0){
                 for(int i = 0; i < horz_size; i++){
                     //probably wont be necessary on an actual robot, but we need it to read from the field.txt properly
@@ -34,27 +35,29 @@ namespace sim
             //get rid of extra plus
             //in.get(x);
             if(v == 0)
-            for(float i = 0; i < horz_size; i+=0.5){
-                in.get(x);
-                //printf("x: %c i: %d\n", x, i);
-                if(x == '\0')
-                    return;
-                if(x == '\n')
-                    break;
-                if(x == '+') continue;
-                node& node = nodes[helper::get_index(v,i)];
-                node.N = (x == '-');
-                node.bot |= (tolower(x) == 'x');
-                node.vis |= node.bot;
-                node.vic |= (tolower(x) == 'v');
-                if(node.bot)
-                    robot.index = helper::get_index(v,i);
-                //print_node(nodes[get_index(v,i)]);
-                //nodes[get_index(v,i)] = node;
-                //horz_size++;
-            }
+                for(float i = 0; i < horz_size; i+=0.5)
+                {
+                    in.get(x);
+                    //printf("x: %c i: %d\n", x, i);
+                    if(x == '\0')
+                        return;
+                    if(x == '\n')
+                        break;
+                    if(x == '+') continue;
+                    node& node = nodes[helper::get_index(v,i)];
+                    node.N = (x == '-');
+                    node.bot |= (tolower(x) == 'x');
+                    node.vis |= node.bot;
+                    node.vic |= (tolower(x) == 'v');
+                    if(node.bot)
+                        robot.index = helper::get_index(v,i);
+                    //print_node(nodes[get_index(v,i)]);
+                    //nodes[get_index(v,i)] = node;
+                    //horz_size++;
+                }
             //printf("loop 2\n");
-            for(float i = 0; i < horz_size; i+=0.5){
+            for(float i = 0; i < horz_size; i+=0.5)
+            {
                 in.get(x);
                 //printf("x: %c\n", x);
                 if(x == '\0')
@@ -80,7 +83,8 @@ namespace sim
                     robot.index = helper::get_index(v,i);
             }
             //printf("loop 3\n");
-            for(float i = 0; i < horz_size; i+=0.5){
+            for(float i = 0; i < horz_size; i+=0.5)
+            {
                 in.get(x);
                 //printf("x: %c\n", x);
                 if(x == '\0')
