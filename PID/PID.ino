@@ -1,15 +1,41 @@
 #include <Adafruit_BNO055.h>
 #include "Motors.h"
+#include "VL53L0X.h"
+#include <Wire.h>
+
+#define PI_SERIAL Serial2
+#define MUXADDR 0x70
+#define TOF_NUMBER 3
+#define TOF_START 0
 
 Adafruit_BNO055 bno = Adafruit_BNO055(55, 0x28);
 sensors_event_t accelerometerData, gyroData;
+VL53L0X tof;
 
-#define PI_SERIAL Serial2
+
 
 void setup() {
-  Serial2.begin(115200);
+  PI_SERIAL.begin(115200);
   Serial.begin(115200);
+  Wire.begin();
   bno.begin();
+
+  for (int i = TOF_START; i < TOF_NUMBER; i++){
+     tcaselect(i);
+     tof.setTimeout(500);
+     tof.init();
+     tof.startContinuous();
+  }
+  
+}
+
+inline void tcaselect(uint8_t i){
+  if (i > 7)
+    return;
+
+  Wire.beginTransmission(MUXADDR);
+  Wire.write(1 << i);
+  Wire.endTransmission();
   
 }
 
@@ -25,7 +51,7 @@ inline void display_tag(const char* tag)
   Serial.print(": ");
 }
 
-inline void display_data(const sensors_event_t& data)
+void display_data (const sensors_event_t& data)
 {
 
   switch(data.type)
@@ -59,7 +85,7 @@ inline void display_data(const sensors_event_t& data)
 
 
 
-inline void pi_send_data(const sensors_event_t& data)
+void pi_send_data (const sensors_event_t& data)
 {
   
   switch(data.type)
@@ -88,15 +114,125 @@ inline void pi_send_data(const sensors_event_t& data)
 
 }
 
+byte get_tof_vals(int threshold){
+  
+  byte wall = 0;
+  int reading;
+  
+  for(int i = TOF_START; i < TOF_NUMBER; i++){
+    
+    tcaselect(i);
+    reading = tof.readRangeContinuousMillimeters();
+    Serial.println(reading);
+    wall <<= 1;
+
+    if (reading < threshold){
+      wall |= 0b1;
+      Serial.println("Wall");
+    }
+    else{
+      Serial.println("No Wall");  
+    }
+  }
+
+  Serial.println("\n\n\n");
+
+  return wall;
+}
+
+inline void pi_send_data(byte wall){
+  pi_send_tag("wall");
+  PI_SERIAL.write(wall);
+}
+
+void pi_read_data(){
+  while(!PI_SERIAL.available());
+
+  String data = PI_SERIAL.readString();
+  data.trim();
+  data.toLowerCase();
+  data += '\n';
+  String cur_cmd = "";
+  Serial.println(data);
+  for(char c : data)
+  {
+      if(c == 'g' || c == 'f' || c == 't')
+      {
+          if(cur_cmd.length() > 0)
+          {
+              if(cur_cmd[0] == 'g' || cur_cmd[0] == 'f')
+              {
+                  Serial.println("FORWARD");
+              }
+              else
+              {
+                  Serial.println("ERR: Invalid Parameter");
+              }
+          }
+          cur_cmd.remove(0);
+          cur_cmd += c;
+      }
+      if(c == 'e' || c == 'w' || c == 's' || c == 'n')
+      {
+          if(cur_cmd.length() > 0)
+          {
+              if(cur_cmd[0] == 'f' || cur_cmd[0] == 'g')
+              {
+                    Serial.print("turn to ");
+                    Serial.println(c);
+                    Serial.println("FORWARD");
+              }
+              else if(cur_cmd[0] == 't')
+              {
+                 Serial.print("turn to ");
+                 Serial.println(c);
+              }
+              else
+              {
+                  Serial.println("ERR: Invalid Command");
+              }
+              cur_cmd.remove(0);
+              continue;
+          }
+          else
+          {
+              Serial.println("ERR: Invalid Command");
+              continue;
+          }
+      }
+      if(c == '\n' || c == '\0')
+      {
+          if(cur_cmd.length() > 0)
+          {
+              if(cur_cmd[0] == 'g' || cur_cmd[0] == 'f')
+              {
+                  Serial.println("FORWARD");
+              }
+              else
+              {
+                  Serial.println("ERR: Invalid Parameter");
+              }
+          }
+          cur_cmd.remove(0);
+      }
+  }
+}
+
 void loop() {
   bno.getEvent(&accelerometerData, Adafruit_BNO055::VECTOR_ACCELEROMETER);
   bno.getEvent(&gyroData, Adafruit_BNO055::VECTOR_GYROSCOPE);
 
-
+  /*
   display_data(accelerometerData);
   pi_send_data(accelerometerData);
   display_data(gyroData);
   pi_send_data(gyroData);
+  pi_read_data();
+  Serial.println();*/
+
+  byte test = get_tof_vals(100);
+  Serial.print("Tof: ");
+  Serial.println(test, BIN);
 
   delay(100);
 }
