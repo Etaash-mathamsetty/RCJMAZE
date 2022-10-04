@@ -25,6 +25,10 @@ struct nearest_quad
 };
 
 class robot{
+	protected:
+		robot();
+
+		~robot(); 
 	public:
 		DIR dir;
 		int index;
@@ -33,10 +37,6 @@ class robot{
 #else
 		Queue<node> map;
 #endif
-
-		robot();
-
-		~robot(); 
 
 		//helper funcs
 		bool forward();
