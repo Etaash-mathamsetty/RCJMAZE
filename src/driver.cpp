@@ -13,7 +13,7 @@ namespace driver
     CREATE_DRIVER(void, cleanup)
 	{
 		delete[] nodes;
-		delete robot::get_instance();
+		//delete robot::get_instance();
 	}    
 
     CREATE_DRIVER(bool, forward)
