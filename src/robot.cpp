@@ -19,13 +19,7 @@ robot::robot(){
 
 		//default direction
 		dir = DIR::S;
-#ifdef SIMULATION
 		map = new node[horz_size * vert_size];
-#else
-		node node;
-		map.Push(node);
-		driver::get_sensor_data();
-#endif
 
 #ifdef DEBUG
 	std::cout << "INFO: Debug info is ENABLED" << std::endl;
@@ -38,9 +32,7 @@ robot::robot(){
 
 robot::~robot()
 {
-#ifdef SIMULATION
 	delete[] map;
-#endif
 }
 
 robot* robot::get_instance()

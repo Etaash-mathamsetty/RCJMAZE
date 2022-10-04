@@ -32,11 +32,7 @@ class robot{
 	public:
 		DIR dir;
 		int index;
-#ifdef SIMULATION
 		node* map;
-#else
-		Queue<node> map;
-#endif
 
 		//helper funcs
 		bool forward();
