@@ -194,11 +194,7 @@ public:
 	void Pop(){
 		queue.pop_back();
 	}
-
-	void PopFront(){
-		queue.pop_front();
-	}
-
+	
 	size_t Size(){
 		return queue.size();
 	}

@@ -3,11 +3,11 @@
 
 namespace helper
 {
-    int get_index(int a, int b){
+    int get_index(const int& a, const int& b){
 		return a * horz_size + b;
 	}
 
-    bool is_valid_index(int index) {
+    bool is_valid_index(const int& index) {
 		return index < (horz_size * vert_size) && index > 0;
 	}
 

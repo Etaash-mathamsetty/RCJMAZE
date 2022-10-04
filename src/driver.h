@@ -15,7 +15,7 @@
 		if(is_simulation) std::cout << "SIM: "; \
 		std::cout << "FIXME: unimplemented " << "driver::" << #name << std::endl;	\
 		return return_val; 
-#define CREATE_DRIVER(return_type, name, ...) static return_type name(__VA_ARGS__)
+#define CREATE_DRIVER(return_type, name, ...) return_type name(__VA_ARGS__)
 
 namespace driver
 {

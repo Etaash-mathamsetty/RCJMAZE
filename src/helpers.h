@@ -5,9 +5,9 @@
 #define __HELPERS_H__
 namespace helper
 {
-    int get_index(int a, int b);
+    int get_index(const int& a, const int& b);
 
-    bool is_valid_index(int index);
+    bool is_valid_index(const int& index);
 
     std::string dir_to_string(const DIR& dir);
 

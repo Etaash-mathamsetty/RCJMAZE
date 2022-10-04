@@ -17,7 +17,7 @@
 Queue<int> BFS(robot& robot)
 {
 	int* parent = (int*)alloca(horz_size * vert_size * sizeof(int));
-	Queue<int> worker;
+	LinkedList<int> worker;
 	Queue<int> path;
 	int cur_index = robot.index;
 	do
@@ -27,13 +27,13 @@ Queue<int> BFS(robot& robot)
 		for(int i = 0; i < 4; i++)
 		{
 			if(quad[i] != -1)
-				worker.Push(quad[i]);
+				worker.push_back(quad[i]);
 		}
-		parent[worker[0]] = robot.index;
+		parent[worker[0].value] = robot.index;
 
 		//continue working on this
-		worker.PopFront();
-	}while(worker.Size() > 0);
+		worker.pop_front();
+	}while(worker.size() > 0);
 
 	return path;
 }

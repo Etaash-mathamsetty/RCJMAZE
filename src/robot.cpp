@@ -14,7 +14,7 @@ robot::robot(){
 		node* find = std::find_if(nodes, nodes + horz_size * vert_size, [](node node) -> bool{return node.bot;});
 		index = find - nodes;
 #else
-		index = get_index(20,20);
+		index = get_index(19,19);
 #endif
 
 		//default direction
