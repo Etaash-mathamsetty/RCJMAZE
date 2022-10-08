@@ -1,6 +1,7 @@
 #include "robot.h"
 #include "helpers.h"
 #include "globals.h"
+#include "link-list.h"
 #include <iostream>
 
 #ifndef __DEBUG_H__
@@ -65,6 +66,19 @@ namespace debug
         }
         putchar('\n');
 		#endif
+    }
+
+    inline void print_path(Stack<int> path)
+    {
+        #ifdef DEBUG
+        for(size_t i = 0; i < path.Size(); i++)
+        {
+            if(i > 0)
+                putchar(',');
+            std::cout << path[i];
+        }
+        putchar('\n');
+        #endif
     }
 };
 

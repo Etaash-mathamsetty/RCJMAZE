@@ -14,26 +14,52 @@
 #include "simulation.h"
 
 //returns shortest possible path to the nearest unvisited tile
-Queue<int> BFS(robot& robot)
+Stack<int> BFS(robot& robot)
 {
 	int* parent = (int*)alloca(horz_size * vert_size * sizeof(int));
+	//set everything to an obv invalid index
+	for(int i = 0; i < horz_size * vert_size; i++)
+	{
+		parent[i] = -1;
+	}
 	LinkedList<int> worker;
-	Queue<int> path;
+	Stack<int> path;
 	int cur_index = robot.index;
 	do
 	{
-		nearest_quad quad = robot.get_nearest(cur_index);
+		nearest_quad quad = helper::get_nearest(cur_index);
 		//std::sort(quad.nearest, quad.nearest + 4);
 		for(int i = 0; i < 4; i++)
 		{
-			if(quad[i] != -1)
+			if(quad[i] != -1 && parent[cur_index] != quad[i])
+			{
 				worker.push_back(quad[i]);
+				parent[quad[i]] = cur_index;
+			}
 		}
-		parent[worker[0].value] = robot.index;
+
+		//impossible to have 0 nearest quads (boxed in, impossible, I think), so this should be a safe operation
+
+		cur_index = worker[0].value;
 
 		//continue working on this
+		if(!robot.map[cur_index].vis)
+		{
+			//BFS is done
+			break;
+		}
+
 		worker.pop_front();
 	}while(worker.size() > 0);
+
+	//backtracking
+	path.Push(cur_index);
+	do
+	{
+		path.Push(parent[path[0]]);
+	}while(path[0] != robot.index);
+	path.Pop();
+	
 
 	return path;
 }
@@ -48,7 +74,7 @@ int main(int argc, char* argv[]){
 #endif
 	robot& robot = *robot::get_instance();
 	driver::get_sensor_data();
-	printf("node[%d]\n", robot.index);
+	printf("node[%d]:\n", robot.index);
 	debug::print_node(nodes[robot.index]);
 
 	//print_node(nodes[robot.index]);
@@ -70,6 +96,35 @@ int main(int argc, char* argv[]){
 		else
 		{
 			//BFS code goes here
+			for(int i = 0; i < 35; i++)
+			{
+				Stack<int> path = BFS(robot);
+				debug::print_path(path);
+				for(size_t l = 0; l < path.Size(); l++)
+				{
+					if(path[l] == robot.index+1)
+					{
+						driver::turn_to(DIR::E);
+						robot.forward();
+					}
+					else if(path[l] == robot.index-1)
+					{
+						driver::turn_to(DIR::W);
+						robot.forward();
+					}
+					else if(path[l] == robot.index + horz_size)
+					{
+						driver::turn_to(DIR::S);
+						robot.forward();
+					}
+					else if(path[l] == robot.index - horz_size)
+					{
+						driver::turn_to(DIR::N);
+						robot.forward();
+					}
+					debug::print_map();
+				}
+			}
 		}
 	#else 
 		//REAL CODE HERE

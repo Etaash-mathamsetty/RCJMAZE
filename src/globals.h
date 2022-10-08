@@ -1,5 +1,6 @@
 #include <inttypes.h>
 #include <assert.h>
+#include <sstream>
 
 #ifndef _GLOBALS
 #define _GLOBALS
@@ -27,6 +28,22 @@ enum class DIR{
 		W
 };
 
+struct nearest_quad
+{
+	int nearest[4];
+
+	int& operator[] (int x)
+	{
+		return nearest[x];
+	}
+
+	explicit operator std::string()
+	{
+		std::stringstream x;
+		x << "E: " << nearest[0] << ", W: " << nearest[1] << ", S: " << nearest[2] << ", N: " << nearest[3];
+		return x.str();
+	}
+};
 
 #ifdef SIMULATION
 inline int horz_size;

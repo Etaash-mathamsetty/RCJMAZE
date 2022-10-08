@@ -100,8 +100,8 @@ namespace driver
 		CHECK(bot);
 		CHECK(bot->map);
 		CHECK(nodes);
-		bot->map[bot->index].vis = true;
 		memcpy(bot->map + bot->index, nodes + bot->index, sizeof(node));
+		bot->map[bot->index].vis = true;
 	}
 
     CREATE_DRIVER(void, turn_east)

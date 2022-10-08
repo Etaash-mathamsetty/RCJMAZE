@@ -26,8 +26,6 @@ robot::robot(){
 #else
 	std::cout << "INFO: Debug info is DISABLED" << std::endl;
 #endif
-
-	instance = this;
 }
 
 robot::~robot()
@@ -45,7 +43,6 @@ robot* robot::get_instance()
 bool robot::forward(){
 	if(!driver::forward())
 		return false;
-	else
-		driver::get_sensor_data();
+	driver::get_sensor_data();
 	return true;
 }
