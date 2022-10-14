@@ -16,17 +16,17 @@ namespace sim
         robot& robot = *robot::get_instance();
         //std::cout << "sizeof DIR: " << sizeof(DIR) << std::endl;
         char x = 0;
-        in >> horz_size;
-        horz_size++;
-        in >> vert_size;
+        in >> _horz_size;
+        _horz_size++;
+        in >> _vert_size;
         nodes = new node[horz_size * vert_size];
-        //int horz_size;
+        memset(nodes, 0, sizeof(node) * horz_size * vert_size);
         //int v = 0;
         in.get(x);
-        for(int v = 0; v < vert_size; v++)
+        for(int v = 0; v < _vert_size; v++)
         {
             if(v > 0){
-                for(int i = 0; i < horz_size; i++){
+                for(int i = 0; i < _horz_size; i++){
                     //probably wont be necessary on an actual robot, but we need it to read from the field.txt properly
                     nodes[helper::get_index(v,i)].N = nodes[helper::get_index(v-1,i)].S;
                 }
@@ -35,7 +35,7 @@ namespace sim
             //get rid of extra plus
             //in.get(x);
             if(v == 0)
-                for(float i = 0; i < horz_size; i+=0.5)
+                for(float i = 0; i < _horz_size; i+=0.5)
                 {
                     in.get(x);
                     //printf("x: %c i: %d\n", x, i);
@@ -56,7 +56,7 @@ namespace sim
                     //horz_size++;
                 }
             //printf("loop 2\n");
-            for(float i = 0; i < horz_size; i+=0.5)
+            for(float i = 0; i < _horz_size; i+=0.5)
             {
                 in.get(x);
                 //printf("x: %c\n", x);
@@ -83,7 +83,7 @@ namespace sim
                     robot.index = helper::get_index(v,i);
             }
             //printf("loop 3\n");
-            for(float i = 0; i < horz_size; i+=0.5)
+            for(float i = 0; i < _horz_size; i+=0.5)
             {
                 in.get(x);
                 //printf("x: %c\n", x);
@@ -113,8 +113,7 @@ namespace sim
         std::cout << "Enter a command:";
         std::string input, cur_cmd = "";
         std::cin >> input;
-        std::transform(input.begin(), input.end(), input.begin(),
-        [](unsigned char c){ return std::tolower(c); });
+        for(char& c : input) { c = std::tolower(c); }
         if(input == "help")
         {
             std::cout << "INFO: I was too lazy to write a help section, so ask Etaash or just go read the source code." << std::endl;

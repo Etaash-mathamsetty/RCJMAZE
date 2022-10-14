@@ -18,10 +18,7 @@ Stack<int> BFS(robot& robot)
 {
 	int* parent = (int*)alloca(horz_size * vert_size * sizeof(int));
 	//set everything to an obv invalid index
-	for(int i = 0; i < horz_size * vert_size; i++)
-	{
-		parent[i] = -1;
-	}
+	for(int i = 0; i < horz_size * vert_size; i++) { parent[i] = -1; }
 	LinkedList<int> worker;
 	Stack<int> path;
 	int cur_index = robot.index;
@@ -50,16 +47,15 @@ Stack<int> BFS(robot& robot)
 		}
 
 		worker.pop_front();
-	}while(worker.size() > 0);
+	} while(worker.size() > 0);
 
 	//backtracking
 	path.Push(cur_index);
 	do
 	{
 		path.Push(parent[path[0]]);
-	}while(path[0] != robot.index);
+	} while(path[0] != robot.index);
 	path.Pop();
-	
 
 	return path;
 }

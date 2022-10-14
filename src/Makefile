@@ -1,6 +1,6 @@
 
 
-OBJS = BFS.o robot.o simulation.o helpers.o driver.o
+OBJS = BFS.o robot.o simulation.o helpers.o driver.o debug.o
 CFLAGS = -Wall -std=c++17
 
 LDFLAGS =

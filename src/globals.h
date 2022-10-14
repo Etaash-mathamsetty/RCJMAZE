@@ -45,14 +45,15 @@ struct nearest_quad
 	}
 };
 
+const inline int default_index = 19;
+const inline int horz_size = 40;
+const inline int vert_size = 40;
+
 #ifdef SIMULATION
-inline int horz_size;
-inline int vert_size;
+//simulation field
 inline node* nodes;
 const static bool is_simulation = true;
 #else
-inline int horz_size = 40;
-inline int vert_size = 40;
 const static bool is_simulation = false;
 #endif
 
