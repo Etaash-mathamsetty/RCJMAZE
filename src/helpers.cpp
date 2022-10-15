@@ -81,8 +81,11 @@ namespace helper
 
     nearest_quad get_nearest(const int& _index)
     {
+        robot* bot = robot::get_instance();
+        CHECK(bot);
+        CHECK(bot->map);
+        node* map = bot->map;
         nearest_quad quad;
-        node* map = robot::get_instance()->map;
         //std::cout << ((is_valid_index((int)index-1) && !map[index].W) ? index-1 : 0u) << std::endl;
         quad[0] = ((is_valid_index(_index+1) && !map[_index].E) ? _index+1 : -1);
         quad[1] = ((is_valid_index(_index-1) && !map[_index].W) ? _index-1 : -1);

@@ -7,7 +7,7 @@ namespace driver
     CREATE_DRIVER(void, init_robot)
 	{
 		//init robot, and ignore pointer return value
-		robot::get_instance();
+		CHECK(robot::get_instance());
 	}
 
     CREATE_DRIVER(void, cleanup)
@@ -108,7 +108,7 @@ namespace driver
 	{
 		robot* bot = robot::get_instance();
 		CHECK(bot);
-		helper::next_dir(bot->dir);
+		turn_to(helper::next_dir(bot->dir));
 	}
 
     	
@@ -116,7 +116,7 @@ namespace driver
 	{
 		robot* bot = robot::get_instance();
 		CHECK(bot);
-		helper::prev_dir(bot->dir);
+		turn_to(helper::prev_dir(bot->dir));
 	}
 
     CREATE_DRIVER(void, turn_to, DIR dir)
