@@ -69,7 +69,7 @@ int main(int argc, char* argv[]){
 	robot& robot = *robot::get_instance();
 	driver::get_sensor_data();
 	printf("node[%d]:\n", robot.index);
-	debug::print_node(nodes[robot.index]);
+	debug::print_node(robot.map[robot.index]);
 
 	//print_node(nodes[robot.index]);
 	debug::print_map();
