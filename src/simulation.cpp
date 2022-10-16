@@ -13,7 +13,6 @@ namespace sim
             std::cerr << "ERR: Cannot open " << name << std::endl;
             return;
         }
-        robot& robot = *robot::get_instance();
         //std::cout << "sizeof DIR: " << sizeof(DIR) << std::endl;
         char x = 0;
         in >> _horz_size;
