@@ -49,7 +49,6 @@ const int default_index = 19;
 const int horz_size = 40;
 const int vert_size = 40;
 
-//FIXME: use these
 namespace com
 {
 	const char turn = 't';
@@ -59,6 +58,7 @@ namespace com
 	const char west = 'w';
 	const char north = 'n';
 	const char south = 's';
+	const char quit = 'q';
 };
 
 #ifdef SIMULATION

@@ -32,15 +32,15 @@ namespace helper
         switch(dir)
         {
             case DIR::N:
-                return 'n';
+                return com::north;
             case DIR::E:
-                return 'e';
+                return com::east;
             case DIR::S:
-                return 's';
+                return com::south;
             case DIR::W:
-                return 'w';
+                return com::west;
             default:
-                return 'n';
+                return com::north;
         }
     }
 
@@ -48,13 +48,13 @@ namespace helper
     {
         switch(tolower(c))
         {
-            case 'n':
+            case com::north:
                 return DIR::N;
-            case 'e':
+            case com::east:
                 return DIR::E;
-            case 's':
+            case com::south:
                 return DIR::S;
-            case 'w':
+            case com::west:
                 return DIR::W;
             default: 
                 return DIR::N;

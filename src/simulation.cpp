@@ -122,15 +122,15 @@ namespace sim
         input += '\n';
         for(char c : input)
         {
-            if(c == 'q')
+            if(c == com::quit)
                 return false;
             if(c == 'c')
                 system("clear");
-            if(c == 'g' || c == 'f' || c == 't')
+            if(c == com::go || c == com::forward || c == com::forward)
             {
                 if(cur_cmd.length() > 0)
                 {
-                    if(cur_cmd[0] == 'g' || cur_cmd[0] == 'f')
+                    if(cur_cmd[0] == com::go || cur_cmd[0] == com::forward)
                     {
                         bot->forward();
                     }
@@ -143,16 +143,16 @@ namespace sim
                 cur_cmd += c;
                 continue;
             }
-            if(c == 'e' || c == 'w' || c == 's' || c == 'n')
+            if(c == com::east || c == com::west || c == com::south || c == com::north)
             {
                 if(cur_cmd.length() > 0)
                 {
-                    if(cur_cmd[0] == 'f' || cur_cmd[0] == 'g')
+                    if(cur_cmd[0] == com::forward || cur_cmd[0] == com::go)
                     {
                         driver::turn_to(helper::char_to_dir(c));
                         bot->forward();
                     }
-                    else if(cur_cmd[0] == 't')
+                    else if(cur_cmd[0] == com::turn)
                     {
                         driver::turn_to(helper::char_to_dir(c));
                     }
@@ -173,7 +173,7 @@ namespace sim
             {
                 if(cur_cmd.length() > 0)
                 {
-                    if(cur_cmd[0] == 'g' || cur_cmd[0] == 'f')
+                    if(cur_cmd[0] == com::go || cur_cmd[0] == com::forward)
                     {
                         bot->forward();
                     }
