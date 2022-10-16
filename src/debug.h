@@ -17,7 +17,7 @@ namespace debug
 
 	void print_map();
 
-    void print_path(Stack<int> path);
+    void print_path(Stack<int>& path);
 };
 
 #endif

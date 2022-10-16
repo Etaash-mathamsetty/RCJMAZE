@@ -34,7 +34,7 @@ struct nearest_quad
 
 	int& operator[] (int x)
 	{
-		return nearest[x];
+		return nearest[x % 4];
 	}
 
 	explicit operator std::string()
@@ -45,9 +45,21 @@ struct nearest_quad
 	}
 };
 
-const inline int default_index = 19;
-const inline int horz_size = 40;
-const inline int vert_size = 40;
+const int default_index = 19;
+const int horz_size = 40;
+const int vert_size = 40;
+
+//FIXME: use these
+namespace com
+{
+	const char turn = 't';
+	const char go = 'g';
+	const char forward = 'f';
+	const char east = 'e';
+	const char west = 'w';
+	const char north = 'n';
+	const char south = 's';
+};
 
 #ifdef SIMULATION
 //simulation field

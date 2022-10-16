@@ -9,11 +9,9 @@
 static robot* instance = NULL;
 
 robot::robot(){
-	#ifndef SIMULATION
 		//simply becomes too complicated if we pretended we were at default_index, default_index in the simulation, am open to ideas tho
 		//nvm, im just really freaking dumb, I know how to do it
 		index = helper::get_index(default_index,default_index);
-	#endif
 		//default direction
 		dir = DIR::S;
 		map = new node[horz_size * vert_size];

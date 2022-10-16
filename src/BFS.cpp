@@ -35,11 +35,9 @@ Stack<int> BFS(robot& robot)
 			}
 		}
 
-		//impossible to have 0 nearest quads (boxed in, impossible, I think), so this should be a safe operation
-
+		assert(worker.size() > 0);
 		cur_index = worker[0].value;
 
-		//continue working on this
 		if(!robot.map[cur_index].vis)
 		{
 			//BFS is done

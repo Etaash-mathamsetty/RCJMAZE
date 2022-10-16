@@ -33,7 +33,7 @@ namespace driver
 
 	CREATE_DRIVER(void, turn_to, DIR dir);
 
-	CREATE_DRIVER(bool, get_vic);
+	//CREATE_DRIVER(bool, get_vic);
 };
 
 #endif

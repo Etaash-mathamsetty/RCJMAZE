@@ -22,15 +22,17 @@ namespace driver
 		CHECK(bot);
 		CHECK(bot->map);
 		CHECK(nodes);
+		//FIXME: too much repitition
 		switch(bot->dir){
 			case DIR::N:
 			{
-				if(bot->index / horz_size > 0 && !bot->map[bot->index].N){
+				if(helper::is_valid_index(bot->index - horz_size) && helper::is_valid_index(sim::sim_robot_index - horz_size) && !bot->map[bot->index].N){
 					bot->map[bot->index].bot = false;
-					nodes[bot->index].bot = false;
+					nodes[sim::sim_robot_index].bot = false;
 					bot->index -= horz_size;
+					sim::sim_robot_index -= horz_size;
 					bot->map[bot->index].bot = true;
-					nodes[bot->index].bot = true;
+					nodes[sim::sim_robot_index].bot = true;
 				}
 				else{
 					std::cerr << "ERROR: Cannot move forward!" << std::endl;
@@ -41,12 +43,13 @@ namespace driver
 			}
 			case DIR::E:
 			{
-				if(bot->index < horz_size * vert_size && !(bot->map[bot->index].E)){
+				if(helper::is_valid_index(bot->index + 1) && helper::is_valid_index(sim::sim_robot_index + 1) && !(bot->map[bot->index].E)){
 					bot->map[bot->index].bot = false;
-					nodes[bot->index].bot = false;
+					nodes[sim::sim_robot_index].bot = false;
 					(bot->index)++;
+					sim::sim_robot_index++;
 					bot->map[bot->index].bot = true;
-					nodes[bot->index].bot = true;
+					nodes[sim::sim_robot_index].bot = true;
 				}
 				else{
 					std::cerr << "ERROR: Cannot move forward!" << std::endl;
@@ -57,12 +60,13 @@ namespace driver
 			}
 			case DIR::S:
 			{
-				if(bot->index / horz_size < vert_size && !bot->map[bot->index].S){
+				if(helper::is_valid_index(bot->index + horz_size) && helper::is_valid_index(sim::sim_robot_index + horz_size) && !bot->map[bot->index].S){
 					bot->map[bot->index].bot = false;
-					nodes[bot->index].bot = false;
+					nodes[sim::sim_robot_index].bot = false;
 					bot->index += horz_size;
+					sim::sim_robot_index += horz_size;
 					bot->map[bot->index].bot = true;
-					nodes[bot->index].bot = true;
+					nodes[sim::sim_robot_index].bot = true;
 				}
 				else{
 					std::cerr << "ERROR: Cannot move forward!" << std::endl;
@@ -73,12 +77,13 @@ namespace driver
 			}
 			case DIR::W:
 			{
-				if(bot->index > 0 && !(bot->map[bot->index].W)){
+				if(helper::is_valid_index(bot->index - 1) && helper::is_valid_index(sim::sim_robot_index - 1) && !(bot->map[bot->index].W)){
 					bot->map[bot->index].bot = false;
-					nodes[bot->index].bot = false;
+					nodes[sim::sim_robot_index].bot = false;
 					(bot->index)--;
+					sim::sim_robot_index--;
 					bot->map[bot->index].bot = true;
-					nodes[bot->index].bot = true;
+					nodes[sim::sim_robot_index].bot = true;
 				}
 				else
 				{
@@ -93,15 +98,14 @@ namespace driver
 		return true;
 	}
 
-
 	CREATE_DRIVER(void, get_sensor_data)
 	{
 		robot* bot = robot::get_instance();
 		CHECK(bot);
 		CHECK(bot->map);
 		CHECK(nodes);
-		nodes[bot->index].vis = true;
-		memcpy(bot->map + bot->index, nodes + bot->index, sizeof(node));
+		nodes[sim::sim_robot_index].vis = true;
+		memcpy(bot->map + bot->index, nodes + sim::sim_robot_index, sizeof(node));
 	}
 
     CREATE_DRIVER(void, turn_east)
@@ -110,7 +114,6 @@ namespace driver
 		CHECK(bot);
 		turn_to(helper::next_dir(bot->dir));
 	}
-
     	
 	CREATE_DRIVER(void, turn_west)
 	{
@@ -126,14 +129,18 @@ namespace driver
 		bot->dir = dir;
 	}
 
+/*
     CREATE_DRIVER(bool, get_vic){
 		robot* bot = robot::get_instance();
 		CHECK(bot);
 		CHECK(bot->map);
 		return bot->map[bot->index].vic;
 	}
+*/
 
     #else
+
+
 
     #endif
 } // namespace driver

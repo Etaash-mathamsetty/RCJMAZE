@@ -64,7 +64,7 @@ namespace debug
 		#endif
     }
 
-    void print_path(Stack<int> path)
+    void print_path(Stack<int>& path)
     {
         #ifdef DEBUG
         for(size_t i = 0; i < path.Size(); i++)

@@ -50,7 +50,7 @@ namespace sim
                     node.vis |= node.bot;
                     node.vic |= (tolower(x) == 'v');
                     if(node.bot)
-                        robot.index = helper::get_index(v,i);
+                        sim_robot_index = helper::get_index(v,i);
                     //print_node(nodes[get_index(v,i)]);
                     //nodes[get_index(v,i)] = node;
                     //horz_size++;
@@ -80,7 +80,7 @@ namespace sim
                 node.vis |= node.bot;
                 node.vic |= (tolower(x) == 'v');
                 if(node.bot)
-                    robot.index = helper::get_index(v,i);
+                    sim_robot_index = helper::get_index(v,i);
             }
             //printf("loop 3\n");
             for(float i = 0; i < _horz_size; i+=0.5)
@@ -98,13 +98,13 @@ namespace sim
                 node.vis |= node.bot;
                 node.vic |= (tolower(x) == 'v');
                 if(node.bot)
-                    robot.index = helper::get_index(v,i);
+                    sim_robot_index = helper::get_index(v,i);
             }
             //v++;
         }
         return;
     }
-    
+
     //vim style commands ig?
     bool run_command()
     {
