@@ -28,6 +28,7 @@ robot::~robot()
 	delete[] map;
 }
 
+//returns singleton instance
 robot* robot::get_instance()
 {
 	if(!instance)
@@ -35,6 +36,7 @@ robot* robot::get_instance()
 	return instance;
 }
 
+//move forward helper
 bool robot::forward(){
 	if(!driver::forward())
 		return false;

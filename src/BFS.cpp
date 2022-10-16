@@ -12,6 +12,7 @@
 #include "debug.h"
 #include "helpers.h"
 #include "simulation.h"
+#include "scripting.h"
 
 //returns shortest possible path to the nearest unvisited tile
 Stack<int> BFS(robot& robot)
@@ -74,8 +75,15 @@ int main(int argc, char* argv[]){
 	//print_node(nodes[robot.index]);
 	debug::print_map();
 	std::cout << (std::string)robot.get_nearest() << std::endl;
-	//alr BFS time
-
+	std::cout << "python test script:" << std::endl;
+	PythonScript script("test.py");
+	script.Exec();
+	for(float value : Bridge::get_data_value("test"))
+	{
+		std::cout << value << std::endl;
+	}
+	Bridge::send_serial_command(script , "teg");
+	std::cout << "done with the python!" << std::endl;
 	//Queue<int> path = BFS(robot);
 
 	//DRIVER_turn_west();

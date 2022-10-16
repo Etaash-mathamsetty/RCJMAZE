@@ -1,5 +1,7 @@
 #include "debug.h"
 
+static std::string last_error = "No Error";
+
 namespace debug
 {
     void print_node(const node& node)
@@ -75,5 +77,16 @@ namespace debug
         }
         putchar('\n');
         #endif
+    }
+
+    //will use for debugging
+    void set_last_error(const std::string& error)
+    {
+        last_error = error;
+    }
+
+    const std::string& get_last_error()
+    {
+        return last_error;
     }
 }

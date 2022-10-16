@@ -1,9 +1,9 @@
 
 
-OBJS = BFS.o robot.o simulation.o helpers.o driver.o debug.o
-CFLAGS = -Wall -std=c++17
+OBJS = BFS.o robot.o simulation.o helpers.o driver.o debug.o scripting.o
+CFLAGS = -Wall -std=c++17 `pkg-config --cflags python3`
 
-LDFLAGS =
+LDFLAGS = -lboost_python3 -lpython3.10
 
 all:	run
 
