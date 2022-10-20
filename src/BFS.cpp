@@ -7,8 +7,6 @@
 #include <math.h>
 #include <chrono>
 #include <algorithm>
-#include <thread>
-#include <future>
 #include "link-list.h"
 #include "driver.h"
 #include "globals.h"
