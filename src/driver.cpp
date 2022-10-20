@@ -1,4 +1,8 @@
 #include "driver.h"
+#include "robot.h"
+#include "scripting.h"
+#include <chrono>
+#include <thread>
 
 namespace driver
 {
@@ -8,12 +12,15 @@ namespace driver
 	{
 		//init robot, and ignore pointer return value
 		CHECK(robot::get_instance());
+		PythonScript::initPython();
+		PythonScript::Exec(init_py_file);
 	}
 
     CREATE_DRIVER(void, cleanup)
 	{
 		delete[] nodes;
 		//delete robot::get_instance();
+		PythonScript::Exec(cleanup_py_file);
 	}    
 
     CREATE_DRIVER(bool, forward)
@@ -23,6 +30,8 @@ namespace driver
 		CHECK(bot->map);
 		CHECK(nodes);
 		//FIXME: too much repitition
+		//simulate time for movement
+		std::this_thread::sleep_for(std::chrono::milliseconds(3000));
 		switch(bot->dir){
 			case DIR::N:
 			{
@@ -127,6 +136,7 @@ namespace driver
 		robot* bot = robot::get_instance();
 		CHECK(bot);
 		bot->dir = dir;
+		std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 	}
 
 /*
@@ -140,7 +150,33 @@ namespace driver
 
     #else
 
+	CREATE_DRIVER(void, init_robot)
+	{
+		CHECK(robot::get_instance());
+		PythonScript::initPython();
+		PythonScript::Exec(init_py_file);
+	}
 
+	CREATE_DRIVER(void, cleanup)
+	{
+		PythonScript::Exec(cleanup_py_file);
+	}
+
+	CREATE_DRIVER(void, get_sensor_data)
+	{
+		robot* bot = robot::get_instance();
+		CHECK(bot);
+		CHECK(bot->map);
+		bot->map[bot->index].vis = true;
+		PythonScript::Exec(cv_py_file);
+		PythonScript::Exec(ser_py_file);
+		//bot->map[bot->index].letter = (uint8_t)Bridge::get_data_value("letter")[0];
+		bot->map[bot->index].N = (bool)Bridge::get_data_value("NWall")[0];
+		bot->map[bot->index].E = (bool)Bridge::get_data_value("EWall")[0];
+		bot->map[bot->index].S = (bool)Bridge::get_data_value("SWall")[0];
+		bot->map[bot->index].W = (bool)Bridge::get_data_value("WWall")[0];
+
+	}
 
     #endif
 } // namespace driver

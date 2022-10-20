@@ -1,8 +1,10 @@
 #include <iostream>
 #include <sstream>
 #include <string.h>
+#include <future>
 #include "globals.h"
 #include "helpers.h"
+#include "scripting.h"
 
 #ifndef _ROBOT
 #define _ROBOT

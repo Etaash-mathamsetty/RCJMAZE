@@ -5,14 +5,16 @@
 #include <sstream>
 #include <string.h>
 #include <math.h>
+#include <chrono>
 #include <algorithm>
+#include <thread>
+#include <future>
 #include "link-list.h"
 #include "driver.h"
 #include "globals.h"
 #include "debug.h"
 #include "helpers.h"
 #include "simulation.h"
-#include "scripting.h"
 
 //returns shortest possible path to the nearest unvisited tile
 Stack<int> BFS(robot& robot)
@@ -71,19 +73,9 @@ int main(int argc, char* argv[]){
 	driver::get_sensor_data();
 	printf("node[%d]:\n", robot.index);
 	debug::print_node(robot.map[robot.index]);
-
 	//print_node(nodes[robot.index]);
 	debug::print_map();
 	std::cout << (std::string)robot.get_nearest() << std::endl;
-	std::cout << "python test script:" << std::endl;
-	PythonScript script("test.py");
-	script.Exec();
-	for(float value : Bridge::get_data_value("test"))
-	{
-		std::cout << value << std::endl;
-	}
-	Bridge::send_serial_command(script , "teg");
-	std::cout << "done with the python!" << std::endl;
 	//Queue<int> path = BFS(robot);
 
 	//DRIVER_turn_west();
@@ -93,13 +85,20 @@ int main(int argc, char* argv[]){
 		std::cout << "Autnomous? (y/n):";
 		std::string x;
 		std::cin >> x;
+		bool quitable = false;
 		if(tolower(x[0]) == 'n')
 			while(sim::run_command()){ debug::print_map(); }
 		else
 		{
 			//BFS code goes here
-			for(int i = 0; i < 35; i++)
+			std::chrono::time_point<std::chrono::steady_clock> start = std::chrono::steady_clock::now();
+			while(start + std::chrono::seconds(200) >= std::chrono::steady_clock::now())
 			{
+				if(start + std::chrono::seconds(130) < std::chrono::steady_clock::now())
+				{
+					robot.map[helper::get_index(default_index, default_index)].vis = false;
+					quitable = true;
+				}
 				Stack<int> path = BFS(robot);
 				debug::print_path(path);
 				for(size_t l = 0; l < path.Size(); l++)
@@ -126,6 +125,8 @@ int main(int argc, char* argv[]){
 					}
 					debug::print_map();
 				}
+				if(quitable && robot.index == helper::get_index(default_index, default_index))
+					break;
 			}
 		}
 	#else 

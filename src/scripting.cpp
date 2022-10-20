@@ -1,68 +1,61 @@
 #include "scripting.h"
+#include "globals.h"
 #include <iostream>
 using namespace boost;
 
 std::map<std::string, std::vector<float>> data_values;
-std::mutex mutex;
-std::unique_lock<std::mutex> lock = {mutex, std::defer_lock};
-
-void set_data_value(const std::string key, python::list value)
-{
-    lock.lock();
-    for(int i = 0; i < len(value); i++)
-    {
-        data_values[key].push_back(python::extract<float>(value[i]));
-    }
-    lock.unlock();
-}
 
 namespace Bridge
 {
-    std::vector<float> get_data_value(const std::string key)
+    // could expose later
+    void set_data_value(const std::string key, python::list value)
     {
-        lock.lock();
-        std::vector<float> value = data_values[key];
-        lock.unlock();
-        return value;
+        for(int i = 0; i < len(value); i++)
+        {
+            data_values[key].push_back(python::extract<float>(value[i]));
+        }
     }
 
-    void send_serial_command(PythonScript& script, std::string command)
+    std::vector<float> get_data_value(const std::string key)
     {
-        script.main.attr("WriteSerialCommand")(command);
+        return data_values[key];
     }
+}
+
+bool f_is_simulation()
+{
+    return is_simulation;
 }
 
 BOOST_PYTHON_MODULE(Robot)
 {
     using namespace boost::python;
-    void(*SetDataValue)(const std::string, python::list) = &set_data_value;
-    def("SetDataValue", SetDataValue);
+    def("SetDataValue", &Bridge::set_data_value);
+    def("isSimulation", &f_is_simulation);
 }
 
-// Get the python module ready
-PythonScript::PythonScript(std::string file)
+void PythonScript::initPython()
 {
+    //one time python init
     PyImport_AppendInittab("Robot", PyInit_Robot);
     Py_Initialize();
-    main = python::import("__main__");
-    global = python::object(main.attr("__dict__"));
-    this->file = file;
+    main_module = python::import("__main__");
+    main_namespace = main_module.attr("__dict__");
 }
 
 // Execute the python script
-void PythonScript::Exec()
+void PythonScript::Exec(std::string file)
 {
     try
     {
-        python::exec_file(file.c_str(), global, global);
+        python::exec_file(file.c_str(), main_namespace, main_namespace);
     }
     catch(python::error_already_set const&)
     {
         PyErr_Print();
     }
-}
-
-PythonScript::~PythonScript()
-{
-   // Py_Finalize();
+    catch(...)
+    {
+        std::cout << "Unknown exception" << std::endl;
+    }
 }

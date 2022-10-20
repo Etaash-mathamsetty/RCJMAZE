@@ -61,6 +61,11 @@ namespace com
 	const char quit = 'q';
 };
 
+const std::string init_py_file = "vars.py";
+const std::string cv_py_file = "cv.py";
+const std::string ser_py_file = "serial.py";
+const std::string cleanup_py_file = "cleanup.py";
+
 #ifdef SIMULATION
 //simulation field
 inline node* nodes;

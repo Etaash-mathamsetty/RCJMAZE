@@ -15,6 +15,7 @@ robot::robot(){
 		//default direction
 		dir = DIR::S;
 		map = new node[horz_size * vert_size];
+		memset(map, 0, horz_size * vert_size * sizeof(node));
 
 #ifdef DEBUG
 	std::cout << "INFO: Debug info is ENABLED" << std::endl;
