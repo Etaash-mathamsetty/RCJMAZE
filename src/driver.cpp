@@ -31,7 +31,9 @@ namespace driver
 		CHECK(nodes);
 		//FIXME: too much repitition
 		//simulate time for movement
+		#ifdef SIM_MOV_TIME
 		std::this_thread::sleep_for(std::chrono::milliseconds(3000));
+		#endif
 		switch(bot->dir){
 			case DIR::N:
 			{
@@ -136,7 +138,9 @@ namespace driver
 		robot* bot = robot::get_instance();
 		CHECK(bot);
 		bot->dir = dir;
+		#ifdef SIM_MOV_TIME
 		std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+		#endif
 	}
 
 /*
@@ -171,11 +175,101 @@ namespace driver
 		PythonScript::Exec(cv_py_file);
 		PythonScript::Exec(ser_py_file);
 		//bot->map[bot->index].letter = (uint8_t)Bridge::get_data_value("letter")[0];
-		bot->map[bot->index].N = (bool)Bridge::get_data_value("NWall")[0];
-		bot->map[bot->index].E = (bool)Bridge::get_data_value("EWall")[0];
-		bot->map[bot->index].S = (bool)Bridge::get_data_value("SWall")[0];
-		bot->map[bot->index].W = (bool)Bridge::get_data_value("WWall")[0];
+		bot->map[bot->index].N = (bool)Bridge::get_data_value("NW")[0];
+		bot->map[bot->index].E = (bool)Bridge::get_data_value("EW")[0];
+		bot->map[bot->index].S = (bool)Bridge::get_data_value("SW")[0];
+		bot->map[bot->index].W = (bool)Bridge::get_data_value("WW")[0];
+	}
 
+	CREATE_DRIVER(void, forward)
+	{
+		robot* bot = robot::get_instance();
+		CHECK(bot);
+		CHECK(bot->map);
+		PythonScript::CallPythonFunction("SendSerialCommmand", "f");
+		switch(bot->dir)
+		{
+			case DIR::N:
+			{
+				if(helper::is_valid_index(bot->index - horz_size) && !bot->map[bot->index].N){
+					bot->map[bot->index].bot = false;
+					(bot->index) -= horz_size;
+					bot->map[bot->index].bot = true;
+				}
+				else{
+					std::cerr << "ERROR: Cannot move forward!" << std::endl;
+					debug::print_robot_info(bot);
+					return;
+				}
+				break;
+			}
+			case DIR::E:
+			{
+				if(helper::is_valid_index(bot->index + 1) && !bot->map[bot->index].E){
+					bot->map[bot->index].bot = false;
+					(bot->index)++;
+					bot->map[bot->index].bot = true;
+				}
+				else{
+					std::cerr << "ERROR: Cannot move forward!" << std::endl;
+					debug::print_robot_info(bot);
+					return;
+				}
+				break;
+			}
+			case DIR::S:
+			{
+				if(helper::is_valid_index(bot->index + horz_size) && !bot->map[bot->index].S){
+					bot->map[bot->index].bot = false;
+					(bot->index) += horz_size;
+					bot->map[bot->index].bot = true;
+				}
+				else{
+					std::cerr << "ERROR: Cannot move forward!" << std::endl;
+					debug::print_robot_info(bot);
+					return;
+				}
+				break;
+			}
+			case DIR::W:
+			{
+				if(helper::is_valid_index(bot->index - 1) && !bot->map[bot->index].W){
+					bot->map[bot->index].bot = false;
+					(bot->index)--;
+					bot->map[bot->index].bot = true;
+				}
+				else{
+					std::cerr << "ERROR: Cannot move forward!" << std::endl;
+					debug::print_robot_info(bot);
+					return;
+				}
+				break;
+			}
+		}
+	}
+
+	CREATE_DRIVER(void, turn_east)
+	{
+		robot* bot = robot::get_instance();
+		CHECK(bot);
+		turn_to(helper::next_dir(bot->dir));
+	}
+
+	CREATE_DRIVER(void, turn_west)
+	{
+		robot* bot = robot::get_instance();
+		CHECK(bot);
+		turn_to(helper::prev_dir(bot->dir));
+	}
+
+	CREATE_DRIVER(void, turn_to, DIR dir)
+	{
+		robot* bot = robot::get_instance();
+		CHECK(bot);
+		bot->dir = dir;
+		std::string turn_cmd = com::turn;
+		turn_cmd += helper::dir_to_char(dir);
+		PythonScript::CallPythonFunction("SendSerialCommand", turn_cmd);
 	}
 
     #endif

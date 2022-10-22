@@ -12,7 +12,6 @@ namespace sim
 
     inline int _horz_size;
     inline int _vert_size;
-    //TODO: don't use robot index
     inline int sim_robot_index;
 
     void read_map_from_file(std::string name);

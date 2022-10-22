@@ -7,6 +7,8 @@
 #include <math.h>
 #include <chrono>
 #include <algorithm>
+#include <signal.h>
+#include <unistd.h>
 #include "link-list.h"
 #include "driver.h"
 #include "globals.h"
@@ -14,19 +16,23 @@
 #include "helpers.h"
 #include "simulation.h"
 
+bool quitable = false;
+
 //returns shortest possible path to the nearest unvisited tile
 Stack<int> BFS(robot& robot)
 {
-	int* parent = (int*)alloca(horz_size * vert_size * sizeof(int));
 	//set everything to an obv invalid index
-	for(int i = 0; i < horz_size * vert_size; i++) { parent[i] = -1; }
+	int parent[horz_size * vert_size * sizeof(int)];
+	for(int i = 0; i < horz_size * vert_size; i++)
+		parent[i] = -1;
 	LinkedList<int> worker;
 	Stack<int> path;
 	int cur_index = robot.index;
 	do
 	{
+		if(worker.size() > 0)
+			worker.pop_front();
 		nearest_quad quad = helper::get_nearest(cur_index);
-		//std::sort(quad.nearest, quad.nearest + 4);
 		for(int i = 0; i < 4; i++)
 		{
 			if(quad[i] != -1 && parent[cur_index] != quad[i])
@@ -36,17 +42,20 @@ Stack<int> BFS(robot& robot)
 			}
 		}
 
-		assert(worker.size() > 0);
-		cur_index = worker[0].value;
-
-		if(!robot.map[cur_index].vis)
+		if(worker.size() == 0)
 		{
-			//BFS is done
-			break;
+			quitable = true;
+			robot.map[helper::get_index(default_index, default_index)].vis = false;
+			return BFS(robot);
 		}
 
-		worker.pop_front();
+		cur_index = worker[0].value;
+
+		// BFS is done
+		if(!robot.map[cur_index].vis)
+			break;
 	} while(worker.size() > 0);
+
 
 	//backtracking
 	path.Push(cur_index);
@@ -60,8 +69,16 @@ Stack<int> BFS(robot& robot)
 }
 
 int main(int argc, char* argv[]){
+	//setup signal handler
+ 
 	driver::init_robot();
 #ifdef SIMULATION
+	struct sigaction sigIntHandler;
+	sigIntHandler.sa_handler = [](int s){/* should clean everything up anyway */ exit(1);};
+	sigemptyset(&sigIntHandler.sa_mask);
+	sigIntHandler.sa_flags = 0;
+	sigaction(SIGINT, &sigIntHandler, NULL);
+
 	if(argc > 1)
 		sim::read_map_from_file(argv[1]);
 	else
@@ -83,20 +100,13 @@ int main(int argc, char* argv[]){
 		std::cout << "Autnomous? (y/n):";
 		std::string x;
 		std::cin >> x;
-		bool quitable = false;
 		if(tolower(x[0]) == 'n')
 			while(sim::run_command()){ debug::print_map(); }
 		else
 		{
 			//BFS code goes here
-			std::chrono::time_point<std::chrono::steady_clock> start = std::chrono::steady_clock::now();
-			while(start + std::chrono::seconds(200) >= std::chrono::steady_clock::now())
+			while(true)
 			{
-				if(start + std::chrono::seconds(130) < std::chrono::steady_clock::now())
-				{
-					robot.map[helper::get_index(default_index, default_index)].vis = false;
-					quitable = true;
-				}
 				Stack<int> path = BFS(robot);
 				debug::print_path(path);
 				for(size_t l = 0; l < path.Size(); l++)

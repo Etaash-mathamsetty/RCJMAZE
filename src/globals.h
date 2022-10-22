@@ -7,6 +7,7 @@
 
 #define SIMULATION
 #define DEBUG
+//#define SIM_MOV_DELAY
 
 struct node{
 	public:
