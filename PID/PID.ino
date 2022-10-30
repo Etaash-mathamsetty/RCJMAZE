@@ -11,7 +11,8 @@
 Adafruit_BNO055 bno = Adafruit_BNO055(55, 0x28);
 sensors_event_t accelerometerData, gyroData;
 VL53L0X tof;
-
+Motor motorL(MPORT2);
+Motor motorR(MPORT1, true, true);
 
 
 void setup() {
@@ -136,8 +137,7 @@ void send_tof_vals(byte tof_val){
 }
 
 void pi_read_data() {
-  while (!PI_SERIAL.available())
-    ;
+  while (!PI_SERIAL.available());
 
   String data = PI_SERIAL.readString();
   data.trim();
@@ -188,11 +188,16 @@ void pi_read_data() {
     }
   }
 }
+/*
+void turnRight(int speed, float angle){
+  
+}*/
 
 void loop() {
+  /*
   bno.getEvent(&accelerometerData, Adafruit_BNO055::VECTOR_ACCELEROMETER);
   bno.getEvent(&gyroData, Adafruit_BNO055::VECTOR_GYROSCOPE);
-
+  */
   /*
   display_data(accelerometerData);
   pi_send_data(accelerometerData);
@@ -200,11 +205,27 @@ void loop() {
   pi_send_data(gyroData);
   pi_read_data();
   Serial.println();*/
-
+  /*
   byte test = get_tof_vals(100);
   Serial.print("Tof: ");
   Serial.println(test, BIN);
   //send_tof_vals(test);
-  
+  */
+
+  motorR.run(100);
+  motorL.run(100);
+
+  delay(2000);
+
+  motorR.stop();
+  motorL.stop();
+  delay(100);
+
+  motorR.run(100);
+  motorL.run(-100);
+  delay(3000);
+
+  motorR.stop();
+  motorL.stop();
   delay(100);
 }
