@@ -11,5 +11,8 @@ if not simulation:
 
 def SendSerialCommand(command):
     print("sending command: " + command)
+    b = bytearray()
+    b.extend(map(ord, command))
+    ser.write(b)
 
 print("py init done: simulation = " + str(simulation))

@@ -32,6 +32,7 @@ Stack<int> BFS(robot& robot)
 	{
 		if(worker.size() > 0)
 			worker.pop_front();
+		
 		nearest_quad quad = helper::get_nearest(cur_index);
 		for(int i = 0; i < 4; i++)
 		{
@@ -54,6 +55,7 @@ Stack<int> BFS(robot& robot)
 		// BFS is done
 		if(!robot.map[cur_index].vis)
 			break;
+		
 	} while(worker.size() > 0);
 
 
@@ -71,7 +73,6 @@ Stack<int> BFS(robot& robot)
 int main(int argc, char* argv[]){
 	//setup signal handler
  
-	driver::init_robot();
 #ifdef SIMULATION
 	struct sigaction sigIntHandler;
 	sigIntHandler.sa_handler = [](int s){/* should clean everything up anyway */ exit(1);};
@@ -84,6 +85,7 @@ int main(int argc, char* argv[]){
 	else
 		sim::read_map_from_file("field.txt");
 #endif
+	driver::init_robot();
 	robot& robot = *robot::get_instance();
 	driver::get_sensor_data();
 	printf("node[%d]:\n", robot.index);

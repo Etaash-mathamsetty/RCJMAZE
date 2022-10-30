@@ -46,7 +46,9 @@ namespace debug
                     putchar('x');
                 if(nodes[helper::get_index(i,l)].vic)
                     putchar('v');
-                if(!nodes[helper::get_index(i,l)].bot && !nodes[helper::get_index(i,l)].vic)
+                if(nodes[helper::get_index(i,l)].checkpoint)
+                    putchar('c');
+                if(!nodes[helper::get_index(i,l)].bot && !nodes[helper::get_index(i,l)].vic && !nodes[helper::get_index(i,l)].checkpoint)
                     putchar(' ');
             }
             putchar('\n');

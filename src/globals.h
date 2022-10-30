@@ -7,7 +7,11 @@
 
 #define SIMULATION
 #define DEBUG
-//#define SIM_MOV_DELAY
+#define SIM_MOV_DELAY
+
+/* TODO: lack of progress support
+	save state and load state for checkpoints
+*/
 
 struct node{
 	public:
@@ -15,11 +19,13 @@ struct node{
 		bool S : 1;
 		bool E : 1;
 		bool W : 1;
-		bool vic : 1; //TODO: use more bits for this to represent different victims and multiple victims
+		bool vic : 1; //have we already seen a victim on this tile
 		bool bot : 1;
 		bool vis : 1;
+		bool ramp : 1;
+		bool checkpoint : 1;
 	private:
-		uint8_t garbage : 1;
+		uint8_t garbage : 7;
 };
 
 enum class DIR{

@@ -1,12 +1,14 @@
 #include "simulation.h"
 #include "driver.h"
 #include <algorithm>
+#include <filesystem>
 
 namespace sim
 {
 
     void read_map_from_file(std::string name)
     {
+
         std::ifstream in(name);
         if(in.fail())
         {
@@ -18,8 +20,13 @@ namespace sim
         in >> _horz_size;
         _horz_size++;
         in >> _vert_size;
+
         nodes = new node[horz_size * vert_size];
         memset(nodes, 0, sizeof(node) * horz_size * vert_size);
+
+        if(std::filesystem::exists("save.txt"))
+            return;
+
         //int v = 0;
         in.get(x);
         for(int v = 0; v < _vert_size; v++)
@@ -48,6 +55,7 @@ namespace sim
                     node.bot |= (tolower(x) == 'x');
                     node.vis |= node.bot;
                     node.vic |= (tolower(x) == 'v');
+                    node.checkpoint |= (tolower(x) == 'c');
                     if(node.bot)
                         sim_robot_index = helper::get_index(v,i);
                     //print_node(nodes[get_index(v,i)]);
@@ -78,6 +86,7 @@ namespace sim
                 node.bot |= (tolower(x) == 'x');
                 node.vis |= node.bot;
                 node.vic |= (tolower(x) == 'v');
+                node.checkpoint |= (tolower(x) == 'c');
                 if(node.bot)
                     sim_robot_index = helper::get_index(v,i);
             }
@@ -96,6 +105,7 @@ namespace sim
                 node.bot |= (tolower(x) == 'x');
                 node.vis |= node.bot;
                 node.vic |= (tolower(x) == 'v');
+                node.checkpoint |= (tolower(x) == 'c');
                 if(node.bot)
                     sim_robot_index = helper::get_index(v,i);
             }
