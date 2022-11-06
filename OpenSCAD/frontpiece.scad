@@ -13,14 +13,6 @@ COLOR_WIDTH = 22;
 TOF_LEN = 26;
 TOF_WIDTH = 18;
 
-module cylinders(h, r1, r2){
-     for (i = [0:BASE_WIDTH - CYLINDER_X*2:BASE_WIDTH - CYLINDER_X*2]){
-         for (n = [0:BASE_LENGTH - CYLINDER_Y*2:BASE_LENGTH - CYLINDER_Y*2]){
-            translate([CYLINDER_X + i,CYLINDER_Y + n, CYLINDER_Z]) cylinder(h, r1, r2);
-         }
-     }
-}
-
 module cylinders2(h, r1, r2, LEN, WIDTH) {
      for (i = [0:WIDTH:WIDTH]){
          for (n = [0:LEN:LEN]){
@@ -37,22 +29,6 @@ module cylinders3(h, r1, r2, LEN, WIDTH, xNum, yNum) {
      }    
 } 
 
-module base(){
-    
-    difference(){
-        translate([PICASE_X, PICASE_Y, PICASE_Z]) rotate(90, [-1,0,0]) {
-                //import("/home/alawn/Downloads/files/v3_upper.stl");
-                //import("/home/alawn/Downloads/files/Pi_Case_Upper_30mm_fan.stl");
-                import("/home/alawn/Downloads/files/Pi_case_Upper_all_cutouts.stl");
-        }
-        cylinders(10,2,2);
-        scale([0.65, 0.55, 0.55]) translate([3, 130, -15]) rotate([90,0,270]) linear_extrude(height=4) import("/home/alawn/Downloads/REA1.svg");
-    }
-    
-    
-    translate([PICASE_X, PICASE_Y, -10]) rotate(90, [-1,0,0]) import("/home/alawn/Downloads/files/V3_lower.stl");
-}
-
 module tof(LEN, WIDTH, radius){
         translate([0,0,2]) cube([WIDTH, LEN, 1]);
         translate([radius+1,radius+1,0]) cylinders2(6, 2, 2, LEN-(radius+1)*2,WIDTH-(radius+1)*2);
@@ -66,6 +42,7 @@ module camera(LEN,WIDTH,radius){
         translate([18,0,0]) cube([8,LEN,10]);
        
 }
+
 module lPiece(WIDTH,LEN,radius){
     
     difference(){
@@ -85,17 +62,4 @@ module lPiece(WIDTH,LEN,radius){
     //translate([5,3,]) rotate([90,90,0]) camera(TOF_LEN,TOF_WIDTH,1);
 }
 
-module sidePiece(WIDTH,LEN,radius){
-    difference(){
-        translate([0,0,2]) cube([WIDTH,2,LEN]);
-        translate([5,3,30]) rotate([90,90,0])tof(TOF_LEN,TOF_WIDTH,2);
-        rotate([90,0,0]) translate([radius+1,radius+1+2,-2]) cylinders3(6,radius,radius,LEN-(radius+1)*2,WIDTH-(radius+1)*2,3,1);
-    }
-}
-
-base();
-translate([-40,-40,0]) lPiece(36,36,2.5);
-translate([-80,-40,0]) sidePiece(36,36,2.5);
-
-
-//cylinders(6, 2, 2, TOF_LEN-6,TOF_WIDTH-5);
+lPiece(36,36,2.5);
