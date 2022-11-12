@@ -112,12 +112,45 @@ else if(direction == 'L')
 else 
   Serial.println("bro what?"); 
 
+} 
+void straightDrive(int encoders, int speed, int tolerance){ 
+  
+  bno.begin(Adafruit_BNO055::OPERATION_MODE_IMUPLUS);
+  int angle; 
+  utils::resetTicks();
+
+  while (abs(motor1.getTicks()) < abs(encoders) && abs(motor2.getTicks()) < abs(encoders)) {
+      bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
+
+      int minspeed = 50; 
+      float p = speed * (float)(abs(encoders) - abs(motor1.getTicks()))/abs(encoders); 
+     // speed = speed * (abs(encoders) - abs(motor1.getTicks()))/abs(encoders); 
+      
+  //    Serial.println(speed * (float)(abs(encoders) - abs(motor1.getTicks()))/abs(encoders)); 
+      utils::forward(p + minspeed, p + minspeed);   
+      angle = orientationData.orientation.x; 
+        Serial.println(orientationData.orientation.x); 
+  }
+  utils::stopMotors(); 
+  while(angle > tolerance && angle < 180){ 
+      bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
+      angle = orientationData.orientation.x;  
+      utils::forward(100, -100); 
+  }
+  while(angle < (360 - tolerance) && angle > 180){ 
+      bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
+      angle = orientationData.orientation.x;  
+      utils::forward(-100, 100); 
+  } 
+  utils::stopMotors(); 
+  return;
 }
 void loop() {
   // put your main code here, to run repeatedly:
   bno.begin(Adafruit_BNO055::OPERATION_MODE_IMUPLUS);
   turn(90, 80, R); 
-  delay(1000);  
-  turn(179, 80, L);  
+  straightDrive(1000, 80, 5);  
+  turn(179, 80, L);   
+  straightDrive(1000, 80, 5); 
   delay(1000); 
 }
