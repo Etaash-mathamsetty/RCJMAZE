@@ -71,16 +71,21 @@ module lPiece(WIDTH,LEN,radius){
     difference(){
         translate([0,0,2]) cube([WIDTH,2,LEN]);
         translate([5,3,30]) rotate([90,90,0])tof(TOF_LEN,TOF_WIDTH,2);
+        rotate([90,0,0]) translate([radius + 1 + WIDTH/2 - 24/2,radius+1+2,-2]) cylinders3(6,radius,radius,24-(radius+1)*2,24-(radius+1)*2,3,1);
     }
     
-    difference(){
+
+    
+    /*difference(){
         translate([0,2,2]) translate([WIDTH/2 - 30/2,0,0]) cube([30,26,2]);
         translate([radius+1 + WIDTH/2 - 24/2,radius+1+2,0]) cylinders3(6,radius,radius,24-(radius+1)*2,24-(radius+1)*2,3,3);
-    }
+    }*/
+    
     
     difference(){
         translate([0,0,-30]) cube([WIDTH,2,LEN]);
         translate([5,3,0]) rotate([90,90,0]) camera(TOF_LEN,TOF_WIDTH,1);
+        rotate([90,0,0]) translate([radius + 1 + WIDTH/2 - 24/2,radius+1+2,-2]) cylinders3(6,radius,radius,24-(radius+1)*2,24-(radius+1)*2,3,1);
     }
     //translate([5,3,]) rotate([90,90,0]) camera(TOF_LEN,TOF_WIDTH,1);
 }
@@ -89,7 +94,13 @@ module sidePiece(WIDTH,LEN,radius){
     difference(){
         translate([0,0,2]) cube([WIDTH,2,LEN]);
         translate([5,3,30]) rotate([90,90,0])tof(TOF_LEN,TOF_WIDTH,2);
-        rotate([90,0,0]) translate([radius + 1 + WIDTH/2 - 24/2,radius+1+2,-2]) cylinders3(6,radius,radius,24-(radius+1)*2,24-(radius+1)*2,3,1);
+        
+        
+        //rotate([90,0,0]) translate([radius + 1 + WIDTH/2 - 24/2,radius+1+2,-2]) cylinders3(6,radius,radius,24-(radius+1)*2,24-(radius+1)*2,3,1);
+    }
+    difference(){
+        translate([0,2,2]) translate([WIDTH/2 - 30/2,0,0]) cube([30,26,2]);
+        translate([radius+1 + WIDTH/2 - 24/2,radius+1+2,0]) cylinders3(6,radius,radius,24-(radius+1)*2,24-(radius+1)*2,3,3);
     }
 }
 
