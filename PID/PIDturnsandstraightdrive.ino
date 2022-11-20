@@ -2,18 +2,24 @@
 #include "utils.h"
 #include <Adafruit_BNO055.h>
 #include <utility/imumaths.h>
-static char L = 'L';
-static char R = 'R';
-const float Kp = 1;
-const float Ki = 0;
-const float Kd = 0;
 
+enum Direction {turnL,turnR};
+
+const float KP_TURN = 3.0;
+const float KI_TURN = 0.003;
+const float KD_TURN = 0.243;
+
+const float KP_FORWARD = 3.0;
+const float KI_FORWARD = 0.003;
+const float KD_FORWARD = 0.01;
+//const float KI_TURN = 0;
+//const float KD_TURN = 0;
 Adafruit_BNO055 bno = Adafruit_BNO055(55, 0x28);
 
 sensors_event_t orientationData;
 
 
-Motor motor1(MPORT1);
+Motor motor1(MPORT1, true, true);
 Motor motor2(MPORT2);
 
 
@@ -24,130 +30,52 @@ void setup() {
   bno.begin(Adafruit_BNO055::OPERATION_MODE_IMUPLUS);
   Serial.println("Success");
 }
-void right(int angle, int speed) {
-  float orientation = 0;
-  float p, i, d = 0;
-  float PID;
-  bno.begin(Adafruit_BNO055::OPERATION_MODE_IMUPLUS);
-  bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
-  int goal = (int)(orientationData.orientation.x + angle);
-  orientation = orientationData.orientation.x > angle + (goal - 360) ? orientationData.orientation.x - 360 : orientationData.orientation.x;
 
-  if (goal >= 360) {
+void turn(int angle, int speed, int direction) {
 
-    goal -= 360;
-    float last_error = abs((orientation - angle) / angle);
-    while (orientation < goal) {
-      p = abs((orientation - angle) / angle);
-      i = p - last_error;
-      d = d + p;
-      PID = Kp * p + Ki * i + Kd * d;
-
-      Serial.println(orientation);
-      // Serial.println(goal);
-      bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
-      orientation = orientationData.orientation.x > angle + goal ? orientationData.orientation.x - 360 : orientationData.orientation.x;
-      // Serial.println(orient);
-      utils::forward((PID * -speed) - 70, (PID * speed) + 70);
-      last_error = p;
-    }
-  }
-
-  else {
-    float last_error = abs((orientationData.orientation.x - angle) / angle);
-    while ((int)orientationData.orientation.x < goal) {
-      p = abs((orientationData.orientation.x - angle) / angle);
-      i = p - last_error;
-      d = d + p;
-      PID = Kp * p + Ki * i + Kd * d;
-
-      Serial.println(p);
-      // Serial.println(orientationData.orientation.x);
-      //  Serial.println(goal);
-      bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
-      utils::forward((PID * -speed) - 70, (PID * speed) + 70);
-      last_error = p;
-    }
-  }
-  utils::stopMotors();
-}
-void left(int angle, int speed) {
-  float orientation = 0;
-  float p, i, d = 0;
-  float PID;
-  bno.begin(Adafruit_BNO055::OPERATION_MODE_IMUPLUS);
-  bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
-  int goal = (int)(orientationData.orientation.x - angle);
-
-  orientation = orientationData.orientation.x < goal + 360 - angle ? orientationData.orientation.x + 360 : orientationData.orientation.x;
-
-  if (goal < 0) {
-
-    goal += 360;
-    float last_error = abs((orientation - angle) / angle);
-    Serial.println(orientationData.orientation.x);
-    Serial.println(goal);
-    while (orientation > goal) {
-      p = abs((orientation - angle) / angle);
-      i = p - last_error;
-      d = d + p;
-      PID = Kp * p + Ki * i + Kd * d;
-
-
-      Serial.println(orientationData.orientation.x);
-      Serial.println(p);
-      bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
-      orientation = orientationData.orientation.x < goal - angle ? orientationData.orientation.x + 360 : orientationData.orientation.x;
-      utils::forward((PID * speed) + 70, (PID * -speed) - 70);
-      last_error = p;
-    }
-  }
-
-  else {
-    float last_error = abs((orientationData.orientation.x - angle) / angle);
-    while ((int)orientationData.orientation.x > goal) {
-      p = abs((orientationData.orientation.x - angle) / angle);
-      i = p - last_error;
-      d = d + p;
-      PID = Kp * p + Ki * i + Kd * d;
-
-      Serial.println(orientationData.orientation.x);
-      Serial.println(p);
-      bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
-      utils::forward((PID * speed) + 70, (PID * -speed) - 70);
-      last_error = p;
-    }
-  }
-  utils::stopMotors();
-}
-void turn(int angle, int speed, char direction) {
-  if (direction == 'R')
+  if (direction == turnR)
     right(angle, speed);
-
-  else if (direction == 'L')
+  else if (direction == turnL)
     left(angle, speed);
   else
     Serial.println("bro what?");
 }
+
 void straightDrive(int encoders, int speed, int tolerance) {
 
   bno.begin(Adafruit_BNO055::OPERATION_MODE_IMUPLUS);
   int angle;
   utils::resetTicks();
+  float p, d, i = 0;
+  float p_turn, d_turn, last_difference = 0;
+  float PID;
+  float last_dist = abs(motor1.getTicks()/abs(encoders));
 
   while (abs(motor1.getTicks()) < abs(encoders) && abs(motor2.getTicks()) < abs(encoders)) {
     bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
 
     int minspeed = 50;
-    float p = speed * (float)(abs(encoders) - abs(motor1.getTicks())) / abs(encoders);
+    p = speed * (float)(abs(encoders) - abs(motor1.getTicks())) / abs(encoders);
+    i = i + p;
+    d = p - last_dist;
+    PID = p * KP_FORWARD + i * KI_FORWARD + d * KD_FORWARD;
+
+    if (orientationData.orientation.x > 180){
+      p_turn = orientationData.orientation.x - 360;
+    }
+    else {
+      p_turn = orientationData.orientation.x;
+    }
     // speed = speed * (abs(encoders) - abs(motor1.getTicks()))/abs(encoders);
 
     //    Serial.println(speed * (float)(abs(encoders) - abs(motor1.getTicks()))/abs(encoders));
-    utils::forward(p + minspeed, p + minspeed);
+    utils::forward(PID + p_turn, PID - p_turn);
     angle = orientationData.orientation.x;
     Serial.println(orientationData.orientation.x);
   }
   utils::stopMotors();
+
+  /*
   while (angle > tolerance && angle < 180) {
     bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
     angle = orientationData.orientation.x;
@@ -158,15 +86,70 @@ void straightDrive(int encoders, int speed, int tolerance) {
     angle = orientationData.orientation.x;
     utils::forward(-100, 100);
   }
-  utils::stopMotors();
-  return;
+  utils::stopMotors();*/
 }
+
+void left(int relative_angle, int speed){
+
+  int angle = 360 - relative_angle;
+  float p, i = 0, d;
+  float PID;
+  bno.begin(Adafruit_BNO055::OPERATION_MODE_IMUPLUS);
+  bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
+
+  float last_error = abs((orientationData.orientation.x - angle) / angle);
+  float orientation = orientationData.orientation.x + 360;
+
+  while (orientation > angle){
+
+    p = abs((orientation - angle) / relative_angle);
+    i = i + p;
+    d = p - last_error;
+    PID = KP_TURN * p + KI_TURN * i + KD_TURN * d;
+    last_error = p;
+
+    utils::forward((PID * speed), (PID * -speed));
+    bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
+    orientation = orientationData.orientation.x;
+
+    if (orientationData.orientation.x < 1.0){
+      orientation += 360;
+    }
+  }
+  utils::stopMotors();
+}
+
+void right(int angle, int speed){
+
+  float p, i = 0, d;
+  float PID;
+  bno.begin(Adafruit_BNO055::OPERATION_MODE_IMUPLUS);
+  bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
+
+  float last_error = abs((orientationData.orientation.x - angle) / angle);
+    
+  while (orientationData.orientation.x < angle){
+
+    p = abs((orientationData.orientation.x - angle) / angle);
+    i = i + p;
+    d = p - last_error;
+    PID = KP_TURN * p + KI_TURN * i + KD_TURN * d;
+    last_error = p;
+
+    utils::forward((PID * -speed), (PID * speed));
+    bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
+  }
+  utils::stopMotors();
+}
+
 void loop() {
   // put your main code here, to run repeatedly:
-  bno.begin(Adafruit_BNO055::OPERATION_MODE_IMUPLUS);
-  turn(90, 80, R);
-  straightDrive(1000, 80, 5);
-  turn(179, 80, L);
-  straightDrive(1000, 80, 5);
+  //bno.begin(Adafruit_BNO055::OPERATION_MODE_IMUPLUS);
+  //left(90, 100);
+  //straightDrive(1000, 80, 5);
+  //turn(180, 80, turnL);
+  straightDrive(500, 80, 5);
+  //delay(1000);
+  //right(90, 100);
   delay(1000);
 }

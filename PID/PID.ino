@@ -188,10 +188,6 @@ void pi_read_data() {
     }
   }
 }
-/*
-void turnRight(int speed, float angle){
-  
-}*/
 
 void loop() {
   /*
@@ -208,9 +204,9 @@ void loop() {
   /*
   byte test = get_tof_vals(100);
   Serial.print("Tof: ");
-  Serial.println(test, BIN);
+  Serial.println(test, BIN);*/
   //send_tof_vals(test);
-  */
+  
 
   motorR.run(100);
   motorL.run(100);
