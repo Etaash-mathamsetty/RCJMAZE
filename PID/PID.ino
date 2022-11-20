@@ -2,24 +2,46 @@
 #include "Motors.h"
 #include "VL53L0X.h"
 #include <Wire.h>
+#include "utils.h"
 
+#define FAKE_ROBOT
 #define PI_SERIAL Serial2
 #define MUXADDR 0x70
 #define TOF_NUMBER 3
 #define TOF_START 0
 
 Adafruit_BNO055 bno = Adafruit_BNO055(55, 0x28);
-sensors_event_t accelerometerData, gyroData;
+sensors_event_t accelerometerData, gyroData, orientationData;
+
 VL53L0X tof;
 Motor motorL(MPORT2);
 Motor motorR(MPORT1, true, true);
+
+const float KP_TURN = 3.0;
+const float KI_TURN = 0.003;
+const float KD_TURN = 0.243;
+
+const float DRIVE_STRAIGHT_KP = 3.0;
+const float KP_FORWARD = 3.0;
+const float KI_FORWARD = 0.003;
+const float KD_FORWARD = 0.01;
+const double SAMPLERATE_DELAY_MS = 10.0;
+const double TIMES_PER_SECOND = 1000.0 / SAMPLERATE_DELAY_MS;
+
+volatile double velocity = 0.0;
+volatile double position = 0.0;
+volatile double average_acceleration;
+volatile unsigned long tStart = millis();
+volatile int count = 0;
+
 
 
 void setup() {
   //PI_SERIAL.begin(9600);
   Serial.begin(9600);
+  utils::setMotors(&motorR, &motorL);
   Wire.begin();
-  //bno.begin();
+  bno.begin(Adafruit_BNO055::OPERATION_MODE_IMUPLUS);
   Serial.println("starting the code!");
 
   for (int i = TOF_START; i < TOF_NUMBER; i++) {
@@ -74,6 +96,16 @@ void display_data(const sensors_event_t& data) {
         Serial.println(data.gyro.z);
         break;
       }
+    case SENSOR_TYPE_ORIENTATION:
+      {
+        display_tag("orientation");
+        Serial.print("X: ");
+        Serial.print(data.orientation.x);
+        Serial.print(" Y: ");
+        Serial.print(data.orientation.y);
+        Serial.print(" Z: ");
+        Serial.println(data.orientation.z);
+      }
     default:
       break;
   }
@@ -101,6 +133,15 @@ void pi_send_data(const sensors_event_t& data) {
         PI_SERIAL.print(data.gyro.y);
         PI_SERIAL.print(",");
         PI_SERIAL.println(data.gyro.z);
+      }
+    case SENSOR_TYPE_ORIENTATION:
+      {
+        pi_send_tag("orientation");
+        PI_SERIAL.print(data.orientation.x);
+        PI_SERIAL.print(",");
+        PI_SERIAL.print(data.orientation.y);
+        PI_SERIAL.print(",");
+        PI_SERIAL.println(data.orientation.z);
       }
     default:
       break;
@@ -189,7 +230,109 @@ void pi_read_data() {
   }
 }
 
+void left(int relative_angle, int speed){
+
+  int angle = 360 - relative_angle;
+  float p, i = 0, d;
+  float PID;
+  bno.begin(Adafruit_BNO055::OPERATION_MODE_IMUPLUS);
+  bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
+
+  float last_error = abs((orientationData.orientation.x - angle) / angle);
+  float orientation = orientationData.orientation.x + 360;
+
+  while (orientation > angle){
+
+    p = abs((orientation - angle) / relative_angle);
+    i = i + p;
+    d = p - last_error;
+    PID = KP_TURN * p + KI_TURN * i + KD_TURN * d;
+    last_error = p;
+
+    utils::forward((PID * speed), (PID * -speed));
+    bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
+    orientation = orientationData.orientation.x;
+
+    if (orientationData.orientation.x < 1.0){
+      orientation += 360;
+    }
+  }
+  utils::stopMotors();
+}
+
+void right(int angle, int speed){
+
+  float p, i = 0, d;
+  float PID;
+  bno.begin(Adafruit_BNO055::OPERATION_MODE_IMUPLUS);
+  bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
+
+  float last_error = abs((orientationData.orientation.x - angle) / angle);
+    
+  while (orientationData.orientation.x < angle){
+
+    p = abs((orientationData.orientation.x - angle) / angle);
+    i = i + p;
+    d = p - last_error;
+    PID = KP_TURN * p + KI_TURN * i + KD_TURN * d;
+    last_error = p;
+
+    utils::forward((PID * -speed), (PID * speed));
+    bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
+  }
+  utils::stopMotors();
+}
+
+void straightDrive(int encoders, int speed, int tolerance) {
+
+  bno.begin(Adafruit_BNO055::OPERATION_MODE_IMUPLUS);
+  int angle;
+  utils::resetTicks();
+  float p, d, i = 0;
+  float p_turn, d_turn, last_difference = 0;
+  float PID;
+  float last_dist = abs(motorR.getTicks()/abs(encoders));
+
+  while (abs(motorR.getTicks()) < abs(encoders) && abs(motorL.getTicks()) < abs(encoders)) {
+    bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
+
+    int minspeed = 50;
+    p = speed * (float)(abs(encoders) - abs(motorR.getTicks())) / abs(encoders);
+    i = i + p;
+    d = p - last_dist;
+    PID = p * KP_FORWARD + i * KI_FORWARD + d * KD_FORWARD;
+
+    if (orientationData.orientation.x > 180){
+      p_turn = -(orientationData.orientation.x - 360);
+    }
+    else {
+      p_turn = -orientationData.orientation.x;
+    }
+    // speed = speed * (abs(encoders) - abs(motor1.getTicks()))/abs(encoders);
+
+    //    Serial.println(speed * (float)(abs(encoders) - abs(motor1.getTicks()))/abs(encoders));
+    utils::forward(PID - p_turn * DRIVE_STRAIGHT_KP, PID + p_turn * DRIVE_STRAIGHT_KP);
+    angle = orientationData.orientation.x;
+    Serial.println(orientationData.orientation.x);
+  }
+  utils::stopMotors();
+
+  /*
+  while (angle > tolerance && angle < 180) {
+    bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
+    angle = orientationData.orientation.x;
+    utils::forward(100, -100);
+  }
+  while (angle < (360 - tolerance) && angle > 180) {
+    bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
+    angle = orientationData.orientation.x;
+    utils::forward(-100, 100);
+  }*/
+  utils::stopMotors();
+}
+
 void loop() {
+
   /*
   bno.getEvent(&accelerometerData, Adafruit_BNO055::VECTOR_ACCELEROMETER);
   bno.getEvent(&gyroData, Adafruit_BNO055::VECTOR_GYROSCOPE);
@@ -208,20 +351,34 @@ void loop() {
   //send_tof_vals(test);
   
 
-  motorR.run(100);
-  motorL.run(100);
+  //right(90,100);
+  //delay(1000);
 
-  delay(2000);
+  //left(90,100);
+  //delay(1000);
 
-  motorR.stop();
-  motorL.stop();
-  delay(100);
+  /*straightDrive(2000,80,3);
+  delay(2000);*/
 
-  motorR.run(100);
-  motorL.run(-100);
-  delay(3000);
+  if((millis() - tStart) % 1000 == 0){
+    Serial.println(millis() - tStart);
+    count++;
+    bno.getEvent(&accelerometerData, Adafruit_BNO055::VECTOR_LINEARACCEL);
+    bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
+    
+    //average acceleration cm/ms^2
 
-  motorR.stop();
-  motorL.stop();
-  delay(100);
+    average_acceleration = (average_acceleration + accelerometerData.acceleration.x) / (float)(count);    
+    position = position + 0.5 * average_acceleration * (float) count * (float) count;
+    Serial.print("Orientation: ");
+    Serial.print(orientationData.orientation.x);
+    Serial.print("\tAcceleration: ");
+    Serial.print(accelerometerData.acceleration.x);
+    Serial.print("\tAverage Acceleration: ");
+    Serial.print(average_acceleration);
+    Serial.print("\tPosition: ");
+    Serial.println(position);
+  }
+
+
 }
