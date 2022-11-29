@@ -7,7 +7,7 @@ add this:
 static char L = 'L'; 
 static char R = 'R'; 
 
-Warning: left turn does not work with angle greater than 180.... fix on the way...  
+
 
 PID straight drive 
 
