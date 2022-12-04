@@ -9,7 +9,6 @@
 #define MUXADDR 0x70
 #define TOF_NUMBER 3
 #define TOF_START 0
-
 Adafruit_BNO055 bno = Adafruit_BNO055(55, 0x28);
 sensors_event_t accelerometerData, gyroData, orientationData;
 
@@ -28,13 +27,17 @@ const float KD_FORWARD = 0.01;
 const double SAMPLERATE_DELAY_MS = 10.0;
 const double TIMES_PER_SECOND = 1000.0 / SAMPLERATE_DELAY_MS;
 
+const int SPEED = 100;
+
 volatile double velocity = 0.0;
 volatile double position = 0.0;
 volatile double average_acceleration;
 volatile unsigned long tStart = millis();
 volatile int count = 0;
 
-
+enum type{Color, Distance};
+enum direction{n, e, s, w};
+volatile uint8_t cur_direction = n;
 
 void setup() {
   //PI_SERIAL.begin(9600);
@@ -109,6 +112,27 @@ void display_data(const sensors_event_t& data) {
     default:
       break;
   }
+}
+//forward_status[0] = is forward command runnning
+//forward_status[1] = is black tile ? (or command failed)
+void pi_send_data(bool forward, bool black_tile) {
+  float arr[2] = {forward, black_tile};
+  pi_send_tag("forward_status");
+
+  PI_SERIAL.print(arr[0]);
+  PI_SERIAL.print(',');
+  PI_SERIAL.println(arr[1]);
+}
+
+void pi_send_data(bool walls[4]) {
+  pi_send_tag("NW");
+  PI_SERIAL.println(walls[(int) n]);
+  pi_send_tag("EW");
+  PI_SERIAL.println(walls[(int) e]);
+  pi_send_tag("SW");
+  PI_SERIAL.println(walls[(int) s]);
+  pi_send_tag("WW");
+  PI_SERIAL.println(walls[(int) w]);
 }
 
 
@@ -189,8 +213,10 @@ void pi_read_data() {
   for (char c : data) {
     if (c == 'g' || c == 'f' || c == 't') {
       if (cur_cmd.length() > 0) {
-        if (cur_cmd[0] == 'g' || cur_cmd[0] == 'f') {
+        if (cur_cmd[0] == 'g' || cur_cmd[0] == 'f') {          
           Serial.println("FORWARD");
+          drive(1000,100,1);
+          
         } else {
           Serial.println("ERR: Invalid Parameter");
         }
@@ -204,9 +230,14 @@ void pi_read_data() {
           Serial.print("turn to ");
           Serial.println(c);
           Serial.println("FORWARD");
+          turn(c);
+          pi_send_data({false,false,false,false});
+          drive(1000,100,1);
         } else if (cur_cmd[0] == 't') {
           Serial.print("turn to ");
           Serial.println(c);
+          turn(c);
+          pi_send_data({false,false,false,false});
         } else {
           Serial.println("ERR: Invalid Command");
         }
@@ -221,6 +252,7 @@ void pi_read_data() {
       if (cur_cmd.length() > 0) {
         if (cur_cmd[0] == 'g' || cur_cmd[0] == 'f') {
           Serial.println("FORWARD");
+          drive(1000,100,1);
         } else {
           Serial.println("ERR: Invalid Parameter");
         }
@@ -283,7 +315,29 @@ void right(int angle, int speed){
   utils::stopMotors();
 }
 
-void straightDrive(int encoders, int speed, int tolerance) {
+void turn(char char_end_direction) {
+  uint8_t end_direction;
+  switch(tolower(char_end_direction)) {
+    case 'n': end_direction = (uint8_t)n; break;
+    case 'e': end_direction = (uint8_t)e; break;
+    case 's': end_direction = (uint8_t)s; break;
+    case 'w': end_direction = (uint8_t)w; break;
+    default: Serial.println("invalid"); break;
+  }
+
+  switch(cur_direction - end_direction) {
+    case -3:  left(90, SPEED); break;
+    case -2:  left(180, SPEED); break;
+    case -1:  right(90, SPEED); break;
+    case 0: break;
+    case 1: left(90, SPEED); break;
+    case 2: right(180, SPEED); break;
+    case 3: right(90, SPEED); break;
+    default: Serial.println("invalid"); break;
+  }
+}
+
+void drive(int encoders, int speed, int tolerance) {
 
   bno.begin(Adafruit_BNO055::OPERATION_MODE_IMUPLUS);
   int angle;
@@ -292,6 +346,8 @@ void straightDrive(int encoders, int speed, int tolerance) {
   float p_turn, d_turn, last_difference = 0;
   float PID;
   float last_dist = abs(motorR.getTicks()/abs(encoders));
+
+  pi_send_data(true, false);
 
   while (abs(motorR.getTicks()) < abs(encoders) && abs(motorL.getTicks()) < abs(encoders)) {
     bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
@@ -315,7 +371,11 @@ void straightDrive(int encoders, int speed, int tolerance) {
     angle = orientationData.orientation.x;
     Serial.println(orientationData.orientation.x);
   }
+
+
+
   utils::stopMotors();
+  pi_send_data(false, false);
 
   /*
   while (angle > tolerance && angle < 180) {
@@ -327,12 +387,37 @@ void straightDrive(int encoders, int speed, int tolerance) {
     bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
     angle = orientationData.orientation.x;
     utils::forward(-100, 100);
+  }
+  utils::stopMotors();*/
+}
+
+void acceleration_position() {
+
+  /*
+  if((millis() - tStart) % 1000 == 0){
+    Serial.println(millis() - tStart);
+    count++;
+    bno.getEvent(&accelerometerData, Adafruit_BNO055::VECTOR_LINEARACCEL);
+    bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
+    
+    //average acceleration cm/ms^2
+
+    average_acceleration = (average_acceleration + accelerometerData.acceleration.x) / (float)(count);    
+    position = position + 0.5 * average_acceleration * (float) count * (float) count;
+    Serial.print("Orientation: ");
+    Serial.print(orientationData.orientation.x);
+    Serial.print("\tAcceleration: ");
+    Serial.print(accelerometerData.acceleration.x);
+    Serial.print("\tAverage Acceleration: ");
+    Serial.print(average_acceleration);
+    Serial.print("\tPosition: ");
+    Serial.println(position);
   }*/
-  utils::stopMotors();
 }
 
 void loop() {
 
+  pi_read_data();
   /*
   bno.getEvent(&accelerometerData, Adafruit_BNO055::VECTOR_ACCELEROMETER);
   bno.getEvent(&gyroData, Adafruit_BNO055::VECTOR_GYROSCOPE);
@@ -360,25 +445,6 @@ void loop() {
   /*straightDrive(2000,80,3);
   delay(2000);*/
 
-  if((millis() - tStart) % 1000 == 0){
-    Serial.println(millis() - tStart);
-    count++;
-    bno.getEvent(&accelerometerData, Adafruit_BNO055::VECTOR_LINEARACCEL);
-    bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
-    
-    //average acceleration cm/ms^2
-
-    average_acceleration = (average_acceleration + accelerometerData.acceleration.x) / (float)(count);    
-    position = position + 0.5 * average_acceleration * (float) count * (float) count;
-    Serial.print("Orientation: ");
-    Serial.print(orientationData.orientation.x);
-    Serial.print("\tAcceleration: ");
-    Serial.print(accelerometerData.acceleration.x);
-    Serial.print("\tAverage Acceleration: ");
-    Serial.print(average_acceleration);
-    Serial.print("\tPosition: ");
-    Serial.println(position);
-  }
 
 
 }
