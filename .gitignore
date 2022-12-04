@@ -1,5 +1,5 @@
 *.o
 BFS
 .gdb_history
-.stl
-.scad
+*.stl
+
