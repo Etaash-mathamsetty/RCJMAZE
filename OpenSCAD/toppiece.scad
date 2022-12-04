@@ -8,7 +8,7 @@ HEIGHT = 3;
 PI_WIDTH = 56;
 PI_LEN = 88;
 HOLES_DIST = 58;
-EDGE = 0;
+EDGE = 1;
 HOLE_RADIUS = 1.5;
 HOLE_OFFSET = 3;
 
@@ -26,7 +26,7 @@ import("/home/alawn/Documents/GitHub/RCJMAZE/OpenSCAD/plate.stl");
 
 module squarehole() {
     difference() {
-        roundedcube(size=[BRACKET_WIDTH + EDGE * 2, PI_LEN, HEIGHT],center=false,radius=1,apply_to="z");
+        translate([BRACKET_WIDTH/2-(PI_WIDTH + EDGE * 2)/2,0,0])roundedcube(size=[PI_WIDTH + EDGE * 2, PI_LEN, HEIGHT],center=false,radius=1,apply_to="z");
         translate([EDGE+1,PI_LEN/2-BRACKET_LEN/2+1,-1]) cube([BRACKET_WIDTH-2,BRACKET_LEN-2,HEIGHT+2]);
         translate([(BRACKET_WIDTH + EDGE * 2)/2-(PI_WIDTH - HOLE_OFFSET * 2)/2,3, -1]) cylinders2(5,HOLE_RADIUS,HOLE_RADIUS,HOLES_DIST,PI_WIDTH - HOLE_OFFSET * 2);
         
