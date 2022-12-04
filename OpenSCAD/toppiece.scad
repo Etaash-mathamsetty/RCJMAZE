@@ -1,7 +1,7 @@
 include <roundedcube.scad>
 
 $fn = 32;
-
+NEW_BRACKET_WIDTH = 88;
 BRACKET_WIDTH = 72;
 BRACKET_LEN = 24;
 HEIGHT = 3;
@@ -21,7 +21,7 @@ module cylinders2(h, r1, r2, LEN, WIDTH) {
 } 
 
 module bracket() {
-import("/home/alawn/Documents/GitHub/RCJMAZE/OpenSCAD/plate.stl");
+import("/home/alawn/Documents/GitHub/RCJMAZE/OpenSCAD/plate2.stl");
 }
 
 module squarehole() {
@@ -36,7 +36,7 @@ module squarehole() {
 
 module toppiece() {
     squarehole();
-    translate([EDGE,PI_LEN/2,1.5]) rotate([90,0,0]) bracket();
+    translate([EDGE-1-(NEW_BRACKET_WIDTH-BRACKET_WIDTH)/2,PI_LEN/2,1.5]) rotate([90,0,0]) bracket();
 
     }
 
