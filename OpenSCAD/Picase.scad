@@ -1,4 +1,4 @@
-$fn = 30;
+//$fn = 30;
 CYLINDER_X = 6.1;
 CYLINDER_Y = 6;
 CYLINDER_Z = 25;
@@ -104,7 +104,13 @@ module sidePiece(WIDTH,LEN,radius){
     }
 }
 
-base();
+module base2() {
+    cube([])
+
+}
+
+
+//base();
 translate([-40,-40,0]) lPiece(36,36,2.5);
 translate([-80,-40,0]) sidePiece(36,36,2.5);
 

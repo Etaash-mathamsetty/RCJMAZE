@@ -1,3 +1,5 @@
+include <roundedcube.scad>
+
 $fn = 30;
 CYLINDER_X = 6.1;
 CYLINDER_Y = 6;
@@ -46,9 +48,10 @@ module camera(LEN,WIDTH,radius){
 module lPiece(WIDTH,LEN,radius){
     
     difference(){
-        translate([0,0,2]) cube([WIDTH,2,LEN]);
-        translate([5,3,30]) rotate([90,90,0])tof(TOF_LEN,TOF_WIDTH,2);
+        translate([0,0,2-LEN]) roundedcube([WIDTH,2,LEN*2],false,1,"y");
         rotate([90,0,0]) translate([radius + 1 + WIDTH/2 - 24/2,radius+1+2,-2]) cylinders3(6,radius,radius,24-(radius+1)*2,24-(radius+1)*2,3,1);
+        translate([5,3,30]) rotate([90,90,0])tof(TOF_LEN,TOF_WIDTH,2);
+        translate([5,3,0]) rotate([90,90,0]) camera(TOF_LEN,TOF_WIDTH,1);
     }
     
 
@@ -58,12 +61,6 @@ module lPiece(WIDTH,LEN,radius){
         translate([radius+1 + WIDTH/2 - 24/2,radius+1+2,0]) cylinders3(6,radius,radius,24-(radius+1)*2,24-(radius+1)*2,3,3);
     }*/
     
-    
-    difference(){
-        translate([0,0,-30]) cube([WIDTH,2,LEN]);
-        translate([5,3,0]) rotate([90,90,0]) camera(TOF_LEN,TOF_WIDTH,1);
-        rotate([90,0,0]) translate([radius + 1 + WIDTH/2 - 24/2,radius+1+2,-2]) cylinders3(6,radius,radius,24-(radius+1)*2,24-(radius+1)*2,3,1);
-    }
     //translate([5,3,]) rotate([90,90,0]) camera(TOF_LEN,TOF_WIDTH,1);
 }
 lPiece(36,36,2.5);
