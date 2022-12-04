@@ -39,7 +39,7 @@ module base() {
             translate([BASE_LENGTH - HANGER_LEN,BASE_WIDTH - HANGER_WIDTH,0]) hanger();
             }
             translate([CYLINDER_OFFSET, CYLINDER_OFFSET, -1]) cylinders3(10, 2, 2, HOLES_DIST, BASE_WIDTH - CYLINDER_OFFSET * 2, 2, 2);
-            translate([-30,-17,4])import("/home/alawn/Documents/GitHub/RCJMAZE/OpenSCAD/REA1.svg");
+            translate([-30,-17,3.7]) linear_extrude(height=3) import("/home/alawn/Documents/GitHub/RCJMAZE/OpenSCAD/REA1.svg");
         }
     }
 base();
