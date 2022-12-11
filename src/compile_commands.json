@@ -1,0 +1,121 @@
+[
+  {
+    "arguments": [
+      "/usr/bin/g++",
+      "-c",
+      "-Wall",
+      "-O2",
+      "-g",
+      "-std=c++17",
+      "-I/usr/include/python3.10",
+      "-o",
+      "helpers.o",
+      "helpers.cpp"
+    ],
+    "directory": "/home/etaash/Documents/GitHub/RCJMAZE/src",
+    "file": "/home/etaash/Documents/GitHub/RCJMAZE/src/helpers.cpp",
+    "output": "/home/etaash/Documents/GitHub/RCJMAZE/src/helpers.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/g++",
+      "-c",
+      "-Wall",
+      "-O2",
+      "-g",
+      "-std=c++17",
+      "-I/usr/include/python3.10",
+      "-o",
+      "simulation.o",
+      "simulation.cpp"
+    ],
+    "directory": "/home/etaash/Documents/GitHub/RCJMAZE/src",
+    "file": "/home/etaash/Documents/GitHub/RCJMAZE/src/simulation.cpp",
+    "output": "/home/etaash/Documents/GitHub/RCJMAZE/src/simulation.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/g++",
+      "-c",
+      "-Wall",
+      "-O2",
+      "-g",
+      "-std=c++17",
+      "-I/usr/include/python3.10",
+      "-o",
+      "robot.o",
+      "robot.cpp"
+    ],
+    "directory": "/home/etaash/Documents/GitHub/RCJMAZE/src",
+    "file": "/home/etaash/Documents/GitHub/RCJMAZE/src/robot.cpp",
+    "output": "/home/etaash/Documents/GitHub/RCJMAZE/src/robot.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/g++",
+      "-c",
+      "-Wall",
+      "-O2",
+      "-g",
+      "-std=c++17",
+      "-I/usr/include/python3.10",
+      "-o",
+      "BFS.o",
+      "BFS.cpp"
+    ],
+    "directory": "/home/etaash/Documents/GitHub/RCJMAZE/src",
+    "file": "/home/etaash/Documents/GitHub/RCJMAZE/src/BFS.cpp",
+    "output": "/home/etaash/Documents/GitHub/RCJMAZE/src/BFS.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/g++",
+      "-c",
+      "-Wall",
+      "-O2",
+      "-g",
+      "-std=c++17",
+      "-I/usr/include/python3.10",
+      "-o",
+      "driver.o",
+      "driver.cpp"
+    ],
+    "directory": "/home/etaash/Documents/GitHub/RCJMAZE/src",
+    "file": "/home/etaash/Documents/GitHub/RCJMAZE/src/driver.cpp",
+    "output": "/home/etaash/Documents/GitHub/RCJMAZE/src/driver.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/g++",
+      "-c",
+      "-Wall",
+      "-O2",
+      "-g",
+      "-std=c++17",
+      "-I/usr/include/python3.10",
+      "-o",
+      "debug.o",
+      "debug.cpp"
+    ],
+    "directory": "/home/etaash/Documents/GitHub/RCJMAZE/src",
+    "file": "/home/etaash/Documents/GitHub/RCJMAZE/src/debug.cpp",
+    "output": "/home/etaash/Documents/GitHub/RCJMAZE/src/debug.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/g++",
+      "-c",
+      "-Wall",
+      "-O2",
+      "-g",
+      "-std=c++17",
+      "-I/usr/include/python3.10",
+      "-o",
+      "scripting.o",
+      "scripting.cpp"
+    ],
+    "directory": "/home/etaash/Documents/GitHub/RCJMAZE/src",
+    "file": "/home/etaash/Documents/GitHub/RCJMAZE/src/scripting.cpp",
+    "output": "/home/etaash/Documents/GitHub/RCJMAZE/src/scripting.o"
+  }
+]

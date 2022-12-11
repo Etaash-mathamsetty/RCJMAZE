@@ -1,3 +1,6 @@
+#ifndef ROBOT_H_INCLUDED
+#define ROBOT_H_INCLUDED
+
 #include <iostream>
 #include <sstream>
 #include <string.h>
@@ -5,9 +8,6 @@
 #include "globals.h"
 #include "helpers.h"
 #include "scripting.h"
-
-#ifndef _ROBOT
-#define _ROBOT
 
 class robot{
 	protected:
@@ -37,4 +37,5 @@ class robot{
 
 		static robot* get_instance();
 };
-#endif
+
+#endif // ROBOT_H_INCLUDED

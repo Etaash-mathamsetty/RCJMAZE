@@ -86,13 +86,13 @@ int main(int argc, char* argv[]){
 		sim::read_map_from_file("field.txt");
 #endif
 	driver::init_robot();
-	robot& robot = *robot::get_instance();
+	robot* robot = robot::get_instance();
 	driver::get_sensor_data();
-	printf("node[%d]:\n", robot.index);
-	debug::print_node(robot.map[robot.index]);
+	printf("node[%d]:\n", robot->index);
+	debug::print_node(robot->map[robot->index]);
 	//print_node(nodes[robot.index]);
 	debug::print_map();
-	std::cout << (std::string)robot.get_nearest() << std::endl;
+	std::cout << (std::string)robot->get_nearest() << std::endl;
 	//Queue<int> path = BFS(robot);
 
 	//DRIVER_turn_west();
@@ -109,33 +109,33 @@ int main(int argc, char* argv[]){
 			//BFS code goes here
 			while(true)
 			{
-				Stack<int> path = BFS(robot);
+				Stack<int> path = BFS(*robot);
 				debug::print_path(path);
 				for(size_t l = 0; l < path.Size(); l++)
 				{
-					if(path[l] == robot.index+1)
+					if(path[l] == robot->index+1)
 					{
 						driver::turn_to(DIR::E);
-						robot.forward();
+						robot->forward();
 					}
-					else if(path[l] == robot.index-1)
+					else if(path[l] == robot->index-1)
 					{
 						driver::turn_to(DIR::W);
-						robot.forward();
+						robot->forward();
 					}
-					else if(path[l] == robot.index + horz_size)
+					else if(path[l] == robot->index + horz_size)
 					{
 						driver::turn_to(DIR::S);
-						robot.forward();
+						robot->forward();
 					}
-					else if(path[l] == robot.index - horz_size)
+					else if(path[l] == robot->index - horz_size)
 					{
 						driver::turn_to(DIR::N);
-						robot.forward();
+						robot->forward();
 					}
 					debug::print_map();
 				}
-				if(quitable && robot.index == helper::get_index(default_index, default_index))
+				if(quitable && robot->index == helper::get_index(default_index, default_index))
 					break;
 			}
 		}

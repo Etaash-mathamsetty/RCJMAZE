@@ -1,8 +1,9 @@
+#ifndef HELPERS_H_INCLUDED
+#define HELPERS_H_INCLUDED
+
 #include "globals.h"
 #include <string>
 
-#ifndef __HELPERS_H__
-#define __HELPERS_H__
 namespace helper
 {
     // returns a 1d index from a 2d index
@@ -24,4 +25,4 @@ namespace helper
     nearest_quad get_nearest(const int&);
 };
 
-#endif
+#endif // HELPERS_H_INCLUDED

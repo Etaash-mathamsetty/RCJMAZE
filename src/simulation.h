@@ -1,11 +1,11 @@
+#ifndef SIMULATION_H_INCLUDED
+#define SIMULATION_H_INCLUDED
+
 #include <fstream>
 #include <iostream>
 #include "robot.h"
 #include "globals.h"
 #include "helpers.h"
-
-#ifndef _SIMULATION_H_
-#define _SIMULATION_H_
 
 namespace sim
 {
@@ -19,4 +19,4 @@ namespace sim
     bool run_command();
 };
 
-#endif
+#endif // SIMULATION_H_INCLUDED

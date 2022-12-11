@@ -16,7 +16,7 @@ namespace driver
 		CHECK(bot);
 		std::ifstream in;
 		in.open("save.txt");
-		bool n, s, e, w, vic, bot_here, vis, ramp, checkpoint;
+		bool n, s, e, w, vic, bot_here, vis, ramp, checkpoint, black;
 		for(int i = 0; i < horz_size * vert_size; i++)
 		{
 			in >> n >> s >> e >> w >> vic >> bot_here >> vis >> ramp >> checkpoint;
@@ -30,7 +30,7 @@ namespace driver
 			bot->map[i].checkpoint = checkpoint;
 			if(bot->map[i].bot)
 				bot->index = i;
-			in >> n >> s >> e >> w >> vic >> bot_here >> vis >> ramp >> checkpoint;
+			in >> n >> s >> e >> w >> vic >> bot_here >> vis >> ramp >> checkpoint >> black;
 			nodes[i].N = n;
 			nodes[i].S = s;
 			nodes[i].E = e;
@@ -39,6 +39,7 @@ namespace driver
 			nodes[i].bot = bot_here;
 			nodes[i].vis = vis;
 			nodes[i].checkpoint = checkpoint;
+			nodes[i].black = black;
 			if(nodes[i].bot)
 				sim::sim_robot_index = i;
 		}
@@ -57,7 +58,7 @@ namespace driver
 			<< " " << bot->map[i].checkpoint << std::endl;
 			out << nodes[i].N << " " << nodes[i].S << " " << nodes[i].E << " " << nodes[i].W
 			<< " " << nodes[i].vic << " " << nodes[i].bot << " " << nodes[i].vis << " " << nodes[i].ramp
-			<< " " << nodes[i].checkpoint << std::endl;
+			<< " " << nodes[i].checkpoint << " " << nodes[i].black << std::endl;
 		}
 	}
 
@@ -92,6 +93,8 @@ namespace driver
 		#ifdef SIM_MOV_DELAY
 		std::this_thread::sleep_for(std::chrono::milliseconds(3000));
 		#endif
+		auto org_index = bot->index;
+		auto org_sim_index = sim::sim_robot_index;
 		switch(bot->dir){
 			case DIR::N:
 			{
@@ -163,6 +166,48 @@ namespace driver
 				break;
 			}
 		}
+		if(nodes[sim::sim_robot_index].black)
+		{
+			bot->map[org_index].bot = true;
+			nodes[org_sim_index].bot = true;
+			nodes[sim::sim_robot_index].bot = false;
+			bot->map[bot->index].bot = false;
+			bot->map[bot->index].N = true;
+			bot->map[bot->index].E = true;
+			bot->map[bot->index].W = true;
+			bot->map[bot->index].S = true;
+			//W:
+			if(helper::is_valid_index(bot->index - 1))
+			{
+				bot->map[bot->index - 1].E = true;
+				// nodes[sim::sim_robot_index - 1].E = true;
+			}
+			//E:
+			if(helper::is_valid_index(bot->index + 1))
+			{
+				bot->map[bot->index + 1].W = true;
+				// nodes[sim::sim_robot_index + 1].W = true;
+			}
+			//S:
+			if(helper::is_valid_index(bot->index + horz_size))
+			{
+				bot->map[bot->index + horz_size].N = true;
+				// nodes[sim::sim_robot_index + horz_size].N = true;
+			}
+			//N:
+			if(helper::is_valid_index(bot->index - horz_size))
+			{
+				bot->map[bot->index - horz_size].S = true;
+				// nodes[sim::sim_robot_index - horz_size].S = true;
+			}
+
+			sim::sim_robot_index = org_sim_index;
+			bot->index = org_index;
+
+			std::cout << "WARN: Black tile detected, returning false" << std::endl;
+
+			return false;
+		}
 		//bot->map[bot->index].vis = true;
 		return true;
 	}
@@ -174,7 +219,8 @@ namespace driver
 		CHECK(bot->map);
 		CHECK(nodes);
 		nodes[sim::sim_robot_index].vis = true;
-		memcpy(bot->map + bot->index, nodes + sim::sim_robot_index, sizeof(node));
+		if(!bot->map[bot->index].vis)
+			bot->map[bot->index] = node(nodes[sim::sim_robot_index]);
 		if(bot->map[bot->index].checkpoint)
 			save_state();
 	}
@@ -229,7 +275,7 @@ namespace driver
 	CREATE_DRIVER(void, drop_vic, int num)
 	{
 		//d [drop] N [number of kits, single digit only] \n
-		PythonScript::CallPythonFunction("SendSerialCommand", "d" + std::to_string(num) + "\n");
+		PythonScript::CallPythonFunction<std::string, std::string>("SendSerialCommand", com::drop_vic + std::to_string(num) + "\n");
 	}
 
 	CREATE_DRIVER(void, get_sensor_data)
@@ -257,12 +303,12 @@ namespace driver
 		}
 	}
 
-	CREATE_DRIVER(void, forward)
+	CREATE_DRIVER(bool, forward)
 	{
 		robot* bot = robot::get_instance();
 		CHECK(bot);
 		CHECK(bot->map);
-		PythonScript::CallPythonFunction("SendSerialCommmand", "f\n");
+		auto org_index = bot->index;
 		switch(bot->dir)
 		{
 			case DIR::N:
@@ -275,7 +321,7 @@ namespace driver
 				else{
 					std::cerr << "ERROR: Cannot move forward!" << std::endl;
 					debug::print_robot_info(bot);
-					return;
+					return false;
 				}
 				break;
 			}
@@ -289,7 +335,7 @@ namespace driver
 				else{
 					std::cerr << "ERROR: Cannot move forward!" << std::endl;
 					debug::print_robot_info(bot);
-					return;
+					return false;
 				}
 				break;
 			}
@@ -303,7 +349,7 @@ namespace driver
 				else{
 					std::cerr << "ERROR: Cannot move forward!" << std::endl;
 					debug::print_robot_info(bot);
-					return;
+					return false;
 				}
 				break;
 			}
@@ -317,11 +363,71 @@ namespace driver
 				else{
 					std::cerr << "ERROR: Cannot move forward!" << std::endl;
 					debug::print_robot_info(bot);
-					return;
+					return false;
 				}
 				break;
 			}
 		}
+		/*
+		 *
+		 * aysnc call using serial: PythonScript::CallPythonFunction("SendSerialCommand", "f\n");
+		 * robot will check for black tile, and if there is a black tile, the forward call will go back to the previous tile and return false
+		 * The robot's index will then be updated to the original index
+		 * Print some error/warn message
+		 *
+		 */
+		std::string forward = "";
+		forward += com::forward;
+		forward += '\n';
+		PythonScript::CallPythonFunction<std::string, std::string>("SendSerialCommmand", forward);
+		//wait for it to start running
+		while(!(bool)Bridge::get_data_value("forward_status")[0]) { PythonScript::Exec(ser_py_file); }
+		//wait for it to finish running
+		while((bool)Bridge::get_data_value("forward_status")[0]) { PythonScript::Exec(ser_py_file); }
+
+		bool status = (bool)Bridge::get_data_value("forward_status")[1];
+
+		//false for black tile
+		if(!status)
+		{
+			bot->map[org_index].bot = true;
+			bot->map[bot->index].bot = false;
+			bot->map[bot->index].N = true;
+			bot->map[bot->index].E = true;
+			bot->map[bot->index].W = true;
+			bot->map[bot->index].S = true;
+			//W:
+			if(helper::is_valid_index(bot->index - 1))
+			{
+				bot->map[bot->index - 1].E = true;
+				// nodes[sim::sim_robot_index - 1].E = true;
+			}
+			//E:
+			if(helper::is_valid_index(bot->index + 1))
+			{
+				bot->map[bot->index + 1].W = true;
+				// nodes[sim::sim_robot_index + 1].W = true;
+			}
+			//S:
+			if(helper::is_valid_index(bot->index + horz_size))
+			{
+				bot->map[bot->index + horz_size].N = true;
+				// nodes[sim::sim_robot_index + horz_size].N = true;
+			}
+			//N:
+			if(helper::is_valid_index(bot->index - horz_size))
+			{
+				bot->map[bot->index - horz_size].S = true;
+				// nodes[sim::sim_robot_index - horz_size].S = true;
+			}
+
+			bot->index = org_index;
+
+			std::cout << "WARN: Black tile detected, returning false" << std::endl;
+			return false;
+		}
+
+		return true;
 	}
 
 	CREATE_DRIVER(void, turn_east)
@@ -343,9 +449,10 @@ namespace driver
 		robot* bot = robot::get_instance();
 		CHECK(bot);
 		bot->dir = dir;
-		std::string turn_cmd = com::turn;
+		std::string turn_cmd = "";
+		turn_cmd += com::turn;
 		turn_cmd += helper::dir_to_char(dir) + '\n';
-		PythonScript::CallPythonFunction("SendSerialCommand", turn_cmd);
+		PythonScript::CallPythonFunction<std::string, std::string>("SendSerialCommand", turn_cmd);
 	}
 
     #endif

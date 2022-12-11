@@ -2,7 +2,7 @@
  * link-list.h
  *
  *  Created on: Sep 30, 2021
- *      Author: etaash
+ *      Author: Etaash Mathamsetty
  */
 
 #ifndef LINK_LIST_H_
@@ -16,8 +16,10 @@
 #include <optional>
 
 
+//a better implementation would be to make the link list wrap around
+
 //TODO: FIX NULL BASENODE!!!!!!
-#define REPEAT(i, size) for(__typeof__(size) i = 0; i < size; i++)
+#define REPEAT(i, size) for(decltype(size) i = 0; i < size; i++)
 
 template <typename T>
 struct Node{

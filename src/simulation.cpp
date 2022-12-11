@@ -6,9 +6,9 @@
 namespace sim
 {
 
+    #ifdef SIMULATION
     void read_map_from_file(std::string name)
     {
-
         std::ifstream in(name);
         if(in.fail())
         {
@@ -21,8 +21,8 @@ namespace sim
         _horz_size++;
         in >> _vert_size;
 
-        nodes = new node[horz_size * vert_size];
-        memset(nodes, 0, sizeof(node) * horz_size * vert_size);
+        nodes = new simulation_node[horz_size * vert_size];
+        memset(nodes, 0, sizeof(simulation_node) * horz_size * vert_size);
 
         if(std::filesystem::exists("save.txt"))
             return;
@@ -50,12 +50,14 @@ namespace sim
                     if(x == '\n')
                         break;
                     if(x == '+') continue;
-                    node& node = nodes[helper::get_index(v,i)];
+                    auto& node = nodes[helper::get_index(v,i)];
                     node.N = (x == '-');
                     node.bot |= (tolower(x) == 'x');
                     node.vis |= node.bot;
                     node.vic |= (tolower(x) == 'v');
                     node.checkpoint |= (tolower(x) == 'c');
+                    node.black |= (tolower(x) == 'b');
+
                     if(node.bot)
                         sim_robot_index = helper::get_index(v,i);
                     //print_node(nodes[get_index(v,i)]);
@@ -72,7 +74,7 @@ namespace sim
                 if(x == '\n')
                     break;
                 //if(x == ' ') { i--; continue; }
-                node& node = nodes[helper::get_index(v,i)];
+                auto& node = nodes[helper::get_index(v,i)];
                 if(x == '|') {
                     if((int)i > 0)
                     {
@@ -87,6 +89,8 @@ namespace sim
                 node.vis |= node.bot;
                 node.vic |= (tolower(x) == 'v');
                 node.checkpoint |= (tolower(x) == 'c');
+                node.black |= (tolower(x) == 'b');
+
                 if(node.bot)
                     sim_robot_index = helper::get_index(v,i);
             }
@@ -100,12 +104,14 @@ namespace sim
                 if(x == '\n')
                     break;
                 if(x == '+') continue;
-                node& node = nodes[helper::get_index(v,i)];
+                auto& node = nodes[helper::get_index(v,i)];
                 node.S = (x == '-');
                 node.bot |= (tolower(x) == 'x');
                 node.vis |= node.bot;
                 node.vic |= (tolower(x) == 'v');
                 node.checkpoint |= (tolower(x) == 'c');
+                node.black |= (tolower(x) == 'b');
+
                 if(node.bot)
                     sim_robot_index = helper::get_index(v,i);
             }
@@ -197,4 +203,5 @@ namespace sim
         }
         return true;
     }
+#endif
 };

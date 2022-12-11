@@ -1,20 +1,56 @@
+#ifndef GLOBALS_H_INCLUDED
+#define GLOBALS_H_INCLUDED
+
 #include <inttypes.h>
 #include <assert.h>
 #include <sstream>
 
-#ifndef _GLOBALS
-#define _GLOBALS
-
-#define SIMULATION
+//#define SIMULATION
 #define DEBUG
-#define SIM_MOV_DELAY
+//#define SIM_MOV_DELAY
 
 /* TODO: lack of progress support
 	save state and load state for checkpoints
 */
 
+#ifdef SIMULATION
+//is the bigger one in terms of size, shouldn't impact the smaller node's values when using memcpy
+struct simulation_node{
+	public:
+		bool N : 1;
+		bool S : 1;
+		bool E : 1;
+		bool W : 1;
+		bool vic : 1;
+		bool bot : 1;
+		bool vis : 1;
+		bool ramp : 1;
+		bool checkpoint : 1;
+		bool black : 1;
+	private:
+		uint8_t garbage : 6;
+
+};
+#endif
+
+// is the smaller in terms bytes
 struct node{
 	public:
+#ifdef SIMULATION
+		node(simulation_node& node)
+		{
+			N = node.N;
+			S = node.S;
+			E = node.E;
+			W = node.W;
+			vic = node.vic;
+			bot = node.bot;
+			vis = node.vis;
+			ramp = node.ramp;
+			checkpoint = node.checkpoint;
+		}
+#endif
+
 		bool N : 1;
 		bool S : 1;
 		bool E : 1;
@@ -66,6 +102,7 @@ namespace com
 	const char north = 'n';
 	const char south = 's';
 	const char quit = 'q';
+	const char drop_vic = 'd';
 };
 
 const std::string init_py_file = "vars.py";
@@ -75,7 +112,7 @@ const std::string cleanup_py_file = "cleanup.py";
 
 #ifdef SIMULATION
 //simulation field
-inline node* nodes;
+inline simulation_node* nodes;
 const static bool is_simulation = true;
 #else
 const static bool is_simulation = false;
@@ -83,4 +120,4 @@ const static bool is_simulation = false;
 
 #define CHECK(ptr) assert(ptr)
 
-#endif
+#endif // GLOBALS_H_INCLUDED

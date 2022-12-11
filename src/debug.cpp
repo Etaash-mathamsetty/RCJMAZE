@@ -48,7 +48,10 @@ namespace debug
                     putchar('v');
                 if(nodes[helper::get_index(i,l)].checkpoint)
                     putchar('c');
-                if(!nodes[helper::get_index(i,l)].bot && !nodes[helper::get_index(i,l)].vic && !nodes[helper::get_index(i,l)].checkpoint)
+                if(nodes[helper::get_index(i,l)].black)
+                    putchar('b');
+                if(!nodes[helper::get_index(i,l)].bot && !nodes[helper::get_index(i,l)].vic && !nodes[helper::get_index(i,l)].checkpoint &&
+                    !nodes[helper::get_index(i,l)].black)
                     putchar(' ');
             }
             putchar('\n');

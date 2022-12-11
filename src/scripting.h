@@ -1,11 +1,12 @@
+#ifndef SCRIPTING_H_INCLUDED
+#define SCRIPTING_H_INCLUDED
+
 #include <boost/python.hpp>
 #include <map>
 #include <mutex>
 #include <optional>
 #include <iostream>
 
-#ifndef _PY_SCRIPT
-#define _PY_SCRIPT
 class PythonScript
 {
 public:
@@ -45,4 +46,4 @@ namespace Bridge
     std::vector<float> get_data_value(const std::string key);
 }
 
-#endif
+#endif // SCRIPTING_H_INCLUDED

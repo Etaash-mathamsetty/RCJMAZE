@@ -1,12 +1,12 @@
+#ifndef DEBUG_H_INCLUDED
+#define DEBUG_H_INCLUDED
+
 #include "robot.h"
 #include "helpers.h"
 #include "globals.h"
 #include "simulation.h"
 #include "link-list.h"
 #include <iostream>
-
-#ifndef __DEBUG_H__
-#define __DEBUG_H__
 
 namespace debug
 {
@@ -20,4 +20,4 @@ namespace debug
     void print_path(Stack<int>& path);
 };
 
-#endif
+#endif // DEBUG_H_INCLUDED
