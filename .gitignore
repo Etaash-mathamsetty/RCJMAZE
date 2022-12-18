@@ -3,3 +3,4 @@ BFS
 .gdb_history
 *.stl
 *.svg
+*.kdev4
