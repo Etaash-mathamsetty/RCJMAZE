@@ -22,7 +22,7 @@ namespace Bridge
     }
 }
 
-bool f_is_simulation()
+static bool f_is_simulation()
 {
     return is_simulation;
 }
