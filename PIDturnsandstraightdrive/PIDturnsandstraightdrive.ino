@@ -1,7 +1,12 @@
 #include "Motors.h"
-#include "utils.h"
-#include <Adafruit_BNO055.h>
+#include "utils.h" 
+#include <VL53L0X.h>
+#include <Adafruit_BNO055.h> 
 #include <utility/imumaths.h>
+#define MUXADDR 0x70 
+
+
+
 
 enum Direction {turnL,turnR};
 
@@ -14,13 +19,33 @@ const float KI_FORWARD = 0.003;
 const float KD_FORWARD = 0.01;
 //const float KI_TURN = 0;
 //const float KD_TURN = 0;
+
+//init sensors and motors  
+
 Adafruit_BNO055 bno = Adafruit_BNO055(55, 0x28);
 
 sensors_event_t orientationData;
 
+VL53L0X tof;
+
 
 Motor motor1(MPORT1, true, true);
-Motor motor2(MPORT2);
+Motor motor2(MPORT2); 
+
+
+void tcaselect(uint8_t i)
+{
+
+  if (i > 7)
+    return;
+
+  Wire.beginTransmission(MUXADDR);
+
+  Wire.write(1 << i);
+
+  Wire.endTransmission();
+}
+
 
 
 void setup() {
@@ -41,7 +66,7 @@ void turn(int angle, int speed, int direction) {
     Serial.println("bro what?");
 }
 
-void straightDrive(int encoders, int speed, int tolerance) {
+void straightDrive(int cm, int speed, int tolerance) {
 
   bno.begin(Adafruit_BNO055::OPERATION_MODE_IMUPLUS);
   int angle;
@@ -50,6 +75,12 @@ void straightDrive(int encoders, int speed, int tolerance) {
   float p_turn, d_turn, last_difference = 0;
   float PID;
   float last_dist = abs(motor1.getTicks()/abs(encoders));
+	
+  //conversion from cm to encoders 
+  int coeff = 32; //??? no idea how many encoders per rotatoin 
+  int encoders = (cm / (5.7 * 3.14159265)) * coeff;  
+
+
 
   while (abs(motor1.getTicks()) < abs(encoders) && abs(motor2.getTicks()) < abs(encoders)) {
     bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
@@ -141,6 +172,46 @@ void right(int angle, int speed){
   }
   utils::stopMotors();
 }
+void localization(){
+int tofR, tofL, tofF; 
+tcaselect(1);  
+tofF = tof.readRangeContinuousMillimeters(); 
+tcaselect(2); 
+tofL = tof.readRangeContinuousMillimeters(); 
+tcaselect(3); 
+tofR = tof.readRangeContinuousMillimeters(); 
+
+
+int sideDist = 50, frontDist = 50, tolerance = 10, xdiff, ydiff, hypdist, angle; 
+if(tofR < sideDist - tolerance){ 
+	xdiff = sidDist - tofR; 
+	ydiff = tofF - frontDist;  
+	angle = atan(ydiff, xdiff) * 57.2958;   
+	hypdist = sqrt(pow(xdiff, 2) + pow(ydiff, 2)); 
+	left(angle, 100); 
+	straightDrive(hypdist/10, 100, 5);
+	right(angle, 100);   
+	utils::stopMotors();  
+	return; 
+} 
+else if(tofL < sideDist - tolerance){ 
+	xdiff = sidDist - tofL; 
+	ydiff = tofF - frontDist;  
+	angle = atan(ydiff, xdiff) * 57.2958;   
+	hypdist = sqrt(pow(xdiff, 2) + pow(ydiff, 2)); 
+	right(angle, 100); 
+	straightDrive(hypdist/10, 100, 5);
+	left(angle, 100); 
+	utils::stopMotors(); 
+	return; 
+
+} 
+
+
+}
+
+
+
 
 void loop() {
   // put your main code here, to run repeatedly:
