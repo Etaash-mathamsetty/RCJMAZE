@@ -417,7 +417,7 @@ void acceleration_position() {
 
 void loop() {
 
-  pi_read_data();
+  //pi_read_data();
   /*
   bno.getEvent(&accelerometerData, Adafruit_BNO055::VECTOR_ACCELEROMETER);
   bno.getEvent(&gyroData, Adafruit_BNO055::VECTOR_GYROSCOPE);
@@ -436,11 +436,11 @@ void loop() {
   //send_tof_vals(test);
   
 
-  //right(90,100);
-  //delay(1000);
+  right(90,100);
+  delay(1000);
 
-  //left(90,100);
-  //delay(1000);
+  left(90,100);
+  delay(1000);
 
   /*straightDrive(2000,80,3);
   delay(2000);*/
