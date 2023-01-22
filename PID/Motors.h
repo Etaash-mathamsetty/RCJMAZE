@@ -20,12 +20,11 @@ class Motor{
   Motor(int port, bool attachEnc = true, bool reverse = false){
     this->port = port;
     if(attachEnc)
-    attachEncoder();
+      attachEncoder();
     mult = 1;
     if(reverse)
       mult *= -1;
     boost = 0;
-  //  mticks = ticks[port];
 
       //The PWM frequency is 976 Hz
 #if defined(__AVR_ATmega32U4__) //MeBaseBoard use ATmega32U4 as MCU
@@ -109,14 +108,14 @@ void addBoost(int speed){
   }
 #undef ATTACH_INT
 #undef ATTACH_INT2
-  int getTicks(){
+  int& getTicks(){
     return ticks[port];
   }
 
   void resetTicks(){
-  	ticks[port] = 0;
+  	getTicks() = 0;
   }
-  //int& mticks;
+  
 private: 
 #define CREATE_INTERUPT2(x) static void interupt##x(){ \
   if(dir[x]) ticks[x]++; \
@@ -132,7 +131,7 @@ private:
 #undef CREATE_INTERUPT
 #undef CREATE_INTERUPT2
 
-  int port;
+  int port = 0;
   uint8_t boost;
   static inline int ticks[4] = {0};
   static inline bool dir[4] = {true};
