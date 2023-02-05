@@ -10,8 +10,7 @@ void kitDrop(int num) {
   static int columnNum = 1; 
   static int numDropped = 0; 
 
-  for (int i = 0; i < num; i++) { 
-    numDropped++; 
+  for (int i = 0; i < num; i++) {  
     if (numDropped && !(numDropped % num_per_column))
       columnNum++; 
     
@@ -28,6 +27,7 @@ void kitDrop(int num) {
     delay(1000); 
     myservo.write(180); 
     delay(1000); 
+    numDropped++;
   }
 }
 

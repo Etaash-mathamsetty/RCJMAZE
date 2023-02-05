@@ -81,4 +81,14 @@ namespace logger{
 	#endif
 };
 
+namespace math {
+  int wrapAround(int num, int mod) {
+    num %= mod;
+    if (num < 0) {
+      num += mod;
+    }
+    return num;
+  }
+}
+
 };
