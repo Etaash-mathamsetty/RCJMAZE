@@ -381,13 +381,20 @@ void turn(char char_end_direction) {
 void drive(int encoders, int speed, int tolerance) {
 
   bno.begin(Adafruit_BNO055::OPERATION_MODE_IMUPLUS);
-  int angle;
+  int angle, tofR, tofL; 
   utils::resetTicks();
   double p, d, i = 0;
   double p_turn, d_turn, last_difference = 0;
   double PID;
   double last_dist = abs(motorR.getTicks() / abs(encoders));
   double startX = xPos;
+
+  tcaselect(2); 
+  tofL = tof.readRangeContinuousMillimeters(); 
+  tcaselect(3); 
+  tofR = tof.readRangeContinuousMillimeters(); 
+
+
 
   pi_send_data(true, false);
 
@@ -408,6 +415,9 @@ void drive(int encoders, int speed, int tolerance) {
     } else {
       p_turn = -orientationData.orientation.x - (startX - xPos);
     }
+    
+    
+
 
     if (abs(p_turn * DRIVE_STRAIGHT_KP) <= 0.01 && PID <= 0.01)
       break;
@@ -416,12 +426,36 @@ void drive(int encoders, int speed, int tolerance) {
     //    Serial.println(speed * (double)(abs(encoders) - abs(motor1.getTicks()))/abs(encoders));
     utils::forward(PID - p_turn * DRIVE_STRAIGHT_KP, PID + p_turn * DRIVE_STRAIGHT_KP);
     angle = orientationData.orientation.x;
+  } 
+  //correct horizontal error when inside of hallway 
+  if(tofR < 175 && tofL < 175){ 
+            
+      while(tofR - tofL > tolerance){ 
+         right(60); 
+         utils::forward(100, 100); 
+         delay(150); 
+         left(60); 
+         utils::forward(-100, -100);  
+         delay(130); 
+
+     } 
+     while(tofL - tofR > tolerance){ 
+         left(60); 
+         utils::forward(100, 100); 
+         delay(150); 
+         right(60); 
+         utils::forward(-100, -100);  
+         delay(130); 
+
+     }
   }
+
   utils::stopMotors();
   pi_send_data(false, false);
   motorL.addBoost(0);
   motorR.addBoost(0);
-}
+} 
+
 
 void acceleration_position() {
   unsigned long tStart = micros();
