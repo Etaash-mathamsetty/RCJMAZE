@@ -1,6 +1,7 @@
 
 
 #include "Motors.h"
+#include <Servo.h>
 
 //#define MUXADDR 0x70
 
@@ -8,6 +9,11 @@ namespace utils{
 
 Motor* motor;
 Motor* motor2;
+Servo myservo; 
+int16_t servopin = A6; 
+const int num_per_column = 4;
+const int num_columns = 3;
+const int total = num_per_column * num_columns;
 
 void setMotors(Motor* _motor1, Motor* _motor2){
 	motor = _motor1;
@@ -47,6 +53,35 @@ void forwardTicks(int speed, int ticks, bool reset = true){
 void stopMotors(){
 	motor->stop();
 	motor2->stop();
+}
+
+void kitDrop(int num) { 
+  static int columnNum = 1; 
+  static int numDropped = 0; 
+
+  for (int i = 0; i < num; i++) {  
+    if (numDropped && !(numDropped % num_per_column))
+      columnNum++; 
+    
+    if (numDropped > total) {
+      myservo.write(0);
+      return;
+    }
+
+    myservo.write(180 - 60*columnNum - 3); 
+    Serial.print("columnNum");
+    Serial.println(columnNum);
+    Serial.println("numDropped");
+    Serial.println(numDropped);
+    delay(1000); 
+    myservo.write(180); 
+    delay(1000); 
+    numDropped++;
+  }
+}
+
+void resetServo() {
+  myservo.write(180);
 }
 
 namespace logger{
