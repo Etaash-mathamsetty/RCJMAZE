@@ -4,7 +4,7 @@
 #include <Wire.h>
 #include "utils.h"
 
-#define FAKE_ROBOT
+//#define FAKE_ROBOT
 #define PI_SERIAL Serial2
 #define MUXADDR 0x70
 #define TOF_NUMBER 2
