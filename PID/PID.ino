@@ -381,7 +381,7 @@ void turn(char char_end_direction) {
 void drive(int encoders, int speed, int tolerance) {
 
   bno.begin(Adafruit_BNO055::OPERATION_MODE_IMUPLUS);
-  int angle, tofR, tofL; 
+  int angle = 60, tofR, tofL; 
   utils::resetTicks();
   double p, d, i = 0;
   double p_turn, d_turn, last_difference = 0;
@@ -431,20 +431,20 @@ void drive(int encoders, int speed, int tolerance) {
   if(tofR < 175 && tofL < 175){ 
             
       while(tofR - tofL > tolerance){ 
-         right(60); 
-         utils::forward(100, 100); 
+         right(angle, SPEED); 
+         utils::forward(SPEED, SPEED); 
          delay(150); 
-         left(60); 
-         utils::forward(-100, -100);  
+         left(angle, SPEED); 
+         utils::forward(-SPEED, -SPEED);  
          delay(130); 
 
      } 
      while(tofL - tofR > tolerance){ 
-         left(60); 
-         utils::forward(100, 100); 
+         left(angle, SPEED); 
+         utils::forward(SPEED, SPEED); 
          delay(150); 
-         right(60); 
-         utils::forward(-100, -100);  
+         right(angle, SPEED); 
+         utils::forward(-SPEED, -SPEED);  
          delay(130); 
 
      }
