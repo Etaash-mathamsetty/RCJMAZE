@@ -381,21 +381,13 @@ void turn(char char_end_direction) {
 void drive(int encoders, int speed, int tolerance) {
 
   bno.begin(Adafruit_BNO055::OPERATION_MODE_IMUPLUS);
-  int angle = 60, tofR, tofL; 
+  int angle = 60, tofR1, tofR2; 
   utils::resetTicks();
   double p, d, i = 0;
   double p_turn, d_turn, last_difference = 0;
   double PID;
   double last_dist = abs(motorR.getTicks() / abs(encoders));
   double startX = xPos;
-
-  tcaselect(2); 
-  tofL = tof.readRangeContinuousMillimeters(); 
-  tcaselect(3); 
-  tofR = tof.readRangeContinuousMillimeters(); 
-
-
-
   pi_send_data(true, false);
 
   while (abs(motorR.getTicks()) < abs(encoders) && abs(motorL.getTicks()) < abs(encoders)) {
@@ -416,9 +408,6 @@ void drive(int encoders, int speed, int tolerance) {
       p_turn = -orientationData.orientation.x - (startX - xPos);
     }
     
-    
-
-
     if (abs(p_turn * DRIVE_STRAIGHT_KP) <= 0.01 && PID <= 0.01)
       break;
     // speed = speed * (abs(encoders) - abs(motor1.getTicks()))/abs(encoders);
@@ -428,7 +417,7 @@ void drive(int encoders, int speed, int tolerance) {
     angle = orientationData.orientation.x;
   } 
   //correct horizontal error when inside of hallway 
-  if(tofR < 175 && tofL < 175){ 
+/*  if(tofR < 175 && tofL < 175){ 
             
       while(tofR - tofL > tolerance){ 
          right(angle, SPEED); 
@@ -448,6 +437,26 @@ void drive(int encoders, int speed, int tolerance) {
          delay(130); 
 
      }
+  } 
+  */ 
+  tcaselect(0);
+  tofR1 = tof.readRangeContinuousMillimeters() - 50;
+  tcaselect(1);
+  tofR2 = tof.readRangeContinuousMillimeters() - 15;
+  
+  while (abs(tofR1 - tofR2) > tolerance) {
+    tcaselect(0);
+    tofR1 = tof.readRangeContinuousMillimeters() - 50;
+    tcaselect(1);
+    tofR2 = tof.readRangeContinuousMillimeters() - 15;
+
+    if (tofR1 - tofR2 > 10) {
+      left(10, SPEED);
+    }
+    else if (tofR2 - tofR1 > 10) {
+      right(10, SPEED);
+    }
+
   }
 
   utils::stopMotors();
@@ -490,15 +499,8 @@ void loop() {
   //Serial.println("hi");
   //Serial.println(get_tof_vals(100));
   //Serial.println("hi");
-  pi_read_data();
+ // pi_read_data();
+  drive(500, SPEED, 5);
+  delay(1000);
 
-  //drive(1000, 100, 1);
-  //left(180,100);
-  //delay(1000);
-
-  //left(90,200);
-  //delay(1000);
-
-  /*straightDrive(2000,80,3);
-  delay(2000);*/
 }
