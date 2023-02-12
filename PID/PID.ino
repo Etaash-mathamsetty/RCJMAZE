@@ -458,13 +458,39 @@ void drive(int encoders, int speed, int tolerance) {
     }
 
   }
-
+    
+  while(tofR1 > 150){
+    tcaselect(0); 
+    tofR1 = tof.readRangeContinuousMillimeters() - 50; 
+    tcaselect(1); 
+    tofR2 = tof.readRangeContinuousMillimeters() - 15; 
+    shiftRight(); 
+    
+  } 
+  
   utils::stopMotors();
   pi_send_data(false, false);
   motorL.addBoost(0);
   motorR.addBoost(0);
 } 
-
+void shiftRight(){
+    right(30, SPEED); 
+    utils::forward(SPEED, SPEED);
+    delay(50);
+    left(30, SPEED);
+    utils::forward(-SPEED, -SPEED);
+    delay(29);
+    return; 
+} 
+void shiftLeft(){
+    left(30, SPEED); 
+    utils::forward(SPEED, SPEED);
+    delay(50);
+    right(30, SPEED);
+    utils::forward(-SPEED, -SPEED);
+    delay(29);
+    return; 
+}
 
 void acceleration_position() {
   unsigned long tStart = micros();
