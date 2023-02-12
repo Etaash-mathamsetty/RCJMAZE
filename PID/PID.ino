@@ -444,7 +444,54 @@ void drive(int encoders, int speed, int tolerance) {
   tcaselect(1);
   tofR2 = tof.readRangeContinuousMillimeters() - 15;
   
+  align(tolerance); 
+
+  
+  /*
+  while(tofR1 > 100){
+    tcaselect(0); 
+    tofR1 = tof.readRangeContinuousMillimeters() - 50; 
+    tcaselect(1); 
+    tofR2 = tof.readRangeContinuousMillimeters() - 15; 
+    shiftRight(); 
+    
+  } 
+  
+  align(tolerance);  
+  */
+  
+  utils::stopMotors();
+  pi_send_data(false, false);
+  motorL.addBoost(0);
+  motorR.addBoost(0);
+} 
+void shiftRight(){
+    right(15, SPEED); 
+    utils::forward(SPEED, SPEED);
+    delay(25);
+    left(15, SPEED);
+    utils::forward(-SPEED, -SPEED);
+    delay(24);
+    return; 
+} 
+void shiftLeft(){
+    left(15, SPEED); 
+    utils::forward(SPEED, SPEED);
+    delay(25);
+    right(15  , SPEED);
+    utils::forward(-SPEED, -SPEED);
+    delay(24);
+    return; 
+} 
+void align(int tolerance){
+  int tofR1, tofR2; 
+  tcaselect(0);
+  tofR1 = tof.readRangeContinuousMillimeters() - 50;
+  tcaselect(1);
+  tofR2 = tof.readRangeContinuousMillimeters() - 15;
+
   while (abs(tofR1 - tofR2) > tolerance) {
+    Serial.println(abs(tofR1 - tofR2)); 
     tcaselect(0);
     tofR1 = tof.readRangeContinuousMillimeters() - 50;
     tcaselect(1);
@@ -456,40 +503,8 @@ void drive(int encoders, int speed, int tolerance) {
     else if (tofR2 - tofR1 > 10) {
       right(10, SPEED);
     }
-
   }
-    
-  while(tofR1 > 150){
-    tcaselect(0); 
-    tofR1 = tof.readRangeContinuousMillimeters() - 50; 
-    tcaselect(1); 
-    tofR2 = tof.readRangeContinuousMillimeters() - 15; 
-    shiftRight(); 
-    
-  } 
   
-  utils::stopMotors();
-  pi_send_data(false, false);
-  motorL.addBoost(0);
-  motorR.addBoost(0);
-} 
-void shiftRight(){
-    right(30, SPEED); 
-    utils::forward(SPEED, SPEED);
-    delay(50);
-    left(30, SPEED);
-    utils::forward(-SPEED, -SPEED);
-    delay(29);
-    return; 
-} 
-void shiftLeft(){
-    left(30, SPEED); 
-    utils::forward(SPEED, SPEED);
-    delay(50);
-    right(30, SPEED);
-    utils::forward(-SPEED, -SPEED);
-    delay(29);
-    return; 
 }
 
 void acceleration_position() {
