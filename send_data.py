@@ -6,8 +6,9 @@ ser = serial.Serial('/dev/ttyUSB0')
 #inp = input("Enter a command: ").strip()
 
 while True:
-	ser.write(b'gn')
+	ser.write(b'ge\n')
 	#inp = input("Enter a command: ").strip()  
+
 ser.close()   
 
 #print("py init done: simulation = " + str(simulation))
