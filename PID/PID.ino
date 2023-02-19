@@ -5,7 +5,15 @@
 #include "utils.h"
 
 //#define FAKE_ROBOT
+#define FAKE_SERIAL
+
+#ifdef FAKE_SERIAL
+#define PI_SERIAL Serial
+#endif
+#ifndef
 #define PI_SERIAL Serial2
+#endif
+
 #define MUXADDR 0x70
 #define TOF_NUMBER 2
 #define TOF_START 0
@@ -641,9 +649,9 @@ void loop() {
   //Serial.println("hi");
   //Serial.println(get_tof_vals(100));
   //Serial.println("hi");
-  //pi_read_data();
-  alignAngle(100); 
-  delay(500);
+  pi_read_data();
+  //alignAngle(100); 
+  //delay(500);
   // driveCM(30, 200, 0);
   // delay(1000);
 
