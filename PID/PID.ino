@@ -559,11 +559,9 @@ void alignCenterFB(int speed) {
 
 void alignAngle(int speed) {
   float tofR1, tofR2; 
-  tcaselect(0);
-  tofR1 = tof.readRangeContinuousMillimeters() - 50;
-  tcaselect(1);
-  tofR2 = tof.readRangeContinuousMillimeters() - 15;
-
+  tofR1 = tof(0); 
+  tofR2 = tof(1); 
+         
   if (tofR1 >= 200 || tofR2 >= 200) {
     return;
   }
