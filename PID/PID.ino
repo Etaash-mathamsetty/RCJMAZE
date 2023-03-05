@@ -5,7 +5,7 @@
 #include "utils.h"
 
 //#define FAKE_ROBOT
-#define FAKE_SERIAL
+//#define FAKE_SERIAL
 
 #ifdef FAKE_SERIAL
 #define PI_SERIAL Serial
@@ -482,9 +482,9 @@ void drive(int encoders, int speed, int tolerance) {
   /*
   while(tofR1 > 100){
     tcaselect(0); 
-    tofR1 = tof.readRangeContinuousMillimeters() - 50; 
+    tofR1 = tof.readRangeSingleMillimeters() - 50; 
     tcaselect(1); 
-    tofR2 = tof.readRangeContinuousMillimeters() - 15; 
+    tofR2 = tof.readRangeSingleMillimeters() - 15; 
     shiftRight(); 
     
   } 
@@ -519,9 +519,9 @@ void shiftLeft(){
 void alignCenterLR(int speed) {
   int tofR1, tofL1; 
   tcaselect(0);
-  tofR1 = tof.readRangeContinuousMillimeters() - 50;
+  tofR1 = tof.readRangeSingleMillimeters() - 50;
   tcaselect(1);
-  tofL1 = tof.readRangeContinuousMillimeters() - 15;
+  tofL1 = tof.readRangeSingleMillimeters() - 15;
 
   const int dist = tofR1 - tofL1;
 
@@ -545,9 +545,9 @@ void alignCenterLR(int speed) {
 void alignCenterFB(int speed) {
   int tofF1, tofB1; 
   tcaselect(0);
-  tofF1 = tof.readRangeContinuousMillimeters() - 50;
+  tofF1 = tof.readRangeSingleMillimeters() - 50;
   tcaselect(1);
-  tofB1 = tof.readRangeContinuousMillimeters() - 15;
+  tofB1 = tof.readRangeSingleMillimeters() - 15;
 
   const int dist = tofF1 - tofB1;
 
@@ -562,8 +562,9 @@ void alignCenterFB(int speed) {
 
 void alignAngle(int speed, int tof1, int tof2) {
   float tofR1, tofR2; 
-  tofR1 = tof(0); 
-  tofR2 = tof(1); 
+
+  tofR1 = tofCalibrated(0); 
+  tofR2 = tofCalibrated(1); 
          
   if (tofR1 >= 200 || tofR2 >= 200) {
     return;
@@ -598,9 +599,9 @@ void alignAngle(int speed, int tof1, int tof2) {
   while (abs(tofR1 - tofR2) > tolerance) {
     Serial.println(abs(tofR1 - tofR2)); 
     tcaselect(0);
-    tofR1 = tof.readRangeContinuousMillimeters() - 50;
+    tofR1 = tof.readRangeSingleMillimeters() - 50;
     tcaselect(1);
-    tofR2 = tof.readRangeContinuousMillimeters() - 15;
+    tofR2 = tof.readRangeSingleMillimeters() - 15;
 
     if (tofR1 - tofR2 > 10) {
       left(10, SPEED);
@@ -627,32 +628,32 @@ void acceleration_position() {
   Serial.println(yPos);
 }
 
-int tofCalibrated(int tof) {
-  switch (tof) {
+int tofCalibrated(int select) {
+  switch (select) {
     case 0: {
         tcaselect(0);
-        int x1 = tof.readRangeContinuousMillimeters();
+        int x1 = tof.readRangeSingleMillimeters();
         int tofR1 = -89.7 + (x1 * 1.9) - (0.0033 * (x1 * x1));
         return tofR1;
         //accurate (50, 150), horrible < 25
     }
     case 1: {
         tcaselect(1);
-        int x2 = tof.readRangeContinuousMillimeters();
+        int x2 = tof.readRangeSingleMillimeters();
         int tofR2 = (1.09 * x2) - 21.3;
         return tofR2;
         //accurate (50, 150), still works < 25ish
     }
     case 2: {
         tcaselect(2);
-        int x3 = tof.readRangeContinuousMillimeters();
+        int x3 = tof.readRangeSingleMillimeters();
         int tofL1 = (1.03 * x3) - 9.91;
         return tofL1;
         //accrate (50, 150), passable < 50 but not that good
     } 
     case 3: { 
         tcaselect(3); 
-        int x4 = tof.readRangeContinuousMillimeters(); 
+        int x4 = tof.readRangeSingleMillimeters(); 
         int tofL2 = -0.848 + (0.671 * x4) + (0.00165 * x4 * x4); 
         return tofL2; 
         //decent accuracy 
@@ -660,7 +661,7 @@ int tofCalibrated(int tof) {
     } 
     case 4: { 
         tcaselect(4); 
-        int x5 = tof.readRangeContinuousMillimeters(); 
+        int x5 = tof.readRangeSingleMillimeters(); 
         int tofF = 3 + (0.657 * x5) + (0.00146 * x5 * x5);
         return tofF;   
         //pretty accurate
@@ -694,15 +695,15 @@ void loop() {
   //Serial.println("hi");
   //Serial.println(get_tof_vals(100));
   //Serial.println("hi");
-  // pi_read_data();
-  // byte vals = get_tof_vals(150);
+  pi_read_data();
+  byte vals = get_tof_vals(150);
   // Serial.print("Tof Vals: ");
   // Serial.println(vals);
 
   // //n e s w
-  // bool walls[4] = {false, vals >> 0 & 0b00000001 || vals >> 1 & 0b00000001, vals >> 4 & 0b00000001, vals >> 2 & 0b00000001 || vals >> 3 & 0b00000001};
-  // pi_send_data(walls);
-  alignAngle(100, 0, 1); 
+  bool walls[4] = {false, vals >> 0 & 0b00000001 || vals >> 1 & 0b00000001, vals >> 4 & 0b00000001, vals >> 2 & 0b00000001 || vals >> 3 & 0b00000001};
+  pi_send_data(walls);
+  // alignAngle(100, 0, 1); 
   //delay(500);
   // driveCM(30, 200, 0);
   // delay(1000);
