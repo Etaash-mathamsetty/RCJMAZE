@@ -10,12 +10,13 @@
 #ifdef FAKE_SERIAL
 #define PI_SERIAL Serial
 #endif
-#ifndef
+
+#ifndef FAKE_SERIAL
 #define PI_SERIAL Serial2
 #endif
 
 #define MUXADDR 0x70
-#define TOF_NUMBER 2
+#define TOF_NUMBER 4
 #define TOF_START 0
 Adafruit_BNO055 bno = Adafruit_BNO055(55, 0x28);
 sensors_event_t accelerometerData, gyroData, orientationData, linearAccelData;
@@ -31,7 +32,8 @@ const int minspeed = 200;
 const double KP_TURN = 1.2;
 const double KI_TURN = 0.00003;
 const double KD_TURN = 0.243;
-const int TURN_BOOST = 60;
+const int DRIVE_BOOST = 50;
+const int TURN_BOOST = 100;
 
 
 const double DRIVE_STRAIGHT_KP = 3.0;
@@ -194,15 +196,14 @@ void pi_send_data(const sensors_event_t& data) {
   }
 }
 
-byte get_tof_vals(int threshold) {
+byte get_tof_vals(double threshold) {
 
   byte wall = 0;
-  int reading;
+  double reading;
 
   for (int i = TOF_START; i <= TOF_NUMBER; i++) {
 
-    tcaselect(i);
-    reading = tof.readRangeContinuousMillimeters();
+    reading = tofCalibrated(i);
     wall <<= 1;
 
     if (reading < threshold) {
@@ -222,6 +223,8 @@ void send_tof_vals(byte tof_val) {
   PI_SERIAL.write(tof_val);
   PI_SERIAL.println();
 }
+
+void driveCM(float,int,int);
 
 void pi_read_data() {
   const char* commands_array[] = { "ge", "gw", "gn", "gs" };
@@ -250,7 +253,7 @@ void pi_read_data() {
       if (cur_cmd.length() > 0) {
         if (cur_cmd[0] == 'g' || cur_cmd[0] == 'f') {
           Serial.println("FORWARD");
-          drive(1000, 100, 1);
+          driveCM(27, 100, 1);
 
         } else {
           Serial.println("ERR: Invalid Parameter");
@@ -267,7 +270,7 @@ void pi_read_data() {
           Serial.println("FORWARD");
           turn(c);
           pi_send_data({ false, false, false, false });
-          drive(1000, 100, 1);
+          driveCM(27, 100, 1);
         } else if (cur_cmd[0] == 't') {
           Serial.print("turn to ");
           Serial.println(c);
@@ -287,7 +290,7 @@ void pi_read_data() {
       if (cur_cmd.length() > 0) {
         if (cur_cmd[0] == 'g' || cur_cmd[0] == 'f') {
           Serial.println("FORWARD");
-          drive(1000, 100, 1);
+          driveCM(27, 100, 1);
         } else {
           Serial.println("ERR: Invalid Parameter");
         }
@@ -433,7 +436,7 @@ void drive(int encoders, int speed, int tolerance) {
     //i = i + p;
     //d = p - last_dist;
     PID = p * KP_FORWARD;
-    Serial.println(PID);
+    //Serial.println(PID);
 
     if (orientationData.orientation.x > 180) {
       p_turn = -(orientationData.orientation.x - 360) - (startX - xPos);
@@ -446,7 +449,7 @@ void drive(int encoders, int speed, int tolerance) {
     // speed = speed * (abs(encoders) - abs(motor1.getTicks()))/abs(encoders);
 
     //    Serial.println(speed * (double)(abs(encoders) - abs(motor1.getTicks()))/abs(encoders));
-    utils::forward(PID - p_turn * DRIVE_STRAIGHT_KP, PID + p_turn * DRIVE_STRAIGHT_KP);
+    utils::forward(PID - p_turn * DRIVE_STRAIGHT_KP + DRIVE_BOOST, PID + p_turn * DRIVE_STRAIGHT_KP + DRIVE_BOOST);
     angle = orientationData.orientation.x;
   } 
   //correct horizontal error when inside of hallway 
@@ -557,12 +560,17 @@ void alignCenterFB(int speed) {
   }
 }
 
-void alignAngle(int speed) {
+void alignAngle(int speed, int tof1, int tof2) {
   float tofR1, tofR2; 
-  tcaselect(0);
+
+  tcaselect(tof1);
   tofR1 = tof.readRangeContinuousMillimeters() - 50;
-  tcaselect(1);
+  tcaselect(tof2);
   tofR2 = tof.readRangeContinuousMillimeters() - 15;
+
+  if (tofR1 > 200 | tofR2 > 200) {
+    return;
+  } 
 
   if (tofR1 >= 200 || tofR2 >= 200) {
     return;
@@ -626,6 +634,50 @@ void acceleration_position() {
   Serial.println(yPos);
 }
 
+double tofCalibrated(int timeofflight) {
+  switch (timeofflight) {
+    case 0: {
+        tcaselect(0);
+        int x1 = tof.readRangeContinuousMillimeters();
+        double tofR1 = -89.7 + (x1 * 1.9) - (0.0033 * (x1 * x1));
+        return tofR1;
+        //accurate (50, 150), horrible < 25
+    }
+    case 1: {
+        tcaselect(1);
+        int x2 = tof.readRangeContinuousMillimeters();
+        double tofR2 = (1.09 * x2) - 21.3;
+        return tofR2;
+        //accurate (50, 150), still works < 25ish
+    }
+    case 2: {
+        tcaselect(2);
+        int x3 = tof.readRangeContinuousMillimeters();
+        double tofL1 = (1.03 * x3) - 9.91;
+        return tofL1;
+        //accrate (50, 150), passable < 50 but not that good
+    } 
+    case 3: { 
+        tcaselect(3); 
+        int x4 = tof.readRangeContinuousMillimeters(); 
+        double tofL2 = -0.848 + (0.671 * x4) + (0.00165 * x4 * x4); 
+        return tofL2; 
+        //decent accuracy 
+      
+    } 
+    case 4: { 
+        tcaselect(4); 
+        int x5 = tof.readRangeContinuousMillimeters(); 
+        double tofF = 3 + (0.657 * x5) + (0.00146 * x5 * x5);
+        return tofF;   
+        //pretty accurate
+    } 
+    default:
+      break;
+  }
+
+}
+
 void loop() {
   //acceleration_position();
   //pi_read_data();
@@ -649,8 +701,15 @@ void loop() {
   //Serial.println("hi");
   //Serial.println(get_tof_vals(100));
   //Serial.println("hi");
-  pi_read_data();
-  //alignAngle(100); 
+  // pi_read_data();
+  // byte vals = get_tof_vals(150);
+  // Serial.print("Tof Vals: ");
+  // Serial.println(vals);
+
+  // //n e s w
+  // bool walls[4] = {false, vals >> 0 & 0b00000001 || vals >> 1 & 0b00000001, vals >> 4 & 0b00000001, vals >> 2 & 0b00000001 || vals >> 3 & 0b00000001};
+  // pi_send_data(walls);
+  alignAngle(100, 0, 1); 
   //delay(500);
   // driveCM(30, 200, 0);
   // delay(1000);
