@@ -562,16 +562,9 @@ void alignCenterFB(int speed) {
 
 void alignAngle(int speed, int tof1, int tof2) {
   float tofR1, tofR2; 
-
-  tcaselect(tof1);
-  tofR1 = tof.readRangeContinuousMillimeters() - 50;
-  tcaselect(tof2);
-  tofR2 = tof.readRangeContinuousMillimeters() - 15;
-
-  if (tofR1 > 200 | tofR2 > 200) {
-    return;
-  } 
-
+  tofR1 = tof(0); 
+  tofR2 = tof(1); 
+         
   if (tofR1 >= 200 || tofR2 >= 200) {
     return;
   }
@@ -634,33 +627,33 @@ void acceleration_position() {
   Serial.println(yPos);
 }
 
-double tofCalibrated(int timeofflight) {
-  switch (timeofflight) {
+int tofCalibrated(int tof) {
+  switch (tof) {
     case 0: {
         tcaselect(0);
         int x1 = tof.readRangeContinuousMillimeters();
-        double tofR1 = -89.7 + (x1 * 1.9) - (0.0033 * (x1 * x1));
+        int tofR1 = -89.7 + (x1 * 1.9) - (0.0033 * (x1 * x1));
         return tofR1;
         //accurate (50, 150), horrible < 25
     }
     case 1: {
         tcaselect(1);
         int x2 = tof.readRangeContinuousMillimeters();
-        double tofR2 = (1.09 * x2) - 21.3;
+        int tofR2 = (1.09 * x2) - 21.3;
         return tofR2;
         //accurate (50, 150), still works < 25ish
     }
     case 2: {
         tcaselect(2);
         int x3 = tof.readRangeContinuousMillimeters();
-        double tofL1 = (1.03 * x3) - 9.91;
+        int tofL1 = (1.03 * x3) - 9.91;
         return tofL1;
         //accrate (50, 150), passable < 50 but not that good
     } 
     case 3: { 
         tcaselect(3); 
         int x4 = tof.readRangeContinuousMillimeters(); 
-        double tofL2 = -0.848 + (0.671 * x4) + (0.00165 * x4 * x4); 
+        int tofL2 = -0.848 + (0.671 * x4) + (0.00165 * x4 * x4); 
         return tofL2; 
         //decent accuracy 
       
@@ -668,7 +661,7 @@ double tofCalibrated(int timeofflight) {
     case 4: { 
         tcaselect(4); 
         int x5 = tof.readRangeContinuousMillimeters(); 
-        double tofF = 3 + (0.657 * x5) + (0.00146 * x5 * x5);
+        int tofF = 3 + (0.657 * x5) + (0.00146 * x5 * x5);
         return tofF;   
         //pretty accurate
     } 
