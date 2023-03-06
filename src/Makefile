@@ -1,7 +1,7 @@
 OBJS = BFS.o robot.o simulation.o helpers.o driver.o debug.o scripting.o
-CFLAGS += -Wall -O2 -g -std=c++17 `pkg-config --cflags python3`
+CFLAGS += -Wall -O2 -g -std=c++17 `python-config --cflags`
 
-LDFLAGS = -lboost_python3 -lpython3.10
+LDFLAGS = -lboost_python3 `python-config --ldflags`
 
 all:	BFS
 
