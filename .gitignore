@@ -4,3 +4,4 @@ BFS
 *.stl
 *.svg
 *.kdev4
+Makefile
