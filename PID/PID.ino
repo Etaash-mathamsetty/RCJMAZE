@@ -7,11 +7,6 @@
 #include "utils.h"
 #include "common.h"
 
-#ifdef DEBUG_DISPLAY
-U8X8_SSD1306_128X64_NONAME_SW_I2C oled(28, 30);
-#endif
-
-
 void setup() {
 #ifndef FAKE_SERIAL
   PI_SERIAL.begin(115200);

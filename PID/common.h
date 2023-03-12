@@ -10,11 +10,17 @@
 #define TOF_START 0
 
 #define MUXADDR 0x70
+#define OLED_CLK 28
+#define OLED_DATA 30
 
 #ifdef FAKE_SERIAL
 #define PI_SERIAL Serial
 #else
 #define PI_SERIAL Serial2
+#endif
+
+#ifdef DEBUG_DISPLAY
+U8X8_SSD1306_128X64_NONAME_SW_I2C oled(OLED_CLK, OLED_DATA);
 #endif
 
 /* might need sensor id of 55, but I doubt it  */
