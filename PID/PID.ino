@@ -1,93 +1,53 @@
-#include <Adafruit_BNO055.h>
-#include "Motors.h"
-#include "VL53L0X.h"
-#include <Wire.h>
-#include "utils.h"
-
 //#define FAKE_ROBOT
 //#define FAKE_SERIAL
+#define DEBUG_DISPLAY
+#define MOTORSOFF
 
-#ifdef FAKE_SERIAL
-#define PI_SERIAL Serial
+#include "Motors.h"
+#include "utils.h"
+#include "common.h"
+
+#ifdef DEBUG_DISPLAY
+U8X8_SSD1306_128X64_NONAME_SW_I2C oled(28, 30);
 #endif
 
-#ifndef FAKE_SERIAL
-#define PI_SERIAL Serial2
-#endif
-
-#define MUXADDR 0x70
-#define TOF_NUMBER 4
-#define TOF_START 0
-Adafruit_BNO055 bno = Adafruit_BNO055(55, 0x28);
-sensors_event_t accelerometerData, gyroData, orientationData, linearAccelData;
-
-VL53L0X tof;
-Motor motorL(MPORT2);
-Motor motorR(MPORT1, true, true);
-
-const float CM_TO_ENCODERS = 100/4.6;
-const float ENCODERS_TO_CM = 4.6/100;
-
-const int minspeed = 200;
-const double KP_TURN = 1.2;
-const double KI_TURN = 0.00003;
-const double KD_TURN = 0.243;
-const int DRIVE_BOOST = 50;
-const int TURN_BOOST = 100;
-
-
-const double DRIVE_STRAIGHT_KP = 3.0;
-const double KP_FORWARD = 1.2;
-const double KI_FORWARD = 0.003;
-const double KD_FORWARD = 0.01;
-const double SAMPLERATE_DELAY_MS = 10.0;
-const double TIMES_PER_SECOND = 1000.0 / SAMPLERATE_DELAY_MS;
-
-const int SPEED = 100;
-
-volatile double velocity = 0.0;
-volatile double position = 0.0;
-volatile double average_acceleration;
-volatile unsigned long tStart = millis();
-volatile int count = 0;
-
-const double TOF_DISTANCE = 58.64;
-
-enum type { Color,
-            Distance };
-enum direction { n,
-                 e,
-                 s,
-                 w };
-volatile uint8_t cur_direction = n;
-double xPos = 0, yPos = 0;
-uint16_t BNO055_SAMPLERATE_DELAY_MS = 10;
-double ACCEL_VEL_TRANSITION = (double)(BNO055_SAMPLERATE_DELAY_MS) / 1000.0;
-double ACCEL_POS_TRANSITION = 0.5 * ACCEL_VEL_TRANSITION * ACCEL_VEL_TRANSITION;
-
-inline void tcaselect(uint8_t i) {
-  if (i > 7)
-    return;
-
-  Wire.beginTransmission(MUXADDR);
-  Wire.write(1 << i);
-  Wire.endTransmission();
-}
 
 void setup() {
-  //PI_SERIAL.begin(9600);
+#ifndef FAKE_SERIAL
+  PI_SERIAL.begin(115200);
+#endif
   Serial.begin(9600);
   utils::setMotors(&motorR, &motorL);
   Wire.begin();
-  bno.begin(Adafruit_BNO055::OPERATION_MODE_IMUPLUS);
+  //Wire.begin();
+  //Wire.setClockStretchLimit(200000L);
+
+  bno.begin(OPERATION_MODE_IMUPLUS);
   Serial.println("starting the code!");
 
   for (int i = TOF_START; i <= TOF_NUMBER; i++) {
     tcaselect(i);
     tof.init();
     //tof.setTimeout(500);
-    tof.startContinuous();
+    //tof.startContinuous();
   }
+  pinMode(2, OUTPUT);
+  pinMode(5, OUTPUT);
+  pinMode(4, OUTPUT);
+  analogWrite(2, 10);  
+  Serial.println("TOF INIT SUCCEED!");
+  #ifdef DEBUG_DISPLAY
+    oled.begin();
+    oled.setFlipMode(0);
+    oled.setFont(u8x8_font_chroma48medium8_r);
+    oled.setCursor(0, 0);
+    oled.println("Starting...");
+    delay(1000);
+    oled.setCursor(0, 0);
+    oled.clearDisplay();    
+  #endif
+  Serial.println("oled init done!");
+  analogWrite(2, 0);
 }
 
 inline void pi_send_tag(const char* tag) {
@@ -100,7 +60,7 @@ inline void display_tag(const char* tag) {
   Serial.print(": ");
 }
 
-void display_data(const sensors_event_t& data) {
+void display_bno_data(const sensors_event_t& data) {
 
   switch (data.type) {
     case SENSOR_TYPE_ACCELEROMETER:
@@ -306,7 +266,7 @@ void left(int relative_angle, int speed) {
   int angle = 360 - relative_angle;
   double p, i = 0, d;
   double PID;
-  bno.begin(Adafruit_BNO055::OPERATION_MODE_IMUPLUS);
+  bno.begin(OPERATION_MODE_IMUPLUS);
   bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
 
   double last_error = abs((orientationData.orientation.x - angle) / angle);
@@ -353,7 +313,7 @@ void right(int angle, int speed) {
   double p, i = 0, d;
   double PID;
   double start = millis();
-  bno.begin(Adafruit_BNO055::OPERATION_MODE_IMUPLUS);
+  bno.begin(OPERATION_MODE_IMUPLUS);
   bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
 
   double last_error = abs((orientationData.orientation.x - angle) / angle);
@@ -417,7 +377,7 @@ void driveCM (float cm, int speed = 200, int tolerance = 1) {
 
 void drive(int encoders, int speed, int tolerance) {
 
-  bno.begin(Adafruit_BNO055::OPERATION_MODE_IMUPLUS);
+  bno.begin(OPERATION_MODE_IMUPLUS);
   int angle = 60, tofR1, tofR2; 
   utils::resetTicks();
   double p, d, i = 0;
@@ -628,51 +588,71 @@ void acceleration_position() {
   Serial.println(yPos);
 }
 
-int tofCalibrated(int select) {
-  switch (select) {
-    case 0: {
+int tofCalibrated(int select) 
+{
+  int dist = 0;
+  switch (select) 
+  {
+    case 0: 
+    {
         tcaselect(0);
-        int x1 = tof.readRangeSingleMillimeters();
-        int tofR1 = -89.7 + (x1 * 1.9) - (0.0033 * (x1 * x1));
+        dist = tof.readRangeSingleMillimeters();
+        int tofR1 = -89.7 + (dist * 1.9) - (0.0033 * (dist * dist));
         return tofR1;
         //accurate (50, 150), horrible < 25
     }
-    case 1: {
+    case 1: 
+    {
         tcaselect(1);
-        int x2 = tof.readRangeSingleMillimeters();
-        int tofR2 = (1.09 * x2) - 21.3;
+        dist = tof.readRangeSingleMillimeters();
+        int tofR2 = (1.09 * dist) - 21.3;
         return tofR2;
         //accurate (50, 150), still works < 25ish
     }
-    case 2: {
+    case 2: 
+    {
         tcaselect(2);
-        int x3 = tof.readRangeSingleMillimeters();
-        int tofL1 = (1.03 * x3) - 9.91;
+        dist = tof.readRangeSingleMillimeters();
+        int tofL1 = (1.03 * dist) - 9.91;
         return tofL1;
         //accrate (50, 150), passable < 50 but not that good
     } 
-    case 3: { 
+    case 3: 
+    { 
         tcaselect(3); 
-        int x4 = tof.readRangeSingleMillimeters(); 
-        int tofL2 = -0.848 + (0.671 * x4) + (0.00165 * x4 * x4); 
+        dist = tof.readRangeSingleMillimeters(); 
+        int tofL2 = -0.848 + (0.671 * dist) + (0.00165 * dist * dist); 
         return tofL2; 
         //decent accuracy 
       
     } 
-    case 4: { 
+    case 4: 
+    { 
         tcaselect(4); 
-        int x5 = tof.readRangeSingleMillimeters(); 
-        int tofF = 3 + (0.657 * x5) + (0.00146 * x5 * x5);
+        dist = tof.readRangeSingleMillimeters(); 
+        int tofF = 3 + (0.657 * dist) + (0.00146 * dist * dist);
         return tofF;   
         //pretty accurate
     } 
     default:
-      break;
+      return -1;
   }
-
 }
 
-void loop() {
+void oled_display_walls(bool walls[4])
+{
+#ifdef DEBUG_DISPLAY
+  for(int i = 0; i < 3; i++)
+  {
+    oled.print(walls[i]);
+    oled.print(',');
+  }
+  oled.println(walls[3]);
+#endif
+}
+
+void loop() 
+{
   //acceleration_position();
   //pi_read_data();
   /*
@@ -695,17 +675,27 @@ void loop() {
   //Serial.println("hi");
   //Serial.println(get_tof_vals(100));
   //Serial.println("hi");
-  pi_read_data();
+  //pi_read_data();
   byte vals = get_tof_vals(150);
   // Serial.print("Tof Vals: ");
   // Serial.println(vals);
 
   // //n e s w
-  bool walls[4] = {false, vals >> 0 & 0b00000001 || vals >> 1 & 0b00000001, vals >> 4 & 0b00000001, vals >> 2 & 0b00000001 || vals >> 3 & 0b00000001};
+  bool walls[4] = {(vals) & 0b1, (vals >> 4) & 1 || (vals >> 3) & 1, false, (vals >> 1) & 0b1 || (vals >> 2) & 0b1};
+  /* not wrapped around and stuff */
+  oled_display_walls(walls);
+  /* this is wrapped */
   pi_send_data(walls);
   // alignAngle(100, 0, 1); 
   //delay(500);
   // driveCM(30, 200, 0);
   // delay(1000);
+
+#ifdef DEBUG_DISPLAY
+  oled.setCursor(0, 0);
+#endif
+
+  delay(100);
+
 
 }
