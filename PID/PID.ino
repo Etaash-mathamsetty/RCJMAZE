@@ -1,7 +1,7 @@
 //#define FAKE_ROBOT
 //#define FAKE_SERIAL
 #define DEBUG_DISPLAY
-#define MOTORSOFF
+// #define MOTORSOFF
 
 #include "Motors.h"
 #include "utils.h"
@@ -107,13 +107,13 @@ void pi_send_data(bool forward, bool black_tile) {
 
 void pi_send_data(bool walls[4]) {
   pi_send_tag("NW");
-  PI_SERIAL.println(walls[utils::math::wrapAround((int) (n - cur_direction), sizeof(walls)/sizeof(walls[0]))]);
+  PI_SERIAL.println(walls[utils::math::wrapAround((int) (n - cur_direction), 4)]);
   pi_send_tag("EW");
-  PI_SERIAL.println(walls[utils::math::wrapAround((int) (e - cur_direction), sizeof(walls)/sizeof(walls[0]))]);
+  PI_SERIAL.println(walls[utils::math::wrapAround((int) (e - cur_direction), 4)]);
   pi_send_tag("SW");
-  PI_SERIAL.println(walls[utils::math::wrapAround((int) (s - cur_direction), sizeof(walls)/sizeof(walls[0]))]);
+  PI_SERIAL.println(walls[utils::math::wrapAround((int) (s - cur_direction), 4)]);
   pi_send_tag("WW");
-  PI_SERIAL.println(walls[utils::math::wrapAround((int) (w - cur_direction), sizeof(walls)/sizeof(walls[0]))]);
+  PI_SERIAL.println(walls[utils::math::wrapAround((int) (w - cur_direction), 4)]);
 }
 
 void pi_send_data(const sensors_event_t& data) {
@@ -189,7 +189,16 @@ void pi_read_data() {
 #ifndef FAKE_ROBOT
   while (!PI_SERIAL.available())
     ;
-  String data = PI_SERIAL.readString();
+
+  String data = "";
+  char ch = 0;
+  while(PI_SERIAL.available() > 3 && ch != '\n') {
+    ch = PI_SERIAL.read();
+    data += ch;
+  }
+
+  //data += "\n";
+  // String data = PI_SERIAL.readString();
 #endif
 
 #ifdef FAKE_ROBOT
@@ -676,7 +685,7 @@ void loop()
   // Serial.println(vals);
 
   // //n e s w
-  bool walls[4] = {(vals) & 0b1, (vals >> 4) & 1 || (vals >> 3) & 1, false, (vals >> 1) & 0b1 || (vals >> 2) & 0b1};
+  bool walls[4] = {(vals) & 0b1, (vals >> 4) & 1 && (vals >> 3) & 1, false, (vals >> 1) & 0b1 && (vals >> 2) & 0b1};
   /* not wrapped around and stuff */
   oled_display_walls(walls);
   /* this is wrapped */
@@ -685,6 +694,9 @@ void loop()
   //delay(500);
   // driveCM(30, 200, 0);
   // delay(1000);
+  pi_send_tag("dir");
+  PI_SERIAL.println(cur_direction);
+  pi_read_data();
 
 #ifdef DEBUG_DISPLAY
   oled.setCursor(0, 0);
