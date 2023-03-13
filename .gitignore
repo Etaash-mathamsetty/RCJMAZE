@@ -5,3 +5,4 @@ BFS
 *.svg
 *.kdev4
 Makefile
+__pycache__
