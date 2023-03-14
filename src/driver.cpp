@@ -1,6 +1,7 @@
 #include "driver.h"
 #include "robot.h"
 #include "scripting.h"
+#include "helpers.h"
 #include <chrono>
 #include <thread>
 #include <filesystem>
@@ -16,6 +17,9 @@ namespace driver
 		CHECK(bot);
 		std::ifstream in;
 		in.open("save.txt");
+		in >> num_floors;
+		if(num_floors > 1 && second_floor == nullptr)
+			second_floor = new simulation_node*[5];
 		bool n, s, e, w, vic, bot_here, vis, ramp, checkpoint, black;
 		for(int i = 0; i < horz_size * vert_size; i++)
 		{
@@ -43,6 +47,35 @@ namespace driver
 			if(nodes[i].bot)
 				sim::sim_robot_index = i;
 		}
+		if(num_floors > 1)
+		{
+			for(int l = 0; l < num_floors; l++)
+			for(int i = 0; i < horz_size * vert_size; i++)
+			{
+				in >> n >> s >> e >> w >> vic >> bot_here >> vis >> ramp >> checkpoint;
+				bot->second_floor[l][i].N = n;
+				bot->second_floor[l][i].S = s;
+				bot->second_floor[l][i].E = e;
+				bot->second_floor[l][i].W = w;
+				bot->second_floor[l][i].bot = bot_here;
+				bot->second_floor[l][i].vic = vic;
+				bot->second_floor[l][i].vis = vis;
+				bot->second_floor[l][i].ramp = ramp;
+				bot->second_floor[l][i].checkpoint = checkpoint;
+
+				in >> n >> s >> e >> w >> vic >> bot_here >> vis >> ramp >> checkpoint >> black;
+				second_floor[l][i].N = n;
+				second_floor[l][i].S = s;
+				second_floor[l][i].E = e;
+				second_floor[l][i].W = w;
+				second_floor[l][i].vic = vic;
+				second_floor[l][i].vis = vis;
+				second_floor[l][i].ramp = ramp;
+				second_floor[l][i].black = black;
+				second_floor[l][i].bot = bot_here;
+				second_floor[l][i].checkpoint = checkpoint;
+			}
+		}
 	}
 
 	CREATE_DRIVER(void, save_state)
@@ -51,6 +84,7 @@ namespace driver
 		CHECK(bot);
 		std::ofstream out;
 		out.open("save.txt");
+		out << num_floors << std::endl;
 		for(int i = 0; i < horz_size * vert_size; i++)
 		{
 			out << bot->map[i].N << " " << bot->map[i].S << " " << bot->map[i].E << " " << bot->map[i].W
@@ -59,6 +93,23 @@ namespace driver
 			out << nodes[i].N << " " << nodes[i].S << " " << nodes[i].E << " " << nodes[i].W
 			<< " " << nodes[i].vic << " " << nodes[i].bot << " " << nodes[i].vis << " " << nodes[i].ramp
 			<< " " << nodes[i].checkpoint << " " << nodes[i].black << std::endl;
+		}
+		if(num_floors > 1)
+		{
+			for(int l = 0; l < num_floors; l++)
+			for(int i = 0; i < horz_size * vert_size; i++)
+			{
+				out << bot->second_floor[l][i].N << " " << bot->second_floor[l][i].S << " ";
+				out << bot->second_floor[l][i].E << " " << bot->second_floor[l][i].W << " ";
+				out << bot->second_floor[l][i].vic << " " << bot->second_floor[l][i].bot << " ";
+				out << bot->second_floor[l][i].vis << " " << bot->second_floor[l][i].ramp << " ";
+				out << bot->second_floor[l][i].checkpoint << std::endl;
+
+				out << second_floor[l][i].N << " " << second_floor[l][i].S << " " << second_floor[l][i].E << " ";
+				out << second_floor[l][i].W << " " << second_floor[l][i].vic << " " << second_floor[l][i].bot << " ";
+				out << second_floor[l][i].vis << " " << second_floor[l][i].ramp << " " << second_floor[l][i].checkpoint << " ";
+				out << second_floor[l][i].black << std::endl;
+			}
 		}
 	}
 
@@ -90,12 +141,14 @@ namespace driver
 		CHECK(nodes);
 		//FIXME: too much repitition
 		//simulate time for movement
-		#ifdef SIM_MOV_DELAY
+#ifdef SIM_MOV_DELAY
 		std::this_thread::sleep_for(std::chrono::milliseconds(3000));
-		#endif
+ #endif
 		auto org_index = bot->index;
 		auto org_sim_index = sim::sim_robot_index;
-		switch(bot->dir){
+		bool ramp = nodes[sim::sim_robot_index].ramp;
+		switch(bot->dir)
+		{
 			case DIR::N:
 			{
 				if(helper::is_valid_index(bot->index - horz_size) && helper::is_valid_index(sim::sim_robot_index - horz_size) && !bot->map[bot->index].N){
@@ -105,6 +158,13 @@ namespace driver
 					sim::sim_robot_index -= horz_size;
 					bot->map[bot->index].bot = true;
 					nodes[sim::sim_robot_index].bot = true;
+
+					if(ramp)
+					{
+						floor_num++;
+						nodes = second_floor[floor_num - 1];
+						sim::sim_robot_index = sim::second_floor_entrance[floor_num - 1];
+					}
 				}
 				else{
 					std::cerr << "ERROR: Cannot move forward!" << std::endl;
@@ -115,15 +175,24 @@ namespace driver
 			}
 			case DIR::E:
 			{
-				if(helper::is_valid_index(bot->index + 1) && helper::is_valid_index(sim::sim_robot_index + 1) && !(bot->map[bot->index].E)){
+				if(helper::is_valid_index(bot->index + 1) && helper::is_valid_index(sim::sim_robot_index + 1) && !(bot->map[bot->index].E))
+				{
 					bot->map[bot->index].bot = false;
 					nodes[sim::sim_robot_index].bot = false;
 					(bot->index)++;
 					sim::sim_robot_index++;
 					bot->map[bot->index].bot = true;
 					nodes[sim::sim_robot_index].bot = true;
+
+					if(ramp) 
+					{
+						floor_num++;
+						nodes = second_floor[floor_num - 1];
+						sim::sim_robot_index = sim::second_floor_entrance[floor_num - 1];
+					}
 				}
-				else{
+				else
+				{
 					std::cerr << "ERROR: Cannot move forward!" << std::endl;
 					debug::print_robot_info(bot);
 					return false;
@@ -139,8 +208,16 @@ namespace driver
 					sim::sim_robot_index += horz_size;
 					bot->map[bot->index].bot = true;
 					nodes[sim::sim_robot_index].bot = true;
+
+					if(ramp)
+					{
+						floor_num++;
+						nodes = second_floor[floor_num - 1];
+						sim::sim_robot_index = sim::second_floor_entrance[floor_num - 1];
+					}
 				}
-				else{
+				else
+				{
 					std::cerr << "ERROR: Cannot move forward!" << std::endl;
 					debug::print_robot_info(bot);
 					return false;
@@ -156,6 +233,13 @@ namespace driver
 					sim::sim_robot_index--;
 					bot->map[bot->index].bot = true;
 					nodes[sim::sim_robot_index].bot = true;
+
+					if(ramp)
+					{
+						floor_num++;
+						nodes = second_floor[floor_num - 1];
+						sim::sim_robot_index = sim::second_floor_entrance[floor_num - 1];
+					}
 				}
 				else
 				{
@@ -275,7 +359,7 @@ namespace driver
 	CREATE_DRIVER(void, drop_vic, int num)
 	{
 		//d [drop] N [number of kits, single digit only] \n
-		PythonScript::CallPythonFunction<std::string, std::string>("SendSerialCommand", com::drop_vic + std::to_string(num) + "\n");
+		PythonScript::CallPythonFunction<bool, std::string>("SendSerialCommand", com::drop_vic + std::to_string(num) + "\n");
 	}
 
 	CREATE_DRIVER(void, get_sensor_data)
@@ -379,7 +463,7 @@ namespace driver
 		std::string forward = "";
 		forward += com::forward;
 		forward += '\n';
-		PythonScript::CallPythonFunction<std::string, std::string>("SendSerialCommmand", forward);
+		PythonScript::CallPythonFunction<bool, std::string>("SendSerialCommmand", forward);
 		//wait for it to start running
 		while(!(bool)Bridge::get_data_value("forward_status")[0]) { PythonScript::Exec(ser_py_file); }
 		//wait for it to finish running
@@ -452,7 +536,7 @@ namespace driver
 		std::string turn_cmd = "";
 		turn_cmd += com::turn;
 		turn_cmd += helper::dir_to_char(dir) + '\n';
-		PythonScript::CallPythonFunction<std::string, std::string>("SendSerialCommand", turn_cmd);
+		PythonScript::CallPythonFunction<bool, std::string>("SendSerialCommand", turn_cmd);
 	}
 
     #endif

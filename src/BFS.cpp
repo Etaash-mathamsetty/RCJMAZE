@@ -45,6 +45,7 @@ Stack<int> BFS(robot& robot)
 
 		if(worker.size() == 0)
 		{
+			/* return to start */
 			quitable = true;
 			robot.map[helper::get_index(default_index, default_index)].vis = false;
 			return BFS(robot);
@@ -72,19 +73,27 @@ Stack<int> BFS(robot& robot)
 
 int main(int argc, char* argv[]){
 	//setup signal handler
- 
-#ifdef SIMULATION
 	struct sigaction sigIntHandler;
 	sigIntHandler.sa_handler = [](int s){/* should clean everything up anyway */ exit(1);};
 	sigemptyset(&sigIntHandler.sa_mask);
 	sigIntHandler.sa_flags = 0;
 	sigaction(SIGINT, &sigIntHandler, NULL);
 
+#ifdef SIMULATION
+	second_floor = new simulation_node*[5];
+
 	if(argc > 1)
 		sim::read_map_from_file(argv[1]);
 	else
 		sim::read_map_from_file("field.txt");
+
+	if(argc > 2)
+		sim::read_map_from_file(argv[2]);
+	else
+		sim::read_map_from_file("field2.txt");
+
 #endif
+
 	driver::init_robot();
 	robot* robot = robot::get_instance();
 	driver::get_sensor_data();

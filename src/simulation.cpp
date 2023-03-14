@@ -6,6 +6,16 @@
 namespace sim
 {
 
+    inline void set_node_values(simulation_node& node, char c)
+    {
+        node.bot |= (tolower(c) == 'x');
+        node.vis |= node.bot;
+        node.vic |= (tolower(c) == 'v');
+        node.checkpoint |= (tolower(c) == 'c');
+        node.black |= (tolower(c) == 'b');
+        node.ramp |= (tolower(c) == 'r');
+    }
+
     #ifdef SIMULATION
     void read_map_from_file(std::string name)
     {
@@ -20,6 +30,13 @@ namespace sim
         in >> _horz_size;
         _horz_size++;
         in >> _vert_size;
+
+        simulation_node* first_floor = nodes;
+
+        if(first_floor)
+        {
+            nodes = *second_floor;
+        }
 
         nodes = new simulation_node[horz_size * vert_size];
         memset(nodes, 0, sizeof(simulation_node) * horz_size * vert_size);
@@ -52,14 +69,13 @@ namespace sim
                     if(x == '+') continue;
                     auto& node = nodes[helper::get_index(v,i)];
                     node.N = (x == '-');
-                    node.bot |= (tolower(x) == 'x');
-                    node.vis |= node.bot;
-                    node.vic |= (tolower(x) == 'v');
-                    node.checkpoint |= (tolower(x) == 'c');
-                    node.black |= (tolower(x) == 'b');
+                    set_node_values(node, x);
 
                     if(node.bot)
                         sim_robot_index = helper::get_index(v,i);
+                    
+                    if(node.ramp && !first_floor)
+                        second_floor_entrance = helper::get_index(v,i);
                     //print_node(nodes[get_index(v,i)]);
                     //nodes[get_index(v,i)] = node;
                     //horz_size++;
@@ -85,14 +101,13 @@ namespace sim
                         node.W = true;
                     }
                 }
-                node.bot |= (tolower(x) == 'x');
-                node.vis |= node.bot;
-                node.vic |= (tolower(x) == 'v');
-                node.checkpoint |= (tolower(x) == 'c');
-                node.black |= (tolower(x) == 'b');
+                set_node_values(node, x);
 
                 if(node.bot)
                     sim_robot_index = helper::get_index(v,i);
+
+                if(node.ramp && !first_floor)
+                    second_floor_entrance = helper::get_index(v,i);
             }
             //printf("loop 3\n");
             for(float i = 0; i < _horz_size; i+=0.5)
@@ -106,17 +121,18 @@ namespace sim
                 if(x == '+') continue;
                 auto& node = nodes[helper::get_index(v,i)];
                 node.S = (x == '-');
-                node.bot |= (tolower(x) == 'x');
-                node.vis |= node.bot;
-                node.vic |= (tolower(x) == 'v');
-                node.checkpoint |= (tolower(x) == 'c');
-                node.black |= (tolower(x) == 'b');
+                set_node_values(node, x);
 
                 if(node.bot)
                     sim_robot_index = helper::get_index(v,i);
+                
+                if(node.ramp && !first_floor)
+                    second_floor_entrance = helper::get_index(v,i);
             }
             //v++;
         }
+
+        nodes = first_floor;
         return;
     }
 
