@@ -5,17 +5,13 @@
 #include <assert.h>
 #include <sstream>
 
-//#define SIMULATION
+#define SIMULATION
 #define DEBUG
 //#define SIM_MOV_DELAY
 
-/* TODO: lack of progress support
-	save state and load state for checkpoints
-*/
-
 #ifdef SIMULATION
 //is the bigger one in terms of size, shouldn't impact the smaller node's values when using memcpy
-struct simulation_node{
+struct simulation_node {
 	public:
 		bool N : 1;
 		bool S : 1;
@@ -34,7 +30,7 @@ struct simulation_node{
 #endif
 
 // is the smaller in terms bytes
-struct node{
+struct node {
 	public:
 #ifdef SIMULATION
 		node(simulation_node& node)
@@ -49,6 +45,8 @@ struct node{
 			ramp = node.ramp;
 			checkpoint = node.checkpoint;
 		}
+
+		node() {}
 #endif
 
 		bool N : 1;
@@ -112,6 +110,9 @@ const std::string cleanup_py_file = "cleanup.py";
 
 #ifdef SIMULATION
 //simulation field
+inline int num_floors = 1;
+inline int floor_num = 0;
+inline simulation_node** second_floor;
 inline simulation_node* nodes;
 const static bool is_simulation = true;
 #else

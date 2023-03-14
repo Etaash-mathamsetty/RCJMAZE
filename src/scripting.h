@@ -14,15 +14,15 @@ public:
 
     static void Exec(std::string);
 
-    template<typename T, typename... Args>
-    static std::optional<T> CallPythonFunction(std::string function, Args... args)
+    template<typename ReturnType, typename... Args>
+    static std::optional<ReturnType> CallPythonFunction(std::string function, Args... args)
     {
         using namespace boost;
         if(PyObject_HasAttrString(main_module.ptr(), function.c_str()))
         {
             try
             {
-                return python::extract<T>(main_module.attr(function.c_str())(args...));
+                return python::extract<ReturnType>(main_module.attr(function.c_str())(args...));
             }
             catch(python::error_already_set const &)
             {
@@ -32,7 +32,7 @@ public:
         }
         else
         {
-            std::cout << "Function " << function << " not found" << std::endl;
+            std::cerr << "ERR: Function " << function << " not found!" << std::endl;
             return {};
         }
     }
@@ -43,7 +43,7 @@ private:
 
 namespace Bridge
 {
-    std::vector<float> get_data_value(const std::string key);
+    std::optional<std::vector<float>> get_data_value(const std::string key);
 }
 
 #endif // SCRIPTING_H_INCLUDED

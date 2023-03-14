@@ -104,7 +104,7 @@ public:
 
 	std::optional<Node<T>> pop_back(){
 		if(tail->prev != nullptr){
-			Node<T>* prev_tail = tail;
+			Node<T> prev_tail = *tail;
 			tail->prev->next = nullptr;
 			delete tail;
 			tail = tail->prev;
