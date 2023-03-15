@@ -110,6 +110,8 @@ const std::string cleanup_py_file = "cleanup.py";
 
 #ifdef SIMULATION
 //simulation field
+/* number of simulation_node* we need to allocate for second_floor */
+const int num_second_floors = 5;
 inline int num_floors = 1;
 inline int floor_num = 0;
 inline simulation_node** second_floor;

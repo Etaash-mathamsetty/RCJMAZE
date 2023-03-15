@@ -16,9 +16,8 @@
 #include <optional>
 
 
-//a better implementation would be to make the link list wrap around
+//TODO: a better implementation would be to make the link list wrap around
 
-//TODO: FIX NULL BASENODE!!!!!!
 #define REPEAT(i, size) for(decltype(size) i = 0; i < size; i++)
 
 template <typename T>

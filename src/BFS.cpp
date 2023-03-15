@@ -22,7 +22,7 @@ bool quitable = false;
 Stack<int> BFS(robot& robot)
 {
 	//set everything to an obv invalid index
-	int parent[horz_size * vert_size * sizeof(int)];
+	int parent[horz_size * vert_size];
 	for(int i = 0; i < horz_size * vert_size; i++)
 		parent[i] = -1;
 	LinkedList<int> worker;
@@ -74,24 +74,27 @@ Stack<int> BFS(robot& robot)
 int main(int argc, char* argv[]){
 	//setup signal handler
 	struct sigaction sigIntHandler;
-	sigIntHandler.sa_handler = [](int s){/* should clean everything up anyway */ exit(1);};
+	sigIntHandler.sa_handler = [](int s){ /* TODO: test with driver::cleanup(); */ /* should clean everything up anyway */ exit(1);};
 	sigemptyset(&sigIntHandler.sa_mask);
 	sigIntHandler.sa_flags = 0;
 	sigaction(SIGINT, &sigIntHandler, NULL);
 
 #ifdef SIMULATION
-	second_floor = new simulation_node*[5];
+	second_floor = new simulation_node*[num_second_floors];
 
-	if(argc > 1)
-		sim::read_map_from_file(argv[1]);
-	else
-		sim::read_map_from_file("field.txt");
 
-	if(argc > 2)
-		sim::read_map_from_file(argv[2]);
-	else
-		sim::read_map_from_file("field2.txt");
-
+	for(int i = 1; i < num_second_floors + 1; i++)
+	{
+		if(argc > i)
+			sim::read_map_from_file(argv[i]);
+		else
+		{
+			if(i > 1)
+				sim::read_map_from_file("field" + std::to_string(i) + ".txt");
+			else
+				sim::read_map_from_file("field.txt");
+		}
+	}
 #endif
 
 	driver::init_robot();
