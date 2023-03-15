@@ -19,7 +19,7 @@ namespace driver
 		in.open("save.txt");
 		in >> num_floors;
 		if(num_floors > 1 && second_floor == nullptr)
-			second_floor = new simulation_node*[5];
+			second_floor = new simulation_node*[num_second_floors];
 		bool n, s, e, w, vic, bot_here, vis, ramp, checkpoint, black;
 		for(int i = 0; i < horz_size * vert_size; i++)
 		{
@@ -328,9 +328,9 @@ namespace driver
 		robot* bot = robot::get_instance();
 		CHECK(bot);
 		bot->dir = dir;
-		#ifdef SIM_MOV_TIME
+#ifdef SIM_MOV_TIME
 		std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-		#endif
+#endif
 	}
 
 /*

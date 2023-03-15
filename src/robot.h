@@ -9,7 +9,8 @@
 #include "helpers.h"
 #include "scripting.h"
 
-class robot{
+class robot
+{
 	protected:
 		robot();
 
@@ -28,7 +29,8 @@ class robot{
 			return helper::get_nearest(this->index);
 		}
 
-		explicit operator std::string(){
+		explicit operator std::string()
+		{
 			std::stringstream x;
 			x << "Robot Info: ";
 			x << "DIR: " << helper::dir_to_string(dir) << ", ";
