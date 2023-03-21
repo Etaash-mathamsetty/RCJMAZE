@@ -3,7 +3,8 @@
 #include <Adafruit_BNO055.h>
 #ifdef DEBUG_DISPLAY
 #include <U8g2lib.h>
-#include <U8x8lib.h>
+#include <U8x8lib.h> 
+#include "Adafruit_TCS34725.h"
 #endif
 
 #define TOF_NUMBER 4
@@ -27,6 +28,9 @@ U8X8_SSD1306_128X64_NONAME_SW_I2C oled(OLED_CLK, OLED_DATA);
 Adafruit_BNO055 bno;
 
 VL53L0X tof;
+
+Adafruit_TCS34725 tcs = Adafruit_TCS34725(TCS34725_INTEGRATIONTIME_2_4MS, TCS34725_GAIN_16X);
+
 
 Motor motorL(MPORT2);
 Motor motorR(MPORT1, true, true);
