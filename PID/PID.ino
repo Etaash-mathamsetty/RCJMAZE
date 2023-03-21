@@ -25,7 +25,13 @@ void setup() {
     tof.init();
     //tof.setTimeout(500);
     //tof.startContinuous();
+  } 
+  /*
+  if (!tcs.begin())
+  {
+    Serial.println("error first!");
   }
+  */
   pinMode(2, OUTPUT);
   pinMode(5, OUTPUT);
   pinMode(4, OUTPUT);
@@ -42,7 +48,8 @@ void setup() {
     oled.clearDisplay();    
   #endif
   Serial.println("oled init done!");
-  analogWrite(2, 0);
+  analogWrite(2, 0); 
+ 
 }
 
 inline void pi_send_tag(const char* tag) {
