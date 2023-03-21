@@ -264,6 +264,17 @@ void pi_read_data() {
   }
 }
 
+bool black_detect(){
+ 
+  uint16_t r,g,b,c;
+  tcs.getRawData(&r,&g, &b, &c);
+  print_raw_color(r,g,b,c);
+  if(c < 900)
+    return true;
+  
+  return false;
+}
+
 void left(int relative_angle, int speed) {
   motorL.addBoost(TURN_BOOST);
   motorR.addBoost(TURN_BOOST);
