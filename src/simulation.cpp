@@ -16,6 +16,8 @@ namespace sim
         node.ramp |= (tolower(c) == 'r');
     }
 
+    int floor_number = 0;
+
     #ifdef SIMULATION
     void read_map_from_file(std::string name)
     {
@@ -31,12 +33,16 @@ namespace sim
         _horz_size++;
         in >> _vert_size;
 
-        simulation_node* first_floor = nodes;
+        //init with a random value
+        int& _second_floor_entrance = floor_number;
 
-        if(first_floor)
+        if(floor_number != 0)
         {
-            nodes = *second_floor;
+            _second_floor_entrance = second_floor_entrance[floor_number - 1];
+            nodes = second_floor[floor_number - 1];
         }
+
+        floor_number++;
 
         nodes = new simulation_node[horz_size * vert_size];
         memset(nodes, 0, sizeof(simulation_node) * horz_size * vert_size);
@@ -74,8 +80,8 @@ namespace sim
                     if(node.bot)
                         sim_robot_index = helper::get_index(v,i);
                     
-                    if(node.ramp && !first_floor)
-                        second_floor_entrance = helper::get_index(v,i);
+                    if(node.ramp && floor_number != 0)
+                        _second_floor_entrance = helper::get_index(v,i);
                     //print_node(nodes[get_index(v,i)]);
                     //nodes[get_index(v,i)] = node;
                     //horz_size++;
@@ -106,8 +112,8 @@ namespace sim
                 if(node.bot)
                     sim_robot_index = helper::get_index(v,i);
 
-                if(node.ramp && !first_floor)
-                    second_floor_entrance = helper::get_index(v,i);
+                if(node.ramp && floor_number != 0)
+                    _second_floor_entrance = helper::get_index(v,i);
             }
             //printf("loop 3\n");
             for(float i = 0; i < _horz_size; i+=0.5)
@@ -126,13 +132,11 @@ namespace sim
                 if(node.bot)
                     sim_robot_index = helper::get_index(v,i);
                 
-                if(node.ramp && !first_floor)
-                    second_floor_entrance = helper::get_index(v,i);
+                if(node.ramp && floor_number != 0)
+                    _second_floor_entrance = helper::get_index(v,i);
             }
             //v++;
         }
-
-        nodes = first_floor;
         return;
     }
 
