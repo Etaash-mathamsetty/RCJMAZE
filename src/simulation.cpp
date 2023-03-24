@@ -5,7 +5,7 @@
 
 namespace sim
 {
-
+#ifdef SIMULATION
     inline void set_node_values(simulation_node& node, char c)
     {
         node.bot |= (tolower(c) == 'x');
@@ -18,7 +18,6 @@ namespace sim
 
     int floor_number = 0;
 
-    #ifdef SIMULATION
     void read_map_from_file(std::string name)
     {
         std::ifstream in(name);

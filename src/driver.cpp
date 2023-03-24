@@ -489,13 +489,13 @@ namespace driver
 			std::this_thread::sleep_for(std::chrono::milliseconds(20));
 		}
 		//wait for it to finish running
-		while((bool)*Bridge::get_data_value("forward_status")[0]) 
+		while((bool)(*Bridge::get_data_value("forward_status"))[0]) 
 		{ 
 			PythonScript::Exec(ser_py_file); 
 			std::this_thread::sleep_for(std::chrono::milliseconds(20));
 		}
 
-		bool status = (bool)*Bridge::get_data_value("forward_status")[1];
+		bool status = (bool)(*Bridge::get_data_value("forward_status"))[1];
 
 		//false for black tile
 		if(!status)
