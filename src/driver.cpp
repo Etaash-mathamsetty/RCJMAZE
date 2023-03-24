@@ -362,6 +362,21 @@ namespace driver
 		PythonScript::CallPythonFunction<bool, std::string>("SendSerialCommand", com::drop_vic + std::to_string(num) + "\n");
 	}
 
+	/* COULD HANG WITH INCORRECT TAG, ONLY USE FOR SERIAL
+	only returns the first element of the array, so don't use for everything */
+	template<typename T>
+	T wait_for_data(const std::string& tag)
+	{
+		while(!Bridge::get_data_value(tag).has_value())
+		{
+			PythonScript::Exec(ser_py_file);
+			std::this_thread::sleep_for(std::chrono::milliseconds(80));
+		}
+		T data = (T)(*Bridge::get_data_value(tag))[0];
+		Bridge::remove_data_value(tag);
+		return data;
+	}
+
 	CREATE_DRIVER(void, get_sensor_data)
 	{
 		robot* bot = robot::get_instance();
@@ -371,15 +386,15 @@ namespace driver
 		if(!bot->map[bot->index].vis)
 		{
 			bot->map[bot->index].vis = true;
-			PythonScript::Exec(cv_py_file);
-			PythonScript::Exec(ser_py_file);
 
-			bot->map[bot->index].N = (bool)Bridge::get_data_value("NW")[0];
-			bot->map[bot->index].E = (bool)Bridge::get_data_value("EW")[0];
-			bot->map[bot->index].S = (bool)Bridge::get_data_value("SW")[0];
-			bot->map[bot->index].W = (bool)Bridge::get_data_value("WW")[0];
+			bot->map[bot->index].N = wait_for_data<bool>("NW");
+			bot->map[bot->index].E = wait_for_data<bool>("EW");
+			bot->map[bot->index].S = wait_for_data<bool>("SW");
+			bot->map[bot->index].W = wait_for_data<bool>("WW");
+			bot->map[bot->index].checkpoint = wait_for_data<bool>("CP");
 		}
-		int num_rescue = (int)Bridge::get_data_value("NRK")[0];
+		PythonScript::Exec(cv_py_file);
+		int num_rescue = (int)(*Bridge::get_data_value("NRK"))[0];
 		if(num_rescue > 0 && !bot->map[bot->index].vic)
 		{
 			drop_vic(num_rescue);
@@ -464,12 +479,23 @@ namespace driver
 		forward += com::forward;
 		forward += '\n';
 		PythonScript::CallPythonFunction<bool, std::string>("SendSerialCommmand", forward);
-		//wait for it to start running
-		while(!(bool)Bridge::get_data_value("forward_status")[0]) { PythonScript::Exec(ser_py_file); }
-		//wait for it to finish running
-		while((bool)Bridge::get_data_value("forward_status")[0]) { PythonScript::Exec(ser_py_file); }
 
-		bool status = (bool)Bridge::get_data_value("forward_status")[1];
+		Bridge::remove_data_value("forward_status");
+
+		//wait for it to start running, increase update rate for forward :D
+		while(!Bridge::get_data_value("forward_status").has_value()) 
+		{ 
+			PythonScript::Exec(ser_py_file); 
+			std::this_thread::sleep_for(std::chrono::milliseconds(20));
+		}
+		//wait for it to finish running
+		while((bool)*Bridge::get_data_value("forward_status")[0]) 
+		{ 
+			PythonScript::Exec(ser_py_file); 
+			std::this_thread::sleep_for(std::chrono::milliseconds(20));
+		}
+
+		bool status = (bool)*Bridge::get_data_value("forward_status")[1];
 
 		//false for black tile
 		if(!status)
@@ -507,7 +533,7 @@ namespace driver
 
 			bot->index = org_index;
 
-			std::cout << "WARN: Black tile detected, returning false" << std::endl;
+			std::cout << "driver::forward: WARN: Black tile detected, returning false" << std::endl;
 			return false;
 		}
 

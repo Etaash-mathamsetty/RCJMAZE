@@ -43,7 +43,9 @@ private:
 
 namespace Bridge
 {
-    std::optional<std::vector<float>> get_data_value(const std::string key);
+    std::optional<std::vector<float>> get_data_value(const std::string& key);
+
+    void remove_data_value(const std::string& key);
 }
 
 #endif // SCRIPTING_H_INCLUDED
