@@ -74,7 +74,7 @@ Stack<int> BFS(robot& robot)
 int main(int argc, char* argv[]){
 	//setup signal handler
 	struct sigaction sigIntHandler;
-	sigIntHandler.sa_handler = [](int s){ /* TODO: test with driver::cleanup(); */ /* should clean everything up anyway */ exit(1);};
+	sigIntHandler.sa_handler = [](int s){ driver::cleanup(); /* should clean everything up anyway */ exit(1);};
 	sigemptyset(&sigIntHandler.sa_mask);
 	sigIntHandler.sa_flags = 0;
 	sigaction(SIGINT, &sigIntHandler, NULL);
