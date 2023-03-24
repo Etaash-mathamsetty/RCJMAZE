@@ -3,6 +3,7 @@
         "typeindex": "cpp",
         "typeinfo": "cpp",
         "*.tcc": "cpp",
-        "fstream": "cpp"
+        "fstream": "cpp",
+        "optional": "cpp"
     }
 }

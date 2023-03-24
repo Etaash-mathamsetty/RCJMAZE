@@ -10,7 +10,7 @@ std::map<std::string, std::vector<float>> data_values;
 namespace Bridge
 {
     // could expose later
-    void set_data_value(const std::string key, python::list value)
+    void set_data_value(const std::string& key, python::list value)
     {
         data_values[key].clear();
         for(int i = 0; i < len(value); i++)
@@ -19,7 +19,12 @@ namespace Bridge
         }
     }
 
-    std::optional<std::vector<float>> get_data_value(const std::string key)
+    void remove_data_value(const std::string& key)
+    {
+        data_values.erase(key);
+    }
+
+    std::optional<std::vector<float>> get_data_value(const std::string& key)
     {
         if(data_values.count(key) == 0)
             return {};
