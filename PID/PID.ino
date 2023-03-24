@@ -194,21 +194,19 @@ void pi_read_data() {
   static int cur_command = 0;
 
 #ifndef FAKE_ROBOT
-  while (!PI_SERIAL.available())
-    ;
+  //while (!PI_SERIAL.available());
 
   String data = "";
   char ch = 0;
-  while(PI_SERIAL.available() > 3 && ch != '\n') {
+  while(PI_SERIAL.available() > 3 && ch != '\n') 
+  {
     ch = PI_SERIAL.read();
     data += ch;
   }
 
   //data += "\n";
   // String data = PI_SERIAL.readString();
-#endif
-
-#ifdef FAKE_ROBOT
+#else
   String data = commands_array[cur_command];
   cur_command++;
   cur_command %= num_commands;
@@ -273,14 +271,14 @@ void pi_read_data() {
 void print_raw_color(uint16_t r, uint16_t g, uint16_t b, uint16_t c)
 {
   //log_print("raw color:");
-  log_print("R: ");
-  log_print(r);
-  log_print("\t G: ");
-  log_print(g);
-  log_print("\t B: ");
-  log_print(b);
-  log_print("\t C: ");
-  log_println(c);
+  Serial.print("R: ");
+  Serial.print(r);
+  Serial.print("\t G: ");
+  Serial.print(g);
+  Serial.print("\t B: ");
+  Serial.print(b);
+  Serial.print("\t C: ");
+  Serial.println(c);
 }
 
 bool black_detect(){
@@ -319,7 +317,7 @@ bool silver_detect(){
     //Serial.print(" c:");
     //Serial.print(c2);
    
-  if (c1 >=  950 && (r1 / (float)g1) * 10 >= 10.5) {
+  if (c >=  950 && (r / (float)g) * 10 >= 10.5) {
 
    //   silver_persistance++;
       Serial.println("Checkpoint detected"); 
@@ -775,6 +773,10 @@ void loop()
   pi_send_tag("dir");
   PI_SERIAL.println(cur_direction);
   pi_read_data();
+
+  pi_send_tag("CP");
+  PI_SERIAL.println("0");
+
 
 #ifdef DEBUG_DISPLAY
   oled.setCursor(0, 0);
