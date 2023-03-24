@@ -34,18 +34,23 @@ namespace sim
         in >> _vert_size;
 
         //init with a random value
-        int& _second_floor_entrance = floor_number;
+        int xy = 0;
+        int& _second_floor_entrance = xy;
 
         if(floor_number != 0)
         {
             _second_floor_entrance = second_floor_entrance[floor_number - 1];
+            second_floor[floor_number - 1] = new simulation_node[horz_size * vert_size];
+            memset(second_floor[floor_number - 1], 0 , sizeof(simulation_node) * horz_size * vert_size);
             nodes = second_floor[floor_number - 1];
+        }
+        else
+        {
+            nodes = new simulation_node[horz_size * vert_size];
+            memset(nodes, 0, sizeof(simulation_node) * horz_size * vert_size);
         }
 
         floor_number++;
-
-        nodes = new simulation_node[horz_size * vert_size];
-        memset(nodes, 0, sizeof(simulation_node) * horz_size * vert_size);
 
         if(std::filesystem::exists("save.txt"))
             return;
@@ -137,6 +142,7 @@ namespace sim
             }
             //v++;
         }
+        num_floors = floor_number;
         return;
     }
 

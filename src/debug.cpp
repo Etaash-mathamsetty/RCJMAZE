@@ -50,6 +50,8 @@ namespace debug
                     putchar('c');
                 if(nodes[helper::get_index(i,l)].black)
                     putchar('b');
+                if(nodes[helper::get_index(i, l)].ramp)
+                    putchar('r');
                 if(!nodes[helper::get_index(i,l)].bot && !nodes[helper::get_index(i,l)].vic && !nodes[helper::get_index(i,l)].checkpoint &&
                     !nodes[helper::get_index(i,l)].black)
                     putchar(' ');
