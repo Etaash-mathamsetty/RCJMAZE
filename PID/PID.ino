@@ -102,7 +102,7 @@ void display_bno_data(const sensors_event_t& data) {
   }
 }
 //forward_status[0] = is forward command runnning
-//forward_status[1] = is black tile ? (or command failed)
+//forward_status[1] = true succeed ? (or command failed, black tile, etc)
 void pi_send_data(bool forward, bool black_tile) {
   double arr[2] = { forward, black_tile };
   pi_send_tag("forward_status");
@@ -198,7 +198,7 @@ void pi_read_data() {
 
   String data = "";
   char ch = 0;
-  while(PI_SERIAL.available() > 3 && ch != '\n') 
+  while(PI_SERIAL.available() && ch != '\n') 
   {
     ch = PI_SERIAL.read();
     data += ch;
@@ -465,7 +465,7 @@ void drive(int encoders, int speed, int tolerance) {
   double PID;
   double last_dist = abs(motorR.getTicks() / abs(encoders));
   double startX = xPos;
-  pi_send_data(true, false);
+  pi_send_data(true, true);
 
   while (abs(motorR.getTicks()) < abs(encoders) && abs(motorL.getTicks()) < abs(encoders)) {
     motorL.addBoost(TURN_BOOST);
@@ -533,7 +533,7 @@ void drive(int encoders, int speed, int tolerance) {
   */
   
   utils::stopMotors();
-  pi_send_data(false, false);
+  pi_send_data(false, true);
   motorL.addBoost(0);
   motorR.addBoost(0);
 } 
