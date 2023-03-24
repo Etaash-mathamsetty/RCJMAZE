@@ -5,7 +5,7 @@
 #include <assert.h>
 #include <sstream>
 
-#define SIMULATION
+//#define SIMULATION
 #define DEBUG
 //#define SIM_MOV_DELAY
 
