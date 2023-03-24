@@ -5,14 +5,14 @@
 Adafruit_TCS34725 tcs = Adafruit_TCS34725(TCS34725_INTEGRATIONTIME_2_4MS, TCS34725_GAIN_16X);
 
 void setup(){
+ 
+ Wire.begin();  
  Serial.begin(9600); 
  if (!tcs.begin())
   {
     Serial.println("error first!");
   } 
-  
-  
-  
+ 
 }
 
 void print_raw_color(uint16_t r, uint16_t g, uint16_t b, uint16_t c)
@@ -32,8 +32,8 @@ bool black_detect(){
  
   uint16_t r,g,b,c;
   tcs.getRawData(&r,&g, &b, &c);
- // print_raw_color(r,g,b,c);
-  if(c < 900) { 
+  //print_raw_color(r,g,b,c);
+  if(c < 250) { 
     Serial.println("Black square detected"); 
     return true;
   }
@@ -41,11 +41,12 @@ bool black_detect(){
 }  
 bool blue_detect(){ 
   uint16_t r,g,b,c; 
-  tcs.getRGB(&r, &g, &b, &c); 
-  if(b < 900 && r < 500 && g < 500){ 
-   Serial.println("Puddle detected: delay 5000");   
-   return true; 
-  }
+  tcs.getRawData(&r, &g, &b, &c);
+  if(b > (r * 2.5)){ 
+    Serial.println("Blue");  
+    return(true); 
+  } 
+  
   return false; 
   
 }
@@ -64,7 +65,7 @@ bool silver_detect(){
     //Serial.print(" c:");
     //Serial.print(c2);
    
-  if (c1 >=  950 && (r1 / (float)g1) * 10 >= 10.5) {
+  if (c >=  950 && (r / (float)g) * 10 >= 10.5) {
 
    //   silver_persistance++;
       Serial.println("Checkpoint detected"); 
@@ -85,8 +86,9 @@ bool silver_detect(){
     */
 }  
 void loop(){
+  ///Serial.println("Starting"); 
+  silver_detect(); 
   
-  black_detect(); 
   
   
 } 
