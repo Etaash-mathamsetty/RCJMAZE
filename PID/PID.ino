@@ -276,6 +276,7 @@ void pi_read_data() {
     }
   }
 }
+
 void returnColor(){
     uint16_t r, g, b, c = 0;  
     tcs.getRawData(&r, &g, &b, &c); 
@@ -283,25 +284,29 @@ void returnColor(){
 
    //   silver_persistance++;
       Serial.println("silver detected"); 
-      pi_send_tag("color");
-      PI_SERIAL.println("silver");
+      oled.println("silver");
+      //pi_send_tag("color");
+      //PI_SERIAL.println("silver");
       return; 
     }
     else if(c < 250){ 
       Serial.println("black detected"); 
-      pi_send_tag("color");
-      PI_SERIAL.println("black");  
+      oled.println("black")
+      //pi_send_tag("color");
+      //PI_SERIAL.println("black");  
       return;  
     }
     else if(b > (r * 2.5)){ 
-      Serial.println("blue detected");  
-      pi_send_tag("color"); 
-      PI_SERIAL.println("blue"); 
+      Serial.println("blue detected");
+      oled.println("blue");  
+      //pi_send_tag("color"); 
+     //PI_SERIAL.println("blue"); 
       return; 
     }
     else 
       return;  
 }
+
 void left(int relative_angle, int speed) {
   motorL.addBoost(TURN_BOOST);
   motorR.addBoost(TURN_BOOST);
