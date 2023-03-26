@@ -1,7 +1,7 @@
 //#define FAKE_ROBOT
 //#define FAKE_SERIAL
 #define DEBUG_DISPLAY
-// #define MOTORSOFF
+#define MOTORSOFF
 
 #include "Motors.h"
 #include "utils.h"
@@ -308,6 +308,7 @@ void returnColor(){
 }
 
 void left(int relative_angle, int speed) {
+#ifndef MOTORSOFF
   motorL.addBoost(TURN_BOOST);
   motorR.addBoost(TURN_BOOST);
   int angle = 360 - relative_angle;
@@ -350,10 +351,11 @@ void left(int relative_angle, int speed) {
   motorL.addBoost(0);
   motorR.addBoost(0);
   utils::stopMotors();
+#endif
 }
 
 void right(int angle, int speed) {
-
+#ifndef MOTORSOFF
   motorL.addBoost(TURN_BOOST);
   motorR.addBoost(TURN_BOOST);
 
@@ -393,6 +395,7 @@ void right(int angle, int speed) {
   utils::stopMotors();
   motorL.addBoost(0);
   motorR.addBoost(0);
+#endif
 }
 
 void turn(char char_end_direction) {
@@ -423,7 +426,7 @@ void driveCM (float cm, int speed = 200, int tolerance = 1) {
 }
 
 void drive(int encoders, int speed, int tolerance) {
-
+#ifndef MOTORSOFF
   bno.begin(OPERATION_MODE_IMUPLUS);
   int angle = 60, tofR1, tofR2; 
   utils::resetTicks();
@@ -503,6 +506,12 @@ void drive(int encoders, int speed, int tolerance) {
   pi_send_data(false, true);
   motorL.addBoost(0);
   motorR.addBoost(0);
+#else
+  pi_send_data(true, true);
+  delay(100);
+  pi_send_data(false, true);
+#endif
+  
 } 
 void shiftRight(){
     right(15, SPEED); 
@@ -635,41 +644,47 @@ void acceleration_position() {
   Serial.println(yPos);
 }
 
-int tofCalibrated(int select) 
+unsigned int tofCalibrated(int select) 
 {
-  int dist = 0;
+  unsigned int dist = 0;
+  unsigned int cal = 0;
+  const unsigned int max_dist = 200;
   switch (select) 
   {
     case 0: 
     {
         tcaselect(0);
         dist = tof.readRangeSingleMillimeters();
-        int tofR1 = -89.7 + (dist * 1.9) - (0.0033 * (dist * dist));
-        return tofR1;
+        cal = -89.7 + (dist * 1.9) - (0.0033 * (dist * dist));
+        cal = min(cal, max_dist);
+        return cal;
         //accurate (50, 150), horrible < 25
     }
     case 1: 
     {
         tcaselect(1);
         dist = tof.readRangeSingleMillimeters();
-        int tofR2 = (1.09 * dist) - 21.3;
-        return tofR2;
+        cal = (1.09 * dist) - 21.3;
+        cal = min(cal, max_dist);        
+        return cal;
         //accurate (50, 150), still works < 25ish
     }
     case 2: 
     {
         tcaselect(2);
         dist = tof.readRangeSingleMillimeters();
-        int tofL1 = (1.03 * dist) - 9.91;
-        return tofL1;
+        cal = (1.03 * dist) - 9.91;
+        cal = min(cal, max_dist);
+        return cal;
         //accrate (50, 150), passable < 50 but not that good
     } 
     case 3: 
     { 
         tcaselect(3); 
         dist = tof.readRangeSingleMillimeters(); 
-        int tofL2 = -0.848 + (0.671 * dist) + (0.00165 * dist * dist); 
-        return tofL2; 
+        cal = -0.848 + (0.671 * dist) + (0.00165 * dist * dist); 
+        cal = min(cal, max_dist);
+        return cal; 
         //decent accuracy 
       
     } 
@@ -677,8 +692,9 @@ int tofCalibrated(int select)
     { 
         tcaselect(4); 
         dist = tof.readRangeSingleMillimeters(); 
-        int tofF = 3 + (0.657 * dist) + (0.00146 * dist * dist);
-        return tofF;   
+        cal = 3 + (0.657 * dist) + (0.00146 * dist * dist);
+        cal = min(cal, max_dist);
+        return cal;   
         //pretty accurate
     } 
     default:
@@ -696,6 +712,24 @@ void oled_display_walls(bool walls[4])
   }
   oled.println(walls[3]);
 #endif
+}
+
+char dir_to_char(uint8_t cur_dir)
+{
+  switch(cur_dir)
+  {
+    case n:
+      return 'n';
+    case e:
+      return 'e';
+    case s:
+      return 's';
+    case w:
+      return 'w';
+    default:
+      return 'n';
+  }
+  return 'n';
 }
 
 void loop() 
@@ -740,6 +774,9 @@ void loop()
   pi_send_tag("dir");
   PI_SERIAL.println(cur_direction);
   pi_read_data();
+
+  oled.print("dir: ");
+  oled.println(dir_to_char(cur_direction));
 
   pi_send_tag("CP");
   PI_SERIAL.println("0");
