@@ -222,6 +222,7 @@ void pi_read_data() {
       if (cur_cmd.length() > 0) {
         if (cur_cmd[0] == 'g' || cur_cmd[0] == 'f') {
           Serial.println("FORWARD");
+          oled.println("forward");
           driveCM(27, 100, 1);
 
         } else {
@@ -237,13 +238,19 @@ void pi_read_data() {
           Serial.print("turn to ");
           Serial.println(c);
           Serial.println("FORWARD");
+          oled.print("turn to ");
+          oled.println(c);
+          oled.println("forward");
           turn(c);
           pi_send_data({ false, false, false, false });
           driveCM(27, 100, 1);
         } else if (cur_cmd[0] == 't') {
           Serial.print("turn to ");
           Serial.println(c);
+          oled.print("turn to ");
+          oled.println(c);
           turn(c);
+          oled.println("done");
           pi_send_data({ false, false, false, false });
         } else {
           Serial.println("ERR: Invalid Command");
@@ -259,6 +266,7 @@ void pi_read_data() {
       if (cur_cmd.length() > 0) {
         if (cur_cmd[0] == 'g' || cur_cmd[0] == 'f') {
           Serial.println("FORWARD");
+          oled.println("forward");
           driveCM(27, 100, 1);
         } else {
           Serial.println("ERR: Invalid Parameter");
@@ -550,7 +558,7 @@ void shiftLeft(){
     left(15, SPEED); 
     utils::forward(SPEED, SPEED);
     delay(25);
-    right(15  , SPEED);
+    right(15, SPEED);
     utils::forward(-SPEED, -SPEED);
     delay(24);
     return; 
