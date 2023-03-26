@@ -291,7 +291,7 @@ void returnColor(){
     }
     else if(c < 250){ 
       Serial.println("black detected"); 
-      oled.println("black")
+      oled.println("black");
       //pi_send_tag("color");
       //PI_SERIAL.println("black");  
       return;  
