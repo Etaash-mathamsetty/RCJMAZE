@@ -85,9 +85,30 @@ bool silver_detect(){
     }   
     */
 }  
+char* returnColor(){
+    uint16_t r, g, b, c = 0;  
+    tcs.getRawData(&r, &g, &b, &c); 
+    if (c >=  950 && (r / (float)g) * 10 >= 10.5) {
+
+   //   silver_persistance++;
+      Serial.println("silver detected"); 
+      return "silver"; 
+    }
+    else if(c < 250){ 
+      Serial.println("black detected"); 
+      return "black"; 
+    }
+    else if(b > (r * 2.5)){ 
+      Serial.println("blue detected"); 
+      return "blue"; 
+    }
+    else 
+      return " "; 
+  
+}
 void loop(){
   ///Serial.println("Starting"); 
-  silver_detect(); 
+  returnColor(); 
   
   
   
