@@ -188,6 +188,7 @@ void send_tof_vals(byte tof_val) {
 
 void driveCM(float,int,int);
 
+/* there is a bug in this function somewhere */
 void pi_read_data() {
   const char* commands_array[] = { "ge", "gw", "gn", "gs" };
   const int num_commands = sizeof(commands_array) / sizeof(commands_array[0]);
