@@ -254,7 +254,7 @@ void pi_read_data() {
           oled.println("done");
           pi_send_data({ false, false, false, false });
         } else {
-          Serial.println("ERR: Ivalid Command");
+          Serial.println("ERR: Invalid Command");
         }
         cur_cmd.remove(0);
         continue;
