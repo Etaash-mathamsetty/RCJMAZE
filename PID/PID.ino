@@ -188,7 +188,8 @@ void send_tof_vals(byte tof_val) {
 
 void driveCM(float,int,int);
 
-/* there is a bug in this function somewhere */
+/* there is a bug in this function somewhere 
+the problem is that we need to read & execute every single command before continuing */
 void pi_read_data() {
   const char* commands_array[] = { "ge", "gw", "gn", "gs" };
   const int num_commands = sizeof(commands_array) / sizeof(commands_array[0]);
