@@ -1,7 +1,7 @@
 //#define FAKE_ROBOT
 //#define FAKE_SERIAL
 #define DEBUG_DISPLAY
-#define MOTORSOFF
+//#define MOTORSOFF
 
 #include "Motors.h"
 #include "utils.h"
@@ -176,6 +176,7 @@ byte get_tof_vals(double threshold) {
     }
     Serial.println(reading);
   }
+  //Serial.println("passed");
 
   return wall;
 }
@@ -191,9 +192,11 @@ void driveCM(float,int,int);
 /* there is a bug in this function somewhere 
 the problem is that we need to read & execute every single command before continuing */
 void pi_read_data() {
+#ifdef FAKE_ROBOT
   const char* commands_array[] = { "ge", "gw", "gn", "gs" };
   const int num_commands = sizeof(commands_array) / sizeof(commands_array[0]);
   static int cur_command = 0;
+#endif
 
 #ifndef FAKE_ROBOT
   //while (!PI_SERIAL.available());
@@ -759,7 +762,13 @@ void loop()
   //Serial.println(get_tof_vals(100));
   //Serial.println("hi");
   //pi_read_data();
+
+  //oled.println("test");
+  
   byte vals = get_tof_vals(150);
+
+  //oled.println("test2");
+  
   // Serial.print("Tof Vals: ");
   // Serial.println(vals);
 
@@ -775,11 +784,15 @@ void loop()
   // delay(1000);
   pi_send_tag("dir");
   PI_SERIAL.println(cur_direction);
-  pi_read_data();
+
+  while(PI_SERIAL.available())
+    pi_read_data();
 
   oled.print("dir: ");
   oled.println(dir_to_char(cur_direction));
 
+
+  //checkpoint detection
   pi_send_tag("CP");
   PI_SERIAL.println("0");
 
