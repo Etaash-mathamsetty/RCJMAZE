@@ -710,12 +710,19 @@ unsigned int tofCalibrated(int select)
 void oled_display_walls(bool walls[4])
 {
 #ifdef DEBUG_DISPLAY
-  for(int i = 0; i < 3; i++)
-  {
-    oled.print(walls[i]);
-    oled.print(',');
-  }
-  oled.println(walls[3]);
+
+  String data = "";
+
+  if(walls[0])
+    data += "n";
+  if(walls[1])
+    data += "e";
+  if(walls[2])
+    data += "s";
+  if(walls[3])
+    data += "w";
+
+  oled.println(data.c_str());
 #endif
 }
 
