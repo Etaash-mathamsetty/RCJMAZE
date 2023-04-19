@@ -49,6 +49,7 @@ void setup() {
   #endif
   Serial.println("oled init done!");
   analogWrite(2, 0); 
+  delay(1000);
  
 }
 
@@ -312,20 +313,132 @@ void returnColor(){
       return;  
 }
 
+void right(int relative_angle, int speed) {
+  bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
+
+  double orientation;
+
+  if (abs(orientationData.orientation.x - global_angle) > 180) {
+    orientation = orientationData.orientation.x - 360;
+  } else {
+    orientation = orientationData.orientation.x;
+  }
+
+  
+  raw_right(relative_angle - (orientation - global_angle), speed);
+}
+
 void left(int relative_angle, int speed) {
+  bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
+
+  double orientation;
+
+  if (abs(orientationData.orientation.x - global_angle) > 180) {
+    orientation = orientationData.orientation.x - 360;
+  } else {
+    orientation = orientationData.orientation.x;
+  }
+
+  
+  raw_left(relative_angle + (orientation - global_angle), speed);
+}
+
+void raw_right(int relative_angle, int speed) {
+
 #ifndef MOTORSOFF
   motorL.addBoost(TURN_BOOST);
   motorR.addBoost(TURN_BOOST);
-  int angle = 360 - relative_angle;
+
   double p, i = 0, d;
   double PID;
-  bno.begin(OPERATION_MODE_IMUPLUS);
+  bool cross_over = false;
   bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
 
+  if (orientationData.orientation.x + relative_angle >= 360) {
+    cross_over = true;
+  }
+
+  const double initial_angle = orientationData.orientation.x;
+
+  double orientation = cross_over ? orientationData.orientation.x - relative_angle: orientationData.orientation.x;
+  // double angle = cross_over ? global_angle : global_angle + relative_angle;
+  //FIXME: Robot keeps dying when I use global angle
+  double angle = orientation + relative_angle;
   double last_error = abs((orientationData.orientation.x - angle) / angle);
-  double orientation = orientationData.orientation.x + 360;
+
+  while (orientation < angle) {
+
+    Serial.print("Orientation Right: ");
+    Serial.print(orientation);
+    Serial.print("\t");
+    Serial.print(global_angle);
+    Serial.print("\t");
+    Serial.println(cross_over);
+
+    p = abs((orientation - angle) / relative_angle);
+    //i = i + p;
+    //d = p - last_error;
+    PID = KP_TURN * p;
+    //last_error = p;
+
+    if (PID * speed < minspeed) {
+      utils::forward((PID * -speed), (PID * speed));
+    }
+    else {
+      utils::forward((-minspeed), (minspeed));
+    }
+
+    if (PID <= 0.01)
+      break;
+
+    // Serial.print("PID: ");
+    // Serial.println(PID);
+
+    bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
+    orientation = cross_over ? orientationData.orientation.x - relative_angle: orientationData.orientation.x;
+
+    if (orientationData.orientation.x < initial_angle) {
+      orientation += 360;
+    }
+
+    // if (orientationData.orientation.x < 1.0) {
+    //   orientation += 360;
+    // }
+  }
+  motorL.addBoost(0);
+  motorR.addBoost(0);
+  utils::stopMotors();
+  global_angle = utils::math::wrapAround(global_angle + relative_angle, 360);
+#endif
+}
+
+void raw_left(int relative_angle, int speed) {
+#ifndef MOTORSOFF
+  motorL.addBoost(TURN_BOOST);
+  motorR.addBoost(TURN_BOOST);
+
+  double p, i = 0, d;
+  double PID;
+  bool cross_over = false;
+  bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
+
+  if (orientationData.orientation.x - relative_angle < 0) {
+    cross_over = true;
+  }
+
+  const double initial_angle = orientationData.orientation.x;
+  double orientation = cross_over ? orientationData.orientation.x + relative_angle: orientationData.orientation.x;
+  // double angle = cross_over ? global_angle : global_angle - relative_angle;
+  double angle = orientation - relative_angle;
+  double last_error = abs((orientationData.orientation.x - angle) / angle);
 
   while (orientation > angle) {
+    Serial.print("Orientation Left:  ");
+    Serial.print(orientation);
+    Serial.print("\t");
+    Serial.print(global_angle);
+    Serial.print("\t");
+    Serial.println(cross_over);
 
     p = abs((orientation - angle) / relative_angle);
     //i = i + p;
@@ -343,63 +456,21 @@ void left(int relative_angle, int speed) {
     if (PID <= 0.01)
       break;
 
-    Serial.print("PID: ");
-    Serial.println(PID);
-
     bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
-    orientation = orientationData.orientation.x;
+    orientation = cross_over ? orientationData.orientation.x + relative_angle: orientationData.orientation.x;
 
-    if (orientationData.orientation.x < 1.0) {
-      orientation += 360;
+    if (orientationData.orientation.x > initial_angle) {
+      orientation -= 360;
     }
+
+    // if (orientationData.orientation.x < 1.0) {
+    //   orientation += 360;
+    // }
   }
   motorL.addBoost(0);
   motorR.addBoost(0);
   utils::stopMotors();
-#endif
-}
-
-void right(int angle, int speed) {
-#ifndef MOTORSOFF
-  motorL.addBoost(TURN_BOOST);
-  motorR.addBoost(TURN_BOOST);
-
-  double p, i = 0, d;
-  double PID;
-  double start = millis();
-  bno.begin(OPERATION_MODE_IMUPLUS);
-  bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
-
-  double last_error = abs((orientationData.orientation.x - angle) / angle);
-
-  while (orientationData.orientation.x < angle) {
-
-    p = abs((orientationData.orientation.x - angle) / angle);
-    //i = (i + p) * (start - millis());
-    //d = (p - last_error) / (start - millis());
-
-    PID = KP_TURN * p;
-
-    if (PID * speed < minspeed) {
-      utils::forward((PID * -speed), (PID * speed));
-    }
-    else {
-      utils::forward((-minspeed), (minspeed));
-    }
-   //                                                                                        Serial.println(PID);
-
-    /* prevents error value from being too low */
-    if (PID <= 0.01)
-      break;
-
-    Serial.print("PID: ");
-    Serial.println(PID);
-    //utils::forward(100,-100);
-    bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
-  }
-  utils::stopMotors();
-  motorL.addBoost(0);
-  motorR.addBoost(0);
+  global_angle = utils::math::wrapAround(global_angle - relative_angle, 360);
 #endif
 }
 
@@ -432,7 +503,11 @@ void driveCM (float cm, int speed = 200, int tolerance = 1) {
 
 void drive(int encoders, int speed, int tolerance) {
 #ifndef MOTORSOFF
-  bno.begin(OPERATION_MODE_IMUPLUS);
+  // bno.begin(OPERATION_MODE_IMUPLUS);
+  double orientation_offset;
+  bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
+  orientation_offset = orientationData.orientation.x;
+
   int angle = 60, tofR1, tofR2; 
   utils::resetTicks();
   double p, d, i = 0;
@@ -440,6 +515,7 @@ void drive(int encoders, int speed, int tolerance) {
   double PID;
   double last_dist = abs(motorR.getTicks() / abs(encoders));
   double startX = xPos;
+  double orientation;
   pi_send_data(true, true);
 
   while (abs(motorR.getTicks()) < abs(encoders) && abs(motorL.getTicks()) < abs(encoders)) {
@@ -447,16 +523,18 @@ void drive(int encoders, int speed, int tolerance) {
     motorR.addBoost(TURN_BOOST);
     bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
 
-    p = speed * (double)(abs(encoders) - abs(motorR.getTicks())) / abs(encoders);
+    p = speed * (double) (abs(encoders) - abs(motorR.getTicks())) / abs(encoders);
     //i = i + p;
     //d = p - last_dist;
     PID = p * KP_FORWARD;
     //Serial.println(PID);
 
-    if (orientationData.orientation.x > 180) {
-      p_turn = -(orientationData.orientation.x - 360) - (startX - xPos);
+    orientation = (int) (orientationData.orientation.x - orientation_offset) % 360;
+
+    if (orientation > 180) {
+      p_turn = -(orientation - 360) - (startX - xPos);
     } else {
-      p_turn = -orientationData.orientation.x - (startX - xPos);
+      p_turn = -orientation - (startX - xPos);
     }
     
     if (abs(p_turn * DRIVE_STRAIGHT_KP) <= 0.01 && PID <= 0.01)
@@ -465,7 +543,7 @@ void drive(int encoders, int speed, int tolerance) {
 
     //    Serial.println(speed * (double)(abs(encoders) - abs(motor1.getTicks()))/abs(encoders));
     utils::forward(PID - p_turn * DRIVE_STRAIGHT_KP + DRIVE_BOOST, PID + p_turn * DRIVE_STRAIGHT_KP + DRIVE_BOOST);
-    angle = orientationData.orientation.x;
+    angle = orientation;
   } 
   //correct horizontal error when inside of hallway 
 /*  if(tofR < 175 && tofL < 175){ 
@@ -772,7 +850,7 @@ void loop()
 
   //oled.println("test");
   
-  byte vals = get_tof_vals(150);
+  // byte vals = get_tof_vals(150);
 
   //oled.println("test2");
   
@@ -780,35 +858,39 @@ void loop()
   // Serial.println(vals);
 
   // //n e s w
-  bool walls[4] = {(vals) & 0b1, (vals >> 4) & 1 && (vals >> 3) & 1, false, (vals >> 1) & 0b1 && (vals >> 2) & 0b1};
-  /* not wrapped around and stuff */
-  oled_display_walls(walls);
-  /* this is wrapped */
-  pi_send_data(walls);
-  // alignAngle(100, 0, 1); 
-  //delay(500);
-  // driveCM(30, 200, 0);
-  // delay(1000);
-  pi_send_tag("dir");
-  PI_SERIAL.println(cur_direction);
+//   bool walls[4] = {(vals) & 0b1, (vals >> 4) & 1 && (vals >> 3) & 1, false, (vals >> 1) & 0b1 && (vals >> 2) & 0b1};
+//   /* not wrapped around and stuff */
+//   oled_display_walls(walls);
+//   /* this is wrapped */
+//   pi_send_data(walls);
+//   // alignAngle(100, 0, 1); 
+//   //delay(500);
+//   // driveCM(30, 200, 0);
+//   // delay(1000);
+//   pi_send_tag("dir");
+//   PI_SERIAL.println(cur_direction);
 
-  while(PI_SERIAL.available())
-    pi_read_data();
+//   while(PI_SERIAL.available())
+//     pi_read_data();
 
-  oled.print("dir: ");
-  oled.println(dir_to_char(cur_direction));
-
-
-  //checkpoint detection
-  pi_send_tag("CP");
-  PI_SERIAL.println("0");
+//   oled.print("dir: ");
+//   oled.println(dir_to_char(cur_direction));
 
 
-#ifdef DEBUG_DISPLAY
-  oled.setCursor(0, 0);
-#endif
-
-  delay(100);
+//   //checkpoint detection
+//   pi_send_tag("CP");
+//   PI_SERIAL.println("0");
 
 
+// #ifdef DEBUG_DISPLAY
+//   oled.setCursor(0, 0);
+// #endif
+
+//   delay(100);
+
+
+delay(1000);
+bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
+left(90, 100);
+delay(1000);
 }

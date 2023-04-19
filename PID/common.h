@@ -54,6 +54,7 @@ const double KI_FORWARD = 0.003;
 const double KD_FORWARD = 0.01;
 const double SAMPLERATE_DELAY_MS = 10.0;
 const double TIMES_PER_SECOND = 1000.0 / SAMPLERATE_DELAY_MS;
+volatile double global_angle = 0;
 
 const int SPEED = 100;
 
