@@ -119,7 +119,7 @@ void addBoost(int speed){
 private: 
 #define CREATE_INTERUPT2(x) static void interupt##x(){ \
   if(dir[x]) ticks[x]++; \
-  else ticks[x]--; \
+    else ticks[x]--; \
   }
 #define CREATE_INTERUPT(x) CREATE_INTERUPT2(x)
   

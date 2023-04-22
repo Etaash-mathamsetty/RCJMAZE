@@ -29,7 +29,6 @@ void forward(int speed){
   forward(speed,speed);	
 }
 
-
 void resetTicks(){
 	motor->resetTicks();
 	motor2->resetTicks();
@@ -55,6 +54,12 @@ void stopMotors(){
 	motor2->stop();
 }
 
+void resetBoost()
+{
+  motor->addBoost(0);
+  motor2->addBoost(0);
+}
+
 void kitDrop(int num) { 
   static int columnNum = 1; 
   static int numDropped = 0; 
@@ -68,6 +73,8 @@ void kitDrop(int num) {
       return;
     }
 
+    analogWrite(5, 10);
+
     myservo.write(180 - 60*columnNum - 3); 
     Serial.print("columnNum");
     Serial.println(columnNum);
@@ -77,6 +84,8 @@ void kitDrop(int num) {
     myservo.write(180); 
     delay(1000); 
     numDropped++;
+
+    analogWrite(5, 0);
   }
 }
 
