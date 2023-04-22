@@ -208,6 +208,7 @@ void pi_read_data() {
   {
     ch = PI_SERIAL.read();
     data += ch;
+    delay(10);
   }
 
   //data += "\n";
@@ -229,7 +230,7 @@ void pi_read_data() {
         if (cur_cmd[0] == 'g' || cur_cmd[0] == 'f') {
           Serial.println("FORWARD");
           oled.println("forward");
-          driveCM(27, 100, 1);
+          driveCM(27, 130, 1);
 
         } else {
           Serial.println("ERR: Invalid Parameter");
@@ -316,14 +317,13 @@ void returnColor(){
 void right(int relative_angle, int speed) {
   bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
 
-  double orientation;
+  double orientation = orientationData.orientation.x;
 
-  if (abs(orientationData.orientation.x - global_angle) > 180) {
+  Serial.print("orientationData: ");
+  Serial.println(orientationData.orientation.x);
+
+  if (abs(orientationData.orientation.x - global_angle) > 180)
     orientation = orientationData.orientation.x - 360;
-  } else {
-    orientation = orientationData.orientation.x;
-  }
-
   
   raw_right(relative_angle - (orientation - global_angle), speed);
 }
@@ -380,13 +380,7 @@ void raw_right(int relative_angle, int speed) {
     //d = p - last_error;
     PID = KP_TURN * p;
     //last_error = p;
-
-    if (PID * speed < minspeed) {
-      utils::forward((PID * -speed), (PID * speed));
-    }
-    else {
-      utils::forward((-minspeed), (minspeed));
-    }
+    utils::forward((PID * -speed), (PID * speed));
 
     if (PID <= 0.01)
       break;
@@ -405,8 +399,7 @@ void raw_right(int relative_angle, int speed) {
     //   orientation += 360;
     // }
   }
-  motorL.addBoost(0);
-  motorR.addBoost(0);
+  utils::resetBoost();
   utils::stopMotors();
   global_angle = utils::math::wrapAround(global_angle + relative_angle, 360);
 #endif
@@ -445,13 +438,7 @@ void raw_left(int relative_angle, int speed) {
     //d = p - last_error;
     PID = KP_TURN * p;
     //last_error = p;
-
-    if (PID * speed < minspeed) {
-      utils::forward((PID * speed), (PID * -speed));
-    }
-    else {
-      utils::forward((minspeed), (-minspeed));
-    }
+    utils::forward((PID * speed), (PID * -speed));
 
     if (PID <= 0.01)
       break;
@@ -467,8 +454,7 @@ void raw_left(int relative_angle, int speed) {
     //   orientation += 360;
     // }
   }
-  motorL.addBoost(0);
-  motorR.addBoost(0);
+  utils::resetBoost();
   utils::stopMotors();
   global_angle = utils::math::wrapAround(global_angle - relative_angle, 360);
 #endif
@@ -505,6 +491,8 @@ void drive(int encoders, int speed, int tolerance) {
 #ifndef MOTORSOFF
   // bno.begin(OPERATION_MODE_IMUPLUS);
   double orientation_offset;
+  motorL.addBoost(DRIVE_BOOST);
+  motorR.addBoost(DRIVE_BOOST);
   bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
   orientation_offset = orientationData.orientation.x;
 
@@ -518,9 +506,7 @@ void drive(int encoders, int speed, int tolerance) {
   double orientation;
   pi_send_data(true, true);
 
-  while (abs(motorR.getTicks()) < abs(encoders) && abs(motorL.getTicks()) < abs(encoders)) {
-    motorL.addBoost(TURN_BOOST);
-    motorR.addBoost(TURN_BOOST);
+  while (abs(motorR.getTicks()) < abs(encoders) && abs(motorL.getTicks()) < abs(encoders) && tofCalibrated(4) >= 30) {
     bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
 
     p = speed * (double) (abs(encoders) - abs(motorR.getTicks())) / abs(encoders);
@@ -793,12 +779,20 @@ void oled_display_walls(bool walls[4])
 
   if(walls[0])
     data += "n";
+  else 
+    data += " ";
   if(walls[1])
     data += "e";
+  else
+    data += " ";
   if(walls[2])
     data += "s";
+  else
+    data += " ";
   if(walls[3])
     data += "w";
+  else
+    data += " ";
 
   oled.println(data.c_str());
 #endif
@@ -822,21 +816,22 @@ char dir_to_char(uint8_t cur_dir)
   return 'n';
 }
 
+
 void loop() 
 {
   //acceleration_position();
   //pi_read_data();
   /*
   bno.getEvent(&accelerometerData, Adafruit_BNO055::VECTOR_ACCELEROMETER);
-  bno.getEvent(&gyroData, Adafruit_BNO055::VECTOR_GYROSCOPE);
-  */
+  bno.getEvent(&gyroData, Adafruit_BNO055::VECTOR_GYROSCOPE); */
   /*
   display_data(accelerometerData);
   pi_send_data(accelerometerData);
   display_data(gyroData);
   pi_send_data(gyroData);
   pi_read_data();
-  Serial.println();*/
+  Serial.println();
+  */
   /*
   byte test = get_tof_vals(100);
   Serial.print("Tof: ");
@@ -850,7 +845,7 @@ void loop()
 
   //oled.println("test");
   
-  // byte vals = get_tof_vals(150);
+  uint8_t vals = get_tof_vals(150);
 
   //oled.println("test2");
   
@@ -858,11 +853,11 @@ void loop()
   // Serial.println(vals);
 
   // //n e s w
-//   bool walls[4] = {(vals) & 0b1, (vals >> 4) & 1 && (vals >> 3) & 1, false, (vals >> 1) & 0b1 && (vals >> 2) & 0b1};
-//   /* not wrapped around and stuff */
-//   oled_display_walls(walls);
-//   /* this is wrapped */
-//   pi_send_data(walls);
+  bool walls[4] = {(vals) & 1, (vals >> 4) & 1 && (vals >> 3) & 1, false, (vals >> 1) & 1 && (vals >> 2) & 1};
+// not wrapped around and stuff 
+  oled_display_walls(walls);
+//  this is wrapped
+  pi_send_data(walls);
 //   // alignAngle(100, 0, 1); 
 //   //delay(500);
 //   // driveCM(30, 200, 0);
@@ -870,27 +865,30 @@ void loop()
 //   pi_send_tag("dir");
 //   PI_SERIAL.println(cur_direction);
 
-//   while(PI_SERIAL.available())
-//     pi_read_data();
+  while(PI_SERIAL.available())
+    pi_read_data();
 
-//   oled.print("dir: ");
-//   oled.println(dir_to_char(cur_direction));
-
-
-//   //checkpoint detection
-//   pi_send_tag("CP");
-//   PI_SERIAL.println("0");
+  oled.print("dir: ");
+  oled.println(dir_to_char(cur_direction));
 
 
-// #ifdef DEBUG_DISPLAY
-//   oled.setCursor(0, 0);
-// #endif
+  //checkpoint detection
+  pi_send_tag("CP");
+  PI_SERIAL.println("0");
 
-//   delay(100);
+#ifdef DEBUG_DISPLAY
+  oled.setCursor(0, 0);
+#endif
 
+  delay(100);
 
-delay(1000);
-bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
-left(90, 100);
-delay(1000);
 }
+
+
+/*
+void loop()
+{
+  right(90, 100);
+  delay(1000);  
+}
+*/
