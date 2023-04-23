@@ -249,7 +249,7 @@ void pi_read_data() {
           oled.println(c);
           oled.println("forward");
           turn(c);
-          pi_send_data({ false, false, false, false });
+          //pi_send_data({ false, false, false, false });
           driveCM(27, 100, 1);
         } else if (cur_cmd[0] == 't') {
           Serial.print("turn to ");
@@ -258,7 +258,7 @@ void pi_read_data() {
           oled.println(c);
           turn(c);
           oled.println("done");
-          pi_send_data({ false, false, false, false });
+          //pi_send_data({ false, false, false, false });
         } else {
           Serial.println("ERR: Invalid Command");
         }
@@ -317,24 +317,32 @@ void returnColor(){
 void right(int relative_angle, int speed) {
   bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
 
-  double orientation = orientationData.orientation.x;
+  // double orientation = orientationData.orientation.x;
   
+  pi_send_tag("turn_status");
+  PI_SERIAL.println(1.0);
+
   raw_right(relative_angle, speed);
+
+  pi_send_tag("turn_status");
+  PI_SERIAL.println(0.0);
 }
 
 void left(int relative_angle, int speed) {
   bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
 
-  double orientation;
+  double orientation = orientationData.orientation.x;
 
-  if (abs(orientationData.orientation.x - global_angle) > 180) {
+  if (abs(orientationData.orientation.x - global_angle) > 180)
     orientation = orientationData.orientation.x - 360;
-  } else {
-    orientation = orientationData.orientation.x;
-  }
 
+  pi_send_tag("turn_status");
+  PI_SERIAL.println(1.0);
   
   raw_left(relative_angle + (orientation - global_angle), speed);
+
+  pi_send_tag("turn_status");
+  PI_SERIAL.println(0.0);
 }
 
 void raw_right(int relative_angle, int speed) {
@@ -472,7 +480,7 @@ void turn(char char_end_direction) {
     case 2:
     case -2: left(180, SPEED); break;
     default: Serial.println("invalid");
-    case 0: break;
+    case 0: pi_send_tag("turn_status"); PI_SERIAL.println(0.0); break;
   }
   cur_direction = end_direction;
 }
@@ -567,8 +575,7 @@ void drive(int encoders, int speed, int tolerance) {
   
   utils::stopMotors();
   pi_send_data(false, true);
-  motorL.addBoost(0);
-  motorR.addBoost(0);
+  utils::resetBoost();
 #else
   pi_send_data(true, true);
   delay(100);
