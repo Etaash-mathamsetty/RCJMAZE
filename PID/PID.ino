@@ -318,14 +318,8 @@ void right(int relative_angle, int speed) {
   bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
 
   double orientation = orientationData.orientation.x;
-
-  Serial.print("orientationData: ");
-  Serial.println(orientationData.orientation.x);
-
-  if (abs(orientationData.orientation.x - global_angle) > 180)
-    orientation = orientationData.orientation.x - 360;
   
-  raw_right(relative_angle - (orientation - global_angle), speed);
+  raw_right(relative_angle, speed);
 }
 
 void left(int relative_angle, int speed) {
@@ -816,6 +810,7 @@ char dir_to_char(uint8_t cur_dir)
   return 'n';
 }
 
+#ifndef TEST
 
 void loop() 
 {
@@ -883,12 +878,18 @@ void loop()
   delay(100);
 
 }
+#else
 
 
-/*
 void loop()
 {
   right(90, 100);
+  right(90, 100);
+  delay(1000);  
+  left(90, 100);
+  left(90, 100);
+  left(90, 100);
   delay(1000);  
 }
-*/
+
+#endif
