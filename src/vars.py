@@ -2,6 +2,8 @@ import cv2
 import Robot as Rb
 import serial 
 
+print("Initializing Python subsystem")
+
 simulation = Rb.isSimulation()
 serial_port = '/dev/ttyS0'
 
