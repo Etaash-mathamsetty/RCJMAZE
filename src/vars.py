@@ -10,6 +10,10 @@ serial_port = '/dev/ttyS0'
 if not simulation:
     video = cv2.VideoCapture(0)
     video1 = cv2.VideoCapture(1)
+    if not video.isOpened():
+        print("failed to open video 0")
+    if not video1.isOpened():
+        print("failed to open video 1")
     ser = serial.Serial(port = serial_port, baudrate = 115200)
 
 def SendSerialCommand(command):
