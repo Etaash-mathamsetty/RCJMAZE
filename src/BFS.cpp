@@ -152,8 +152,43 @@ int main(int argc, char* argv[]){
 			}
 		}
 	#else 
+		#define TEST_MODE
 		//REAL CODE HERE
-
+		while(true)
+		{
+			Stack<int> path = BFS(*robot);
+			debug::print_path(path);
+			for(size_t l = 0; l < path.Size(); l++)
+			{
+				switch(path[l] - robot->index)
+				{
+					case 1:
+						driver::turn_to(DIR::E);
+						robot->forward();
+						break;
+					case -1:
+						driver::turn_to(DIR::W);
+						robot->forward();
+						break;
+					case -horz_size:
+						driver::turn_to(DIR::N);
+						robot->forward();
+						break;
+					case horz_size:
+						driver::turn_to(DIR::S);
+						robot->forward();
+						break;
+				}
+				debug::print_node(robot->map[robot->index]);
+				if(quitable && robot->index == helper::get_index(default_index, default_index))
+					break;
+			}
+			#ifdef TEST_MODE
+				std::cout << "press any key to continue..." << std::endl;
+				getchar();
+				printf("\n");
+			#endif
+		}
 	#endif
 	//DRIVER_turn_east();
 	//std::cout << (std::string)robot << std::endl;

@@ -393,6 +393,8 @@ namespace driver
 			bot->map[bot->index].W = wait_for_data<bool>("WW");
 			bot->map[bot->index].checkpoint = wait_for_data<bool>("CP");
 		}
+		debug::print_node(bot->map[bot->index]);
+
 		PythonScript::Exec(cv_py_file);
 		int num_rescue = (int)(*Bridge::get_data_value("NRK"))[0];
 		if(num_rescue > 0 && !bot->map[bot->index].vic)
@@ -478,7 +480,7 @@ namespace driver
 		std::string forward = "";
 		forward += com::forward;
 		forward += '\n';
-		PythonScript::CallPythonFunction<bool, std::string>("SendSerialCommmand", forward);
+		PythonScript::CallPythonFunction<bool, std::string>("SendSerialCommand", forward);
 
 		Bridge::remove_data_value("forward_status");
 
@@ -561,8 +563,23 @@ namespace driver
 		bot->dir = dir;
 		std::string turn_cmd = "";
 		turn_cmd += com::turn;
-		turn_cmd += helper::dir_to_char(dir) + '\n';
+		turn_cmd += helper::dir_to_char(dir);
+		turn_cmd += '\n';
+		//std::cout << int(dir) << " " << helper::dir_to_char(dir) << std::endl;
 		PythonScript::CallPythonFunction<bool, std::string>("SendSerialCommand", turn_cmd);
+
+		Bridge::remove_data_value("turn_status");
+		while(!Bridge::get_data_value("turn_status").has_value())
+		{
+			PythonScript::Exec(ser_py_file);
+			std::this_thread::sleep_for(std::chrono::milliseconds(20));
+		}
+
+		while((bool)(*Bridge::get_data_value("turn_status"))[0])
+		{
+			PythonScript::Exec(ser_py_file);
+			std::this_thread::sleep_for(std::chrono::milliseconds(20));
+		}
 	}
 
     #endif
