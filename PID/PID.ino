@@ -21,6 +21,9 @@ void setup() {
   Serial.println("starting the code!");
 
   for (int i = TOF_START; i <= TOF_NUMBER; i++) {
+    /* TODO: Remove when 3rd sensor is replaced */
+    if(i == 3)
+      continue;
     tcaselect(i);
     tof.init();
     //tof.setTimeout(500);
@@ -159,27 +162,41 @@ void pi_send_data(const sensors_event_t& data) {
   }
 }
 
-byte get_tof_vals(double threshold) {
+#define ARRAY_SIZE(arr) (sizeof(arr) / sizeof(arr[0]))
 
-  byte wall = 0;
+bool* get_tof_vals(double threshold) {
+
+  static bool arr[TOF_NUMBER + 1];
   double reading;
+
+  memset(arr, 0, ARRAY_SIZE(arr));
+
+  Serial.println("start");
 
   for (int i = TOF_START; i <= TOF_NUMBER; i++) {
 
+    /* TODO: remove once 3rd sensor is replaced */
+    if(i == 3)
+    {
+      arr[3] = true;
+      continue;
+    }
+
     reading = tofCalibrated(i);
-    wall <<= 1;
 
     if (reading < threshold) {
-      wall |= 1;
+      arr[i] = true;
       Serial.println("Wall");
     } else {
       Serial.println("No Wall");
     }
     Serial.println(reading);
   }
+
+  Serial.println("end");
   //Serial.println("passed");
 
-  return wall;
+  return arr;
 }
 
 void send_tof_vals(byte tof_val) {
@@ -284,7 +301,7 @@ void pi_read_data() {
         }
         if (cur_cmd[0] == 'r')
         {
-          uint8_t vals = get_tof_vals(150);
+          bool* arr = get_tof_vals(150);
 
           //oled.println("test2");
           
@@ -292,9 +309,9 @@ void pi_read_data() {
           // Serial.println(vals);
 
           // //n e s w
-          bool walls[4] = {(vals) & 1, (vals >> 4) & 1 && (vals >> 3) & 1, false, (vals >> 1) & 1 && (vals >> 2) & 1};
+          bool walls[4] = {arr[4], arr[0] && arr[1], arr[5], arr[2] && arr[3]};
           // not wrapped around and stuff 
-          oled_display_walls(walls);
+          //oled_display_walls(walls);
           //  this is wrapped
           pi_send_data(walls);
         }
@@ -359,7 +376,8 @@ void left(int relative_angle, int speed) {
   pi_send_tag("turn_status");
   PI_SERIAL.println(1.0);
   
-  raw_left(relative_angle + (orientation - global_angle), speed);
+  // raw_left(relative_angle + (orientation - global_angle), speed);
+  raw_left(relative_angle, speed);
 
   pi_send_tag("turn_status");
   PI_SERIAL.println(0.0);
@@ -528,7 +546,7 @@ void drive(int encoders, int speed, int tolerance) {
   double orientation;
   pi_send_data(true, true);
 
-  while (abs(motorR.getTicks()) < abs(encoders) && abs(motorL.getTicks()) < abs(encoders) && tofCalibrated(4) >= 30) {
+  while (abs(motorR.getTicks()) < abs(encoders) && abs(motorL.getTicks()) < abs(encoders) && tofCalibrated(4) >= 50) {
     bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
 
     p = speed * (double) (abs(encoders) - abs(motorR.getTicks())) / abs(encoders);
@@ -786,6 +804,15 @@ unsigned int tofCalibrated(int select)
         cal = min(cal, max_dist);
         return cal;   
         //pretty accurate
+    }
+    case 5:
+    {
+        //TODO: calibrate 
+        tcaselect(5);
+        dist = tof.readRangeSingleMillimeters();
+        cal = dist;
+        cal = min(cal, max_dist);
+        return cal;
     } 
     default:
       return -1;
@@ -832,6 +859,14 @@ char dir_to_char(uint8_t cur_dir)
 
 void loop() 
 {
+
+  bool* arr = get_tof_vals(150);
+
+  // //n e s w
+  bool walls[4] = {arr[4], arr[0] && arr[1], arr[5], arr[2] && arr[3]};
+  // not wrapped around and stuff 
+  oled_display_walls(walls);
+
   //acceleration_position();
   //pi_read_data();
   /*
