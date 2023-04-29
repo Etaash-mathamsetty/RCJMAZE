@@ -401,7 +401,7 @@ namespace driver
 			bot->map[bot->index].W = wait_for_data<bool>("WW");
 			bot->map[bot->index].checkpoint = wait_for_data<bool>("CP");
 		}
-		debug::print_node(bot->map[bot->index]);
+		//debug::print_node(bot->map[bot->index]);
 
 		PythonScript::Exec(cv_py_file);
 		int num_rescue = (int)(*Bridge::get_data_value("NRK"))[0];
