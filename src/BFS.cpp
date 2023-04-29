@@ -179,10 +179,10 @@ int main(int argc, char* argv[]){
 						robot->forward();
 						break;
 				}
-				debug::print_node(robot->map[robot->index]);
-				if(quitable && robot->index == helper::get_index(default_index, default_index))
-					break;
 			}
+			debug::print_node(robot->map[robot->index]);
+			if(quitable && robot->index == helper::get_index(default_index, default_index))
+				break;
 			#ifdef TEST_MODE
 				std::cout << "press any key to continue..." << std::endl;
 				getchar();
