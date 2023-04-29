@@ -364,7 +364,6 @@ namespace driver
 
 	void notify_wall_read()
 	{
-
 		PythonScript::CallPythonFunction<bool, std::string>("SendSerialCommand", "r\n");
 	}
 

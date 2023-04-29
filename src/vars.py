@@ -29,5 +29,4 @@ def SendSerialCommand(command):
 def DataIsAva():
     return ser.in_waiting >= 5
 
-
 print("py init done: simulation = " + str(simulation))
