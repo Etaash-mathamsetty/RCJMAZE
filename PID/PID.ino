@@ -225,6 +225,11 @@ void pi_read_data() {
   String cur_cmd = "";
   Serial.println(data);
   for (char c : data) {
+    if(c == 'r')
+    {
+      cur_cmd.remove(0);
+      cur_cmd += c;
+    }
     if (c == 'g' || c == 'f' || c == 't') {
       if (cur_cmd.length() > 0) {
         if (cur_cmd[0] == 'g' || cur_cmd[0] == 'f') {
@@ -276,6 +281,22 @@ void pi_read_data() {
           driveCM(27, 100, 1);
         } else {
           Serial.println("ERR: Invalid Parameter");
+        }
+        if (cur_cmd[0] == 'r')
+        {
+          uint8_t vals = get_tof_vals(150);
+
+          //oled.println("test2");
+          
+          // Serial.print("Tof Vals: ");
+          // Serial.println(vals);
+
+          // //n e s w
+          bool walls[4] = {(vals) & 1, (vals >> 4) & 1 && (vals >> 3) & 1, false, (vals >> 1) & 1 && (vals >> 2) & 1};
+          // not wrapped around and stuff 
+          oled_display_walls(walls);
+          //  this is wrapped
+          pi_send_data(walls);
         }
       }
       cur_cmd.remove(0);
@@ -836,20 +857,6 @@ void loop()
   //pi_read_data();
 
   //oled.println("test");
-  
-  uint8_t vals = get_tof_vals(150);
-
-  //oled.println("test2");
-  
-  // Serial.print("Tof Vals: ");
-  // Serial.println(vals);
-
-  // //n e s w
-  bool walls[4] = {(vals) & 1, (vals >> 4) & 1 && (vals >> 3) & 1, false, (vals >> 1) & 1 && (vals >> 2) & 1};
-// not wrapped around and stuff 
-  oled_display_walls(walls);
-//  this is wrapped
-  pi_send_data(walls);
 //   // alignAngle(100, 0, 1); 
 //   //delay(500);
 //   // driveCM(30, 200, 0);
