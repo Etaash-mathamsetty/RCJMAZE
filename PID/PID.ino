@@ -22,8 +22,6 @@ void setup() {
 
   for (int i = TOF_START; i <= TOF_NUMBER; i++) {
     /* TODO: Remove when 3rd sensor is replaced */
-    if(i == 3)
-      continue;
     tcaselect(i);
     tof.init();
     //tof.setTimeout(500);
@@ -176,11 +174,6 @@ bool* get_tof_vals(double threshold) {
   for (int i = TOF_START; i <= TOF_NUMBER; i++) {
 
     /* TODO: remove once 3rd sensor is replaced */
-    if(i == 3)
-    {
-      arr[3] = true;
-      continue;
-    }
 
     reading = tofCalibrated(i);
 
