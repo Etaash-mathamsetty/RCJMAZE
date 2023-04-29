@@ -45,7 +45,7 @@ const double KP_TURN = 1.2;
 const double KI_TURN = 0.00003;
 const double KD_TURN = 0.243;
 const int DRIVE_BOOST = 20;
-const int TURN_BOOST = 100;
+const int TURN_BOOST = 80;
 
 
 const double DRIVE_STRAIGHT_KP = 3.0;
