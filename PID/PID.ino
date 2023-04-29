@@ -537,10 +537,14 @@ void drive(int encoders, int speed, int tolerance) {
   double last_dist = abs(motorR.getTicks() / abs(encoders));
   double startX = xPos;
   double orientation;
+  double orig_encoders = encoders;
+  bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
+  encoders = orig_encoders / cos(-orientationData.orientation.z * (2 * PI / 360));
   pi_send_data(true, true);
 
   while (abs(motorR.getTicks()) < abs(encoders) && abs(motorL.getTicks()) < abs(encoders) && tofCalibrated(4) >= 50) {
     bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
+    encoders = orig_encoders / cos(-orientationData.orientation.z * (2 * PI / 360));
 
     p = speed * (double) (abs(encoders) - abs(motorR.getTicks())) / abs(encoders);
     //i = i + p;
