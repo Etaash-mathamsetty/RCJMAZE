@@ -362,6 +362,12 @@ namespace driver
 		PythonScript::CallPythonFunction<bool, std::string>("SendSerialCommand", com::drop_vic + std::to_string(num) + "\n");
 	}
 
+	void notify_wall_read()
+	{
+
+		PythonScript::CallPythonFunction<bool, std::string>("SendSerialCommand", "r\n");
+	}
+
 	/* COULD HANG WITH INCORRECT TAG, ONLY USE FOR SERIAL
 	only returns the first element of the array, so don't use for everything */
 	template<typename T>
@@ -386,6 +392,8 @@ namespace driver
 		if(!bot->map[bot->index].vis)
 		{
 			bot->map[bot->index].vis = true;
+
+			notify_wall_read();
 
 			bot->map[bot->index].N = wait_for_data<bool>("NW");
 			bot->map[bot->index].E = wait_for_data<bool>("EW");

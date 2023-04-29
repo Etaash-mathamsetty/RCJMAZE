@@ -26,4 +26,8 @@ def SendSerialCommand(command):
         return False
     return True
 
+def DataIsAva():
+    return ser.in_waiting >= 5
+
+
 print("py init done: simulation = " + str(simulation))
