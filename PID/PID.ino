@@ -231,7 +231,6 @@ void pi_read_data() {
           Serial.println("FORWARD");
           oled.println("forward");
           driveCM(27, 130, 1);
-
         } else {
           Serial.println("ERR: Invalid Parameter");
         }
@@ -250,7 +249,7 @@ void pi_read_data() {
           oled.println("forward");
           turn(c);
           //pi_send_data({ false, false, false, false });
-          driveCM(27, 100, 1);
+          driveCM(27, 130, 1);
         } else if (cur_cmd[0] == 't') {
           Serial.print("turn to ");
           Serial.println(c);
@@ -776,24 +775,14 @@ void oled_display_walls(bool walls[4])
 {
 #ifdef DEBUG_DISPLAY
 
-  String data = "";
+  const char char_map[4] = {'n', 'e', 's', 'w'};
+  String data = "    ";
 
-  if(walls[0])
-    data += "n";
-  else 
-    data += " ";
-  if(walls[1])
-    data += "e";
-  else
-    data += " ";
-  if(walls[2])
-    data += "s";
-  else
-    data += " ";
-  if(walls[3])
-    data += "w";
-  else
-    data += " ";
+  for(int i = 0; i < 4; i++)
+  {
+    if(walls[i])
+      data[i] = char_map[i];
+  }
 
   oled.println(data.c_str());
 #endif
@@ -817,6 +806,7 @@ char dir_to_char(uint8_t cur_dir)
   return 'n';
 }
 
+//#define TEST
 #ifndef TEST
 
 void loop() 
@@ -890,13 +880,15 @@ void loop()
 
 void loop()
 {
-  right(90, 100);
+  /* right(90, 100);
   right(90, 100);
   delay(1000);  
   left(90, 100);
   left(90, 100);
   left(90, 100);
-  delay(1000);  
+  delay(1000); */
+  utils::forward(255);
+  delay(1000);
 }
 
 #endif

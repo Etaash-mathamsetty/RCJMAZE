@@ -15,7 +15,7 @@ public:
     static void Exec(std::string);
 
     template<typename ReturnType, typename... Args>
-    static std::optional<ReturnType> CallPythonFunction(std::string function, Args... args)
+    static std::optional<ReturnType> CallPythonFunction(const std::string& function, Args... args)
     {
         using namespace boost;
         if(PyObject_HasAttrString(main_module.ptr(), function.c_str()))
@@ -36,6 +36,29 @@ public:
             return {};
         }
     }
+
+    static std::optional<ReturnType> CallPythonFunction(const std::string& function)
+    {
+        using namespace boost;
+        if(PyObject_HasAttrString(main_module.ptr(), function.c_str()))
+        {
+            try
+            {
+                return python::extract<ReturnType>(main_module.attr(function.c_str())());
+            }
+            catch(python::error_already_set const &)
+            {
+                PyErr_Print();
+                return {};
+            }
+        }
+        else
+        {
+            std::cerr << "ERR: Function " << function << " not found!" << std::endl;
+            return {};
+        }
+    }
+
 private: 
     static inline boost::python::object main_module;
     static inline boost::python::object main_namespace;
