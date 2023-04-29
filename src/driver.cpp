@@ -364,6 +364,7 @@ namespace driver
 
 	void notify_wall_read()
 	{
+		//tell the mega pi to send the wall data now
 		PythonScript::CallPythonFunction<bool, std::string>("SendSerialCommand", "r\n");
 	}
 

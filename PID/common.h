@@ -7,7 +7,7 @@
 #include "Adafruit_TCS34725.h"
 #endif
 
-#define TOF_NUMBER 4
+#define TOF_NUMBER 5
 #define TOF_START 0
 
 #define MUXADDR 0x70
