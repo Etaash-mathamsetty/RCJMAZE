@@ -152,7 +152,7 @@ int main(int argc, char* argv[]){
 			}
 		}
 	#else 
-		#define TEST_MODE
+		//#define TEST_MODE
 		//REAL CODE HERE
 		while(true)
 		{
