@@ -37,6 +37,7 @@ public:
         }
     }
 
+    template<typename ReturnType>
     static std::optional<ReturnType> CallPythonFunction(const std::string& function)
     {
         using namespace boost;
