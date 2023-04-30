@@ -2,6 +2,7 @@
 //#define FAKE_SERIAL
 #define DEBUG_DISPLAY
 //#define MOTORSOFF
+#define TEST
 
 #include "Motors.h"
 #include "utils.h"
@@ -352,6 +353,20 @@ void right(int relative_angle, int speed) {
   pi_send_tag("turn_status");
   PI_SERIAL.println(1.0);
 
+  
+  int offset = (int) (orientationData.orientation.x) % relative_angle;
+
+  if (offset < relative_angle / 2) {
+    relative_angle -= offset;
+  }
+  // Serial.print("With offset: ");
+  // if (offset < relative_angle / 2) {
+
+  //   Serial.println(relative_angle - offset);
+  // } else {
+  //   Serial.println(relative_angle + offset);
+  // }
+
   raw_right(relative_angle, speed);
 
   pi_send_tag("turn_status");
@@ -366,10 +381,30 @@ void left(int relative_angle, int speed) {
   if (abs(orientationData.orientation.x - global_angle) > 180)
     orientation = orientationData.orientation.x - 360;
 
+  int offset = relative_angle - (int) (orientationData.orientation.x) % relative_angle;
+
+  if (offset < relative_angle / 2) {
+    relative_angle -= offset;
+  }
+
   pi_send_tag("turn_status");
   PI_SERIAL.println(1.0);
   
   // raw_left(relative_angle + (orientation - global_angle), speed);
+
+  // int offset = (orientation - relative_angle);
+  // if (offset < 0) {
+  //   offset += relative_angle;
+  // }
+
+  // offset %= relative_angle;
+
+  // if (offset < relative_angle / 2) {
+  //   relative_angle -= offset;
+  // } else {
+  //   relative_angle += offset;
+  // }
+
   raw_left(relative_angle, speed);
 
   pi_send_tag("turn_status");
@@ -401,12 +436,12 @@ void raw_right(int relative_angle, int speed) {
 
   while (abs(orientation - angle) > 1) {
 
-    Serial.print("Orientation Right: ");
-    Serial.print(orientation);
-    Serial.print("\t");
-    Serial.print(global_angle);
-    Serial.print("\t");
-    Serial.println(cross_over);
+    // Serial.print("Orientation Right: ");
+    // Serial.print(orientation);
+    // Serial.print("\t");
+    // Serial.print(global_angle);
+    // Serial.print("\t");
+    // Serial.println(cross_over);
 
     p = abs((orientation - angle) / relative_angle);
     //i = i + p;
@@ -459,12 +494,12 @@ void raw_left(int relative_angle, int speed) {
   double last_error = abs((orientationData.orientation.x - angle) / angle);
 
   while (abs(orientation - angle) > 1) {
-    Serial.print("Orientation Left:  ");
-    Serial.print(orientation);
-    Serial.print("\t");
-    Serial.print(global_angle);
-    Serial.print("\t");
-    Serial.println(cross_over);
+    // Serial.print("Orientation Left:  ");
+    // Serial.print(orientation);
+    // Serial.print("\t");
+    // Serial.print(global_angle);
+    // Serial.print("\t");
+    // Serial.println(cross_over);
 
     p = abs((orientation - angle) / relative_angle);
     //i = i + p;
@@ -639,7 +674,7 @@ void shiftLeft(){
 
 void alignCenterLR(int speed) {
   int tofR1, tofL1; 
-  tofR1 = tofCalibrated(0)
+  tofR1 = tofCalibrated(0);
   tcaselect(1);
   tofL1 = tofCalibrated(1);
 
@@ -918,15 +953,15 @@ void loop()
 
 void loop()
 {
-  /* right(90, 100);
+  right(90, 100);
   right(90, 100);
   delay(1000);  
   left(90, 100);
   left(90, 100);
   left(90, 100);
-  delay(1000); */
-  utils::forward(255);
-  delay(1000);
+  delay(1000); 
+  // utils::forward(255);
+  // delay(1000);
 }
 
 #endif
