@@ -987,6 +987,7 @@ void loop()
   Serial.print("black: ");
   returnColor();
   oled.clearDisplay();
+  oled.setCursor(0,0);
   delay(200);
   //Serial.println(returnColor());
 }
