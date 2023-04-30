@@ -15,16 +15,18 @@ void setup() {
   Serial.begin(9600);
   utils::setMotors(&motorR, &motorL);
   Wire.begin();
+  Serial.println("starting the code!");
   //Wire.begin();
   //Wire.setClockStretchLimit(200000L);
-
-  bno.begin(OPERATION_MODE_IMUPLUS);
-  Serial.println("starting the code!");
 
   oled.begin();
   oled.setFlipMode(0);
   oled.setFont(u8x8_font_chroma48medium8_r);
   oled.setCursor(0, 0);
+  oled.println("Starting...");
+
+  bno.begin(OPERATION_MODE_IMUPLUS);
+  oled.println("BNO init done!");
 
   for (int i = TOF_START; i <= TOF_NUMBER; i++) {
     tcaselect(i);
@@ -32,10 +34,9 @@ void setup() {
     //tof.setTimeout(500);
     //tof.startContinuous();
   } 
-  tcaselect(6);
-
   oled.println("TOF init done!");
   
+  tcaselect(6);
   if (!tcs.begin())
   {
     Serial.println("color sensor init fail!");
@@ -49,14 +50,13 @@ void setup() {
   analogWrite(2, 10);  
   Serial.println("TOF INIT SUCCEED!");
   #ifdef DEBUG_DISPLAY
-    oled.println("Starting...");
+    oled.println("Startup Done!");
     delay(1000);
     oled.setCursor(0, 0);
     oled.clearDisplay();    
   #endif
-  Serial.println("oled init done!");
   analogWrite(2, 0); 
-  delay(500);
+  // delay(500);
  
 }
 
