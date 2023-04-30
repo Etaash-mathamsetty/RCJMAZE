@@ -974,13 +974,13 @@ void loop()
 
 void loop()
 {
-  right(90, 100);
-  right(90, 100);
-  delay(1000);  
-  left(90, 100);
-  left(90, 100);
-  left(90, 100);
-  delay(1000); 
+  // right(90, 100);
+  // right(90, 100);
+  // delay(1000);  
+  // left(90, 100);
+  // left(90, 100);
+  // left(90, 100);
+  // delay(1000); 
   //utils::forward(255);
   //delay(1000);
 
