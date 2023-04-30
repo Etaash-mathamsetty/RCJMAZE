@@ -245,7 +245,7 @@ void pi_read_data() {
         if (cur_cmd[0] == 'g' || cur_cmd[0] == 'f') {
           Serial.println("FORWARD");
           oled.println("forward");
-          driveCM(27, 130, 1);
+          driveCM(27, 110, 1);
         } else {
           Serial.println("ERR: Invalid Parameter");
         }
@@ -264,7 +264,7 @@ void pi_read_data() {
           oled.println("forward");
           turn(c);
           //pi_send_data({ false, false, false, false });
-          driveCM(27, 130, 1);
+          driveCM(27, 110, 1);
         } else if (cur_cmd[0] == 't') {
           Serial.print("turn to ");
           Serial.println(c);
@@ -399,7 +399,7 @@ void raw_right(int relative_angle, int speed) {
   double angle = orientation + relative_angle;
   double last_error = abs((orientationData.orientation.x - angle) / angle);
 
-  while (orientation < angle) {
+  while (abs(orientation - angle) > 1) {
 
     Serial.print("Orientation Right: ");
     Serial.print(orientation);
@@ -458,7 +458,7 @@ void raw_left(int relative_angle, int speed) {
   double angle = orientation - relative_angle;
   double last_error = abs((orientationData.orientation.x - angle) / angle);
 
-  while (orientation > angle) {
+  while (abs(orientation - angle) > 1) {
     Serial.print("Orientation Left:  ");
     Serial.print(orientation);
     Serial.print("\t");
@@ -544,7 +544,7 @@ void drive(int encoders, int speed, int tolerance) {
 
   while (abs(motorR.getTicks()) < abs(encoders) && abs(motorL.getTicks()) < abs(encoders) && tofCalibrated(4) >= 50) {
     bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
-    encoders = orig_encoders / cos(-orientationData.orientation.z * (2 * PI / 360));
+    encoders = orig_encoders / cos(abs(orientationData.orientation.z * (2 * PI / 360)));
 
     p = speed * (double) (abs(encoders) - abs(motorR.getTicks())) / abs(encoders);
     //i = i + p;
@@ -639,10 +639,9 @@ void shiftLeft(){
 
 void alignCenterLR(int speed) {
   int tofR1, tofL1; 
-  tcaselect(0);
-  tofR1 = tof.readRangeSingleMillimeters() - 50;
+  tofR1 = tofCalibrated(0)
   tcaselect(1);
-  tofL1 = tof.readRangeSingleMillimeters() - 15;
+  tofL1 = tofCalibrate(1);
 
   const int dist = tofR1 - tofL1;
 
