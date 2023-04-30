@@ -21,6 +21,11 @@ void setup() {
   bno.begin(OPERATION_MODE_IMUPLUS);
   Serial.println("starting the code!");
 
+  oled.begin();
+  oled.setFlipMode(0);
+  oled.setFont(u8x8_font_chroma48medium8_r);
+  oled.setCursor(0, 0);
+
   for (int i = TOF_START; i <= TOF_NUMBER; i++) {
     /* TODO: Remove when 3rd sensor is replaced */
     tcaselect(i);
@@ -28,22 +33,23 @@ void setup() {
     //tof.setTimeout(500);
     //tof.startContinuous();
   } 
-  /*
+  tcaselect(6);
+
+  oled.println("TOF init done!");
+  
   if (!tcs.begin())
   {
-    Serial.println("error first!");
+    Serial.println("color sensor init fail!");
   }
-  */
+
+  oled.println("TCS init done!");
+  
   pinMode(2, OUTPUT);
   pinMode(5, OUTPUT);
   pinMode(4, OUTPUT);
   analogWrite(2, 10);  
   Serial.println("TOF INIT SUCCEED!");
   #ifdef DEBUG_DISPLAY
-    oled.begin();
-    oled.setFlipMode(0);
-    oled.setFont(u8x8_font_chroma48medium8_r);
-    oled.setCursor(0, 0);
     oled.println("Starting...");
     delay(1000);
     oled.setCursor(0, 0);
@@ -51,7 +57,7 @@ void setup() {
   #endif
   Serial.println("oled init done!");
   analogWrite(2, 0); 
-  delay(1000);
+  delay(500);
  
 }
 
@@ -315,9 +321,14 @@ void pi_read_data() {
   }
 }
 
-void returnColor(){
+int returnColor(){
     uint16_t r, g, b, c = 0;  
+    tcaselect(6);
     tcs.getRawData(&r, &g, &b, &c); 
+    oled.println(r);
+    oled.println(g);
+    oled.println(b);
+    oled.println(c);
     if (c >=  950 && (r / (float)g) * 10 >= 10.5) {
 
    //   silver_persistance++;
@@ -325,24 +336,23 @@ void returnColor(){
       oled.println("silver");
       //pi_send_tag("color");
       //PI_SERIAL.println("silver");
-      return; 
+      return 0; //change later
     }
-    else if(c < 250){ 
+    if(c < 250){ 
       Serial.println("black detected"); 
-      oled.println("black");
+      //oled.println("black");
       //pi_send_tag("color");
       //PI_SERIAL.println("black");  
-      return;  
+      return 1;  
     }
-    else if(b > (r * 2.5)){ 
+    if(b > (r * 2.5)){ 
       Serial.println("blue detected");
       oled.println("blue");  
       //pi_send_tag("color"); 
      //PI_SERIAL.println("blue"); 
-      return; 
+      return 0; //change later
     }
-    else 
-      return;  
+  return 0;  
 }
 
 void right(int relative_angle, int speed) {
@@ -594,13 +604,27 @@ void drive(int encoders, int speed, int tolerance) {
     } else {
       p_turn = -orientation - (startX - xPos);
     }
+
+    if(returnColor() == 1)
+    {
+      utils::stopMotors();
+      unsigned int ticks = (motorR.getTicks() + motorL.getTicks())/2;
+      while(abs(motorR.getTicks()) < abs(encoders) && abs(motorL.getTicks()) < abs(encoders) && tofCalibrated(5) >= 30)
+      {
+        utils::forward(-speed);
+      }
+      pi_send_data(false, false);
+      utils::resetBoost();
+      utils::stopMotors();
+      return;
+    }
     
     if (abs(p_turn * DRIVE_STRAIGHT_KP) <= 0.01 && PID <= 0.01)
       break;
     // speed = speed * (abs(encoders) - abs(motor1.getTicks()))/abs(encoders);
 
     //    Serial.println(speed * (double)(abs(encoders) - abs(motor1.getTicks()))/abs(encoders));
-    utils::forward(PID - p_turn * DRIVE_STRAIGHT_KP + DRIVE_BOOST, PID + p_turn * DRIVE_STRAIGHT_KP + DRIVE_BOOST);
+    utils::forward(PID - p_turn * DRIVE_STRAIGHT_KP + DRIVE_BOOST);
     angle = orientation;
   } 
   //correct horizontal error when inside of hallway 
@@ -675,7 +699,6 @@ void shiftLeft(){
 void alignCenterLR(int speed) {
   int tofR1, tofL1; 
   tofR1 = tofCalibrated(0);
-  tcaselect(1);
   tofL1 = tofCalibrated(1);
 
   const int dist = tofR1 - tofL1;
@@ -699,10 +722,8 @@ void alignCenterLR(int speed) {
 
 void alignCenterFB(int speed) {
   int tofF1, tofB1; 
-  tcaselect(0);
-  tofF1 = tof.readRangeSingleMillimeters() - 50;
-  tcaselect(1);
-  tofB1 = tof.readRangeSingleMillimeters() - 15;
+  tofF1 = tofCalibrated(0);
+  tofB1 = tofCalibrated(1);
 
   const int dist = tofF1 - tofB1;
 
@@ -885,7 +906,7 @@ char dir_to_char(uint8_t cur_dir)
   return 'n';
 }
 
-//#define TEST
+#define TEST
 #ifndef TEST
 
 void loop() 
@@ -960,8 +981,14 @@ void loop()
   left(90, 100);
   left(90, 100);
   delay(1000); 
-  // utils::forward(255);
-  // delay(1000);
+  //utils::forward(255);
+  //delay(1000);
+
+  Serial.print("black: ");
+  returnColor();
+  oled.clearDisplay();
+  delay(200);
+  //Serial.println(returnColor());
 }
 
 #endif
