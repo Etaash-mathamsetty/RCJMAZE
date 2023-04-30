@@ -27,7 +27,6 @@ void setup() {
   oled.setCursor(0, 0);
 
   for (int i = TOF_START; i <= TOF_NUMBER; i++) {
-    /* TODO: Remove when 3rd sensor is replaced */
     tcaselect(i);
     tof.init();
     //tof.setTimeout(500);
@@ -179,8 +178,6 @@ bool* get_tof_vals(double threshold) {
   Serial.println("start");
 
   for (int i = TOF_START; i <= TOF_NUMBER; i++) {
-
-    /* TODO: remove once 3rd sensor is replaced */
 
     reading = tofCalibrated(i);
 
