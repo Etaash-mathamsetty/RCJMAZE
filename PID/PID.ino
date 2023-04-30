@@ -641,7 +641,7 @@ void alignCenterLR(int speed) {
   int tofR1, tofL1; 
   tofR1 = tofCalibrated(0)
   tcaselect(1);
-  tofL1 = tofCalibrate(1);
+  tofL1 = tofCalibrated(1);
 
   const int dist = tofR1 - tofL1;
 
