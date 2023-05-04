@@ -733,7 +733,7 @@ void alignCenterFB(int speed) {
   }
 }
 
-void alignAngle(int speed, int tof1, int tof2) {
+void alignAngle(int speed) {
   float tofR1, tofR2; 
 
   tofR1 = tofCalibrated(0); 
