@@ -558,11 +558,32 @@ void turn(char char_end_direction) {
   cur_direction = end_direction;
 }
 
-void driveCM (float cm, int speed = 200, int tolerance = 1) {
-  drive(cm * CM_TO_ENCODERS, speed, tolerance);
+void driveCM(float cm, int speed = 200, int tolerance = 10) {
+  //alignAngle(100);
+
+  double horizontalError = abs(tofCalibrated(0) - tofCalibrated(2)) / 2;
+  double angle = atan((cm * 10) / horizontalError);
+  if (horizontalError >= tolerance) {
+
+    if (tofCalibrated(0) > tofCalibrated(2)) {
+
+      right(90 - angle; 100);
+      drive((cm * CM_TO_ENCODERS) / sin(angle), speed);
+      left(90 - angle; 100);
+
+    } else {
+      left(90 - angle; 100);
+      drive((cm * CM_TO_ENCODERS) / sin(angle), speed);
+      right(90 - angle; 100);
+    }
+  } 
+  else{
+    drive((cm * CM_TO_ENCODERS), speed); 
+  }
 }
 
-void drive(int encoders, int speed, int tolerance) {
+
+void drive(int encoders, int speed) {
 #ifndef MOTORSOFF
   // bno.begin(OPERATION_MODE_IMUPLUS);
   double orientation_offset;
