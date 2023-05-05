@@ -2,7 +2,7 @@
 //#define FAKE_SERIAL
 #define DEBUG_DISPLAY
 //#define MOTORSOFF
-// #define TEST
+#define TEST
 
 #include "Motors.h"
 #include "utils.h"
@@ -564,28 +564,28 @@ void turn(char char_end_direction) {
 
 void driveCM(float cm, int speed = 200, int tolerance = 10) {
   //alignAngle(100);
-#if 0
-  double horizontalError = abs(tofCalibrated(0) - tofCalibrated(2)) / 2;
-  double angle = atan((cm * 10) / horizontalError) * (180/PI);
+#if 1
+  double horizontalError = abs((int)tofCalibrated(0) - (int)tofCalibrated(2)) / 2;
+  double angle = abs(atan((cm * 10) / horizontalError) * (180/PI));
   if (horizontalError >= tolerance && angle >= 3 && tofCalibrated(0) < 150 && tofCalibrated(2) < 150) {
 
     if (tofCalibrated(0) > tofCalibrated(2)) {
 
-      right(90 - angle, SPEED);
-      drive((cm * CM_TO_ENCODERS) / abs(sin(angle)), speed);
-      left(90 - angle, SPEED);
+      raw_right(90 - angle, SPEED);
+      drive((cm * CM_TO_ENCODERS) / abs(sin(angle * (PI/180))), speed);
+      raw_left(90 - angle, SPEED);
 
     } else {
-      left(90 - angle, SPEED);
-      drive((cm * CM_TO_ENCODERS) / abs(sin(angle)), speed);
-      right(90 - angle, SPEED);
+      raw_left(90 - angle, SPEED);
+      drive((cm * CM_TO_ENCODERS) / abs(sin(angle * (PI/180))), speed);
+      raw_right(90 - angle, SPEED);
     }
   } 
   else {
     drive((cm * CM_TO_ENCODERS), speed); 
   }
 #else
-  drive((cm * CM_TO_ENCODERS), speed)
+  drive((cm * CM_TO_ENCODERS), speed);
 
 #endif
 
@@ -1021,11 +1021,8 @@ void loop()
   //utils::forward(255);
   //delay(1000);
 
-  Serial.print("black: ");
-  returnColor();
-  oled.clearDisplay();
-  oled.setCursor(0,0);
-  delay(200);
+  driveCM(27, 110);
+  delay(100);
   //Serial.println(returnColor());
 }
 
