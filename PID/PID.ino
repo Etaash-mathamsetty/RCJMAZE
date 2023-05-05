@@ -563,7 +563,7 @@ void driveCM(float cm, int speed = 200, int tolerance = 10) {
 
   double horizontalError = abs(tofCalibrated(0) - tofCalibrated(2)) / 2;
   double angle = atan((cm * 10) / horizontalError);
-  if (horizontalError >= tolerance) {
+  if (horizontalError >= tolerance && tofCalibrated(0) < 150 && tofCalibrated(2) < 150) {
 
     if (tofCalibrated(0) > tofCalibrated(2)) {
 
