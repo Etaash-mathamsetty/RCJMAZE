@@ -577,7 +577,7 @@ void driveCM(float cm, int speed = 200, int tolerance = 10) {
       right(90 - angle, SPEED);
     }
   } 
-  else{
+  else {
     drive((cm * CM_TO_ENCODERS), speed); 
   }
 }
