@@ -564,26 +564,31 @@ void turn(char char_end_direction) {
 
 void driveCM(float cm, int speed = 200, int tolerance = 10) {
   //alignAngle(100);
-
+#if 0
   double horizontalError = abs(tofCalibrated(0) - tofCalibrated(2)) / 2;
-  double angle = atan((cm * 10) / horizontalError);
-  if (horizontalError >= tolerance && tofCalibrated(0) < 150 && tofCalibrated(2) < 150) {
+  double angle = atan((cm * 10) / horizontalError) * (180/PI);
+  if (horizontalError >= tolerance && angle >= 3 && tofCalibrated(0) < 150 && tofCalibrated(2) < 150) {
 
     if (tofCalibrated(0) > tofCalibrated(2)) {
 
       right(90 - angle, SPEED);
-      drive((cm * CM_TO_ENCODERS) / sin(angle), speed);
+      drive((cm * CM_TO_ENCODERS) / abs(sin(angle)), speed);
       left(90 - angle, SPEED);
 
     } else {
       left(90 - angle, SPEED);
-      drive((cm * CM_TO_ENCODERS) / sin(angle), speed);
+      drive((cm * CM_TO_ENCODERS) / abs(sin(angle)), speed);
       right(90 - angle, SPEED);
     }
   } 
   else {
     drive((cm * CM_TO_ENCODERS), speed); 
   }
+#else
+  drive((cm * CM_TO_ENCODERS), speed)
+
+#endif
+
 }
 
 
@@ -940,6 +945,8 @@ char dir_to_char(uint8_t cur_dir)
 //#define TEST
 #ifndef TEST
 
+int clear_oled_counter = 0;
+
 void loop() 
 {
 
@@ -995,6 +1002,12 @@ void loop()
 
 #ifdef DEBUG_DISPLAY
   oled.setCursor(0, 0);
+  clear_oled_counter++;
+  if(clear_oled_counter > 50)
+  {
+    oled.clearDisplay();
+    clear_oled_counter = 0;
+  }
 #endif
 
   delay(100);
