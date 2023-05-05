@@ -622,7 +622,7 @@ void drive(int encoders, int speed) {
     double difference_ticks = new_ticks - old_ticks;
     bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
     encoders = orig_encoders / cos(abs(orientationData.orientation.z * (2 * PI / 360)));
-    ticks_elapsed += difference_ticks / cos(abs(orientationData.orientation.z * (2 * PI / 360)));
+    ticks_elapsed = difference_ticks / cos(abs(orientationData.orientation.z * (2 * PI / 360)));
 
     p = speed * (double) (abs(encoders) - abs(motorR.getTicks())) / abs(encoders);
     //i = i + p;
@@ -1028,7 +1028,7 @@ void loop()
   // utils::forward(255);
   driveCM(27, 130, 1);
   delay(1000);
-
+  
 
   // Serial.print("black: ");
   // returnColor();
