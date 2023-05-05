@@ -2,7 +2,7 @@
 //#define FAKE_SERIAL
 #define DEBUG_DISPLAY
 //#define MOTORSOFF
-#define TEST
+// #define TEST
 
 #include "Motors.h"
 #include "utils.h"
@@ -318,15 +318,19 @@ void pi_read_data() {
   }
 }
 
-int returnColor(){
+int returnColor(bool only_black = false){
     uint16_t r, g, b, c = 0;  
     tcaselect(6);
     tcs.getRawData(&r, &g, &b, &c); 
-    oled.println(r);
-    oled.println(g);
-    oled.println(b);
-    oled.println(c);
-    if (c >=  950 && (r / (float)g) * 10 >= 10.5) {
+    // oled.println(r);
+    // delay(50);
+    // oled.println(g);
+    // delay(50);
+    // oled.println(b);
+    // delay(50);
+    // oled.println(c);
+    // delay(2000);
+    if (c >= 500 /* && (r / (float)g) * 10 >= 10.5*/ && !only_black) {
 
    //   silver_persistance++;
       Serial.println("silver detected"); 
@@ -335,14 +339,14 @@ int returnColor(){
       //PI_SERIAL.println("silver");
       return 0; //change later
     }
-    if(c < 250){ 
+    if(c < 100){ 
       Serial.println("black detected"); 
       //oled.println("black");
       //pi_send_tag("color");
       //PI_SERIAL.println("black");  
       return 1;  
     }
-    if(b > (r * 2.5)){ 
+    if(b > (r * 2.5) && !only_black){ 
       Serial.println("blue detected");
       oled.println("blue");  
       //pi_send_tag("color"); 
@@ -602,7 +606,7 @@ void drive(int encoders, int speed, int tolerance) {
       p_turn = -orientation - (startX - xPos);
     }
 
-    if(returnColor() == 1)
+    if(returnColor(true) == 1)
     {
       utils::stopMotors();
       unsigned int ticks = (motorR.getTicks() + motorL.getTicks())/2;
@@ -903,7 +907,7 @@ char dir_to_char(uint8_t cur_dir)
   return 'n';
 }
 
-#define TEST
+//#define TEST
 #ifndef TEST
 
 void loop() 
@@ -971,6 +975,7 @@ void loop()
 
 void loop()
 {
+<<<<<<< Updated upstream
   // right(90, 100);
   // right(90, 100);
   // delay(1000);  
@@ -987,6 +992,16 @@ void loop()
   oled.setCursor(0,0);
   delay(200);
   //Serial.println(returnColor());
+=======
+
+  returnColor();
+
+  oled.setCursor(0,0);
+  oled.clear();
+  oled.clearDisplay();
+  // utils::forward(255);
+  delay(200);
+>>>>>>> Stashed changes
 }
 
 #endif
