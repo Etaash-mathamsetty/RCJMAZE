@@ -15,11 +15,11 @@ void kitDrop(int num) {
       columnNum++; 
     
     if (numDropped > total) {
-      myservo.write(0);
+      myservo.write(150);
       return;
     }
 
-    myservo.write(180 - 60*columnNum - 3); 
+    myservo.write(180 - 55*columnNum - 3); 
     Serial.print("columnNum");
     Serial.println(columnNum);
     Serial.println("numDropped");
