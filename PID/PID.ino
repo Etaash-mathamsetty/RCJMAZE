@@ -292,7 +292,7 @@ void pi_read_data() {
         if (cur_cmd[0] == 'g' || cur_cmd[0] == 'f') {
           Serial.println("FORWARD");
           oled.println("forward");
-          driveCM(27, 100, 1);
+          driveCM(27, 110, 1);
         } else {
           Serial.println("ERR: Invalid Parameter");
         }
@@ -540,7 +540,7 @@ void raw_left(int relative_angle, int speed) {
 }
 
 void turn(char char_end_direction) {
-  uint8_t end_direction;
+  uint8_t end_direction = 0;
   switch (tolower(char_end_direction)) {
     case 'n': end_direction = (uint8_t)n; break;
     case 'e': end_direction = (uint8_t)e; break;
@@ -562,11 +562,32 @@ void turn(char char_end_direction) {
   cur_direction = end_direction;
 }
 
-void driveCM (float cm, int speed = 200, int tolerance = 1) {
-  drive(cm * CM_TO_ENCODERS, speed, tolerance);
+void driveCM(float cm, int speed = 200, int tolerance = 10) {
+  //alignAngle(100);
+
+  double horizontalError = abs(tofCalibrated(0) - tofCalibrated(2)) / 2;
+  double angle = atan((cm * 10) / horizontalError);
+  if (horizontalError >= tolerance && tofCalibrated(0) < 150 && tofCalibrated(2) < 150) {
+
+    if (tofCalibrated(0) > tofCalibrated(2)) {
+
+      right(90 - angle, SPEED);
+      drive((cm * CM_TO_ENCODERS) / sin(angle), speed);
+      left(90 - angle, SPEED);
+
+    } else {
+      left(90 - angle, SPEED);
+      drive((cm * CM_TO_ENCODERS) / sin(angle), speed);
+      right(90 - angle, SPEED);
+    }
+  } 
+  else {
+    drive((cm * CM_TO_ENCODERS), speed); 
+  }
 }
 
-void drive(int encoders, int speed, int tolerance) {
+
+void drive(int encoders, int speed) {
 #ifndef MOTORSOFF
   // bno.begin(OPERATION_MODE_IMUPLUS);
   double orientation_offset;
@@ -609,8 +630,9 @@ void drive(int encoders, int speed, int tolerance) {
     if(returnColor(true) == 1)
     {
       utils::stopMotors();
-      unsigned int ticks = (motorR.getTicks() + motorL.getTicks())/2;
-      while(abs(motorR.getTicks()) < abs(encoders) && abs(motorL.getTicks()) < abs(encoders) && tofCalibrated(5) >= 30)
+      unsigned int ticks = (motorR.getTicks() + motorL.getTicks()) / 2;
+      utils::resetTicks();
+      while(abs(motorR.getTicks()) < abs(ticks) && abs(motorL.getTicks()) < abs(ticks) && tofCalibrated(5) >= 40)
       {
         utils::forward(-speed);
       }
@@ -620,6 +642,7 @@ void drive(int encoders, int speed, int tolerance) {
       return;
     }
     
+    //we are close enough to the target at this point, so quit the loop
     if (abs(p_turn * DRIVE_STRAIGHT_KP) <= 0.01 && PID <= 0.01)
       break;
     // speed = speed * (abs(encoders) - abs(motor1.getTicks()))/abs(encoders);
@@ -737,7 +760,7 @@ void alignCenterFB(int speed) {
   }
 }
 
-void alignAngle(int speed, int tof1, int tof2) {
+void alignAngle(int speed) {
   float tofR1, tofR2; 
 
   tofR1 = tofCalibrated(0); 
@@ -975,7 +998,6 @@ void loop()
 
 void loop()
 {
-<<<<<<< Updated upstream
   // right(90, 100);
   // right(90, 100);
   // delay(1000);  
@@ -992,16 +1014,6 @@ void loop()
   oled.setCursor(0,0);
   delay(200);
   //Serial.println(returnColor());
-=======
-
-  returnColor();
-
-  oled.setCursor(0,0);
-  oled.clear();
-  oled.clearDisplay();
-  // utils::forward(255);
-  delay(200);
->>>>>>> Stashed changes
 }
 
 #endif
