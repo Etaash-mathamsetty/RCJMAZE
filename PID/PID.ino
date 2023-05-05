@@ -2,7 +2,7 @@
 //#define FAKE_SERIAL
 #define DEBUG_DISPLAY
 //#define MOTORSOFF
-#define TEST
+// #define TEST
 
 #include "Motors.h"
 #include "utils.h"
@@ -614,15 +614,9 @@ void drive(int encoders, int speed) {
   encoders = orig_encoders / cos(-orientationData.orientation.z * (2 * PI / 360));
   pi_send_data(true, true);
 
-  double old_ticks = motorR.getTicks();
-  double new_ticks;
-  double ticks_elapsed = 0;
-  while (abs(ticks_elapsed) < abs(encoders) /* && abs(motorL.getTicks()) < abs(encoders) */ && tofCalibrated(4) >= 50) {
-    new_ticks = motorR.getTicks();
-    double difference_ticks = new_ticks - old_ticks;
+  while (abs(motorR.getTicks()) < abs(encoders) && abs(motorL.getTicks()) < abs(encoders) && tofCalibrated(4) >= 50) {
     bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
     encoders = orig_encoders / cos(abs(orientationData.orientation.z * (2 * PI / 360)));
-    ticks_elapsed = difference_ticks / cos(abs(orientationData.orientation.z * (2 * PI / 360)));
 
     p = speed * (double) (abs(encoders) - abs(motorR.getTicks())) / abs(encoders);
     //i = i + p;
@@ -710,7 +704,6 @@ void drive(int encoders, int speed) {
   delay(100);
   pi_send_data(false, true);
 #endif
-  old_ticks = motorR.getTicks();
   
 } 
 void shiftRight(){
@@ -1025,16 +1018,14 @@ void loop()
   // left(90, 100);
   // left(90, 100);
   // delay(1000); 
-  // utils::forward(255);
-  driveCM(27, 130, 1);
-  delay(1000);
-  
+  //utils::forward(255);
+  //delay(1000);
 
-  // Serial.print("black: ");
-  // returnColor();
-  // oled.clearDisplay();
-  // oled.setCursor(0,0);
-  // delay(200);
+  Serial.print("black: ");
+  returnColor();
+  oled.clearDisplay();
+  oled.setCursor(0,0);
+  delay(200);
   //Serial.println(returnColor());
 }
 
