@@ -628,7 +628,7 @@ void drive(int encoders, int speed) {
       utils::stopMotors();
       unsigned int ticks = (motorR.getTicks() + motorL.getTicks()) / 2;
       utils::resetTicks();
-      while(abs(motorR.getTicks()) < abs(ticks) && abs(motorL.getTicks()) < abs(ticks) && tofCalibrated(5) >= 30)
+      while(abs(motorR.getTicks()) < abs(ticks) && abs(motorL.getTicks()) < abs(ticks) && tofCalibrated(5) >= 40)
       {
         utils::forward(-speed);
       }
