@@ -292,7 +292,7 @@ void pi_read_data() {
         if (cur_cmd[0] == 'g' || cur_cmd[0] == 'f') {
           Serial.println("FORWARD");
           oled.println("forward");
-          driveCM(27, 100, 1);
+          driveCM(27, 110, 1);
         } else {
           Serial.println("ERR: Invalid Parameter");
         }
@@ -567,19 +567,18 @@ void driveCM(float cm, int speed = 200, int tolerance = 10) {
 
     if (tofCalibrated(0) > tofCalibrated(2)) {
 
-      right(90 - angle; 100);
+      right(90 - angle, SPEED);
       drive((cm * CM_TO_ENCODERS) / sin(angle), speed);
-      left(90 - angle; 100);
+      left(90 - angle, SPEED);
 
     } else {
-      left(90 - angle; 100);
+      left(90 - angle, SPEED);
       drive((cm * CM_TO_ENCODERS) / sin(angle), speed);
-      right(90 - angle; 100);
+      right(90 - angle, SPEED);
     }
   } 
-  else{
-    drive((cm * CM_TO_ENCODERS), speed); 
-  }
+  
+  drive((cm * CM_TO_ENCODERS), speed); 
 }
 
 
