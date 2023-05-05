@@ -536,7 +536,7 @@ void raw_left(int relative_angle, int speed) {
 }
 
 void turn(char char_end_direction) {
-  uint8_t end_direction;
+  uint8_t end_direction = 0;
   switch (tolower(char_end_direction)) {
     case 'n': end_direction = (uint8_t)n; break;
     case 'e': end_direction = (uint8_t)e; break;
@@ -626,8 +626,9 @@ void drive(int encoders, int speed) {
     if(returnColor() == 1)
     {
       utils::stopMotors();
-      unsigned int ticks = (motorR.getTicks() + motorL.getTicks())/2;
-      while(abs(motorR.getTicks()) < abs(encoders) && abs(motorL.getTicks()) < abs(encoders) && tofCalibrated(5) >= 30)
+      unsigned int ticks = (motorR.getTicks() + motorL.getTicks()) / 2;
+      utils::resetTicks();
+      while(abs(motorR.getTicks()) < abs(ticks) && abs(motorL.getTicks()) < abs(ticks) && tofCalibrated(5) >= 30)
       {
         utils::forward(-speed);
       }
