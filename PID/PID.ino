@@ -623,6 +623,7 @@ void drive(int encoders, int speed) {
       p_turn = -orientation - (startX - xPos);
     }
 
+    //black detection
     if(returnColor() == 1)
     {
       utils::stopMotors();
@@ -638,6 +639,7 @@ void drive(int encoders, int speed) {
       return;
     }
     
+    //we are close enough to the target at this point, so quit the loop
     if (abs(p_turn * DRIVE_STRAIGHT_KP) <= 0.01 && PID <= 0.01)
       break;
     // speed = speed * (abs(encoders) - abs(motor1.getTicks()))/abs(encoders);
