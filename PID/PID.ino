@@ -3,6 +3,7 @@
 #define DEBUG_DISPLAY
 //#define MOTORSOFF
 #define TEST
+#define NO_PI //basic auto when no raspberry pi
 
 #include "Motors.h"
 #include "utils.h"
@@ -565,20 +566,23 @@ void turn(char char_end_direction) {
 void driveCM(float cm, int speed = 200, int tolerance = 10) {
   //alignAngle(100);
 #if 1
-  double horizontalError = abs((int)tofCalibrated(0) - (int)tofCalibrated(2)) / 2;
+  unsigned int left = (tofCalibrated(0) + tofCalibrated(1))/2;
+  unsigned int right = (tofCalibrated(2));  // + tofCalibrated(3))/2;
+  double horizontalError = abs((int)left - (int)right) / 2;
   double angle = abs(atan((cm * 10) / horizontalError) * (180/PI));
-  if (horizontalError >= tolerance && angle >= 3 && tofCalibrated(0) < 150 && tofCalibrated(2) < 150) {
+  oled.println(angle * 1.1);
+  if (horizontalError >= tolerance && left < 150 && right < 150) {
 
-    if (tofCalibrated(0) > tofCalibrated(2)) {
+    if (left > right) {
 
-      raw_right(90 - angle, SPEED);
+      raw_right(90 - min(90, angle * 1.1), SPEED);
       drive((cm * CM_TO_ENCODERS) / abs(sin(angle * (PI/180))), speed);
-      raw_left(90 - angle, SPEED);
+      raw_left(90 - min(90, angle * 1.1), SPEED);
 
     } else {
-      raw_left(90 - angle, SPEED);
+      raw_left(90 - min(90, angle * 1.1), SPEED);
       drive((cm * CM_TO_ENCODERS) / abs(sin(angle * (PI/180))), speed);
-      raw_right(90 - angle, SPEED);
+      raw_right(90 - min(90, angle * 1.1), SPEED);
     }
   } 
   else {
@@ -611,12 +615,29 @@ void drive(int encoders, int speed) {
   double orientation;
   double orig_encoders = encoders;
   bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
-  encoders = orig_encoders / cos(-orientationData.orientation.z * (2 * PI / 360));
+  bool ramp_detect = true;
+  double start_ramp = INT_MAX;
+  // encoders = orig_encoders / cos(-orientationData.orientation.z * (2 * PI / 360));
   pi_send_data(true, true);
 
   while (abs(motorR.getTicks()) < abs(encoders) && abs(motorL.getTicks()) < abs(encoders) && tofCalibrated(4) >= 50) {
     bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
-    encoders = orig_encoders / cos(abs(orientationData.orientation.z * (2 * PI / 360)));
+    // encoders = orig_encoders / cos(abs(orientationData.orientation.z * (2 * PI / 360)));
+
+
+    // if (abs(orientationData.orientation.z) > 7) {
+    //   start_ramp = millis();
+    //   oled.println("ramp detected!");
+    // }
+
+    // if (millis() - start_ramp > 75 && ramp_detect) {
+    //   encoders = motorR.getTicks() + (encoders - motorR.getTicks()) / cos(abs(orientationData.orientation.z * (PI / 180))) + 5 * CM_TO_ENCODERS;
+    //   ramp_detect = false;
+    // }
+
+    // oled.print("encoders: ");
+    // oled.println(encoders);
+    // oled.clearDisplay();
 
     p = speed * (double) (abs(encoders) - abs(motorR.getTicks())) / abs(encoders);
     //i = i + p;
@@ -632,20 +653,20 @@ void drive(int encoders, int speed) {
       p_turn = -orientation - (startX - xPos);
     }
 
-    if(returnColor(true) == 1)
-    {
-      utils::stopMotors();
-      unsigned int ticks = (motorR.getTicks() + motorL.getTicks()) / 2;
-      utils::resetTicks();
-      while(abs(motorR.getTicks()) < abs(ticks) && abs(motorL.getTicks()) < abs(ticks) && tofCalibrated(5) >= 40)
-      {
-        utils::forward(-speed);
-      }
-      pi_send_data(false, false);
-      utils::resetBoost();
-      utils::stopMotors();
-      return;
-    }
+    // if(returnColor(true) == 1)
+    // {
+    //   utils::stopMotors();
+    //   unsigned int ticks = (motorR.getTicks() + motorL.getTicks()) / 2;
+    //   utils::resetTicks();
+    //   while(abs(motorR.getTicks()) < abs(ticks) && abs(motorL.getTicks()) < abs(ticks) && tofCalibrated(5) >= 40)
+    //   {
+    //     utils::forward(-speed);
+    //   }
+    //   pi_send_data(false, false);
+    //   utils::resetBoost();
+    //   utils::stopMotors();
+    //   return;
+    // }
     
     //we are close enough to the target at this point, so quit the loop
     if (abs(p_turn * DRIVE_STRAIGHT_KP) <= 0.01 && PID <= 0.01)
@@ -775,7 +796,7 @@ void alignAngle(int speed) {
     return;
   }
 
-  float len = tofR1 - tofR2;
+  float len = (int)tofCalibrated(0) - (int)tofCalibrated(1);
   if (len == 0) {
     len += 0.01;
   }
@@ -1021,8 +1042,47 @@ void loop()
   //utils::forward(255);
   //delay(1000);
 
+  // bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
+  // Serial.println(orientationData.orientation.z);
+
+  #ifndef NO_PI
+
   driveCM(27, 110);
-  delay(100);
+  delay(1000);
+
+  #else
+      bool* arr = get_tof_vals(150);
+
+  // //n e s w
+  bool walls[4] = {arr[4], arr[0] && arr[1], arr[5], arr[2] && arr[3]};
+  // not wrapped around and stuff 
+  oled_display_walls(walls);
+
+  if(!walls[0])
+  {
+    driveCM(27, 110);
+  }
+  else if(!walls[1])
+  {
+    right(90, SPEED);
+  }
+  else if(!walls[3])
+  {
+    left(90, SPEED);
+  }
+  else if(!walls[2])
+  {
+    right(180, SPEED);
+  }
+
+
+
+  delay(1000);
+
+  #endif
+
+  oled.clearDisplay();
+  oled.setCursor(0,0);
   //Serial.println(returnColor());
 }
 
