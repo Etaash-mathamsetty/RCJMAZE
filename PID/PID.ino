@@ -381,6 +381,21 @@ void right(int relative_angle, int speed) {
 
   raw_right(relative_angle, speed);
 
+  bool* arr = get_tof_vals(150);
+
+  //n e s w
+  bool walls[4] = {arr[4], arr[0] && arr[1], arr[5], arr[2] && arr[3]};
+
+
+  if(walls[2])
+  {
+    while(tofCalibrated(5) >= 50)
+    {
+      utils::forward(-speed);
+    }
+    utils::stopMotors();
+  }
+
   pi_send_tag("turn_status");
   PI_SERIAL.println(0.0);
 }
@@ -418,6 +433,21 @@ void left(int relative_angle, int speed) {
   // }
 
   raw_left(relative_angle, speed);
+
+  bool* arr = get_tof_vals(150);
+
+  //n e s w
+  bool walls[4] = {arr[4], arr[0] && arr[1], arr[5], arr[2] && arr[3]};
+
+
+  if(walls[2])
+  {
+    while(tofCalibrated(5) >= 50)
+    {
+      utils::forward(-speed);
+    }
+    utils::stopMotors();
+  }
 
   pi_send_tag("turn_status");
   PI_SERIAL.println(0.0);
@@ -563,26 +593,33 @@ void turn(char char_end_direction) {
   cur_direction = end_direction;
 }
 
+void alignAngle(int, int x = 10);
+
 void driveCM(float cm, int speed = 200, int tolerance = 10) {
-  //alignAngle(100);
+  //utils::kitDrop(1);
 #if 1
+  const float mult_factor = 1.0;
   unsigned int left = (tofCalibrated(0) + tofCalibrated(1))/2;
-  unsigned int right = (tofCalibrated(2));  // + tofCalibrated(3))/2;
+  unsigned int right = (tofCalibrated(2) + tofCalibrated(3))/2;
   double horizontalError = abs((int)left - (int)right) / 2;
   double angle = abs(atan((cm * 10) / horizontalError) * (180/PI));
-  oled.println(angle * 1.1);
+  oled.println(angle * mult_factor);
   if (horizontalError >= tolerance && left < 150 && right < 150) {
 
     if (left > right) {
 
-      raw_right(90 - min(90, angle * 1.1), SPEED);
-      drive((cm * CM_TO_ENCODERS) / abs(sin(angle * (PI/180))), speed);
-      raw_left(90 - min(90, angle * 1.1), SPEED);
+      raw_right(90 - min(90, angle * mult_factor), SPEED);
+      drive((cm * CM_TO_ENCODERS) / abs(sin(angle * (PI/180)) * 0.9), speed);
+      raw_left(90 - min(90, angle * mult_factor), SPEED);
+      // bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
+      // raw_left(orientationData.orientation.x, SPEED);
 
     } else {
-      raw_left(90 - min(90, angle * 1.1), SPEED);
-      drive((cm * CM_TO_ENCODERS) / abs(sin(angle * (PI/180))), speed);
-      raw_right(90 - min(90, angle * 1.1), SPEED);
+      raw_left(90 - min(90, angle * mult_factor), SPEED);
+      drive((cm * CM_TO_ENCODERS) / abs(sin(angle * (PI/180)) * 0.9), speed);
+      raw_right(90 - min(90, angle * mult_factor), SPEED);
+      // bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
+      // raw_right(360-orientationData.orientation.x, SPEED);
     }
   } 
   else {
@@ -592,7 +629,23 @@ void driveCM(float cm, int speed = 200, int tolerance = 10) {
   drive((cm * CM_TO_ENCODERS), speed);
 
 #endif
+  
+  bool* arr = get_tof_vals(150);
 
+  //n e s w
+  bool walls[4] = {arr[4], arr[0] && arr[1], arr[5], arr[2] && arr[3]};
+
+
+  if(walls[0])
+  {
+    while(tofCalibrated(4) >= 50)
+    {
+      utils::forward(speed * 0.7);
+
+    }
+    utils::stopMotors();
+  }
+  alignAngle(90);
 }
 
 
@@ -786,40 +839,83 @@ void alignCenterFB(int speed) {
   }
 }
 
-void alignAngle(int speed) {
-  float tofR1, tofR2; 
+int closestTo90s(int num) {
+  for (int i = 0; i <= 360; i+=90) {
+    if (abs(num - i) <= 45) {
+      return i;
+    }
+  }
+}
+
+void alignAngle(int speed, int tolerance = 10) {
+  int tofR1, tofR2; 
+  int tofR3, tofR4;
+  int lnum = 0, rnum = 1;
 
   tofR1 = tofCalibrated(0); 
   tofR2 = tofCalibrated(1); 
+  tofR3 = tofCalibrated(2); 
+  tofR4 = tofCalibrated(3); 
+
          
-  if (tofR1 >= 200 || tofR2 >= 200) {
+  if (tofR1 >= 149 || tofR2 >= 149) {
+    lnum = 3;
+    rnum = 2;
+  }
+
+  if (tofR3 >= 149 || tofR4 >= 149 && tofR1 >= 149 || tofR2 >= 149) {
+    bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
+    int new_angle = closestTo90s((int) orientationData.orientation.x);
+
+    if ((int) orientationData.orientation.x  - new_angle < 0) {
+      raw_right(abs(orientationData.orientation.x - new_angle), speed);
+    } else {
+      raw_left(abs(orientationData.orientation.x - new_angle), speed);
+    }
+    
     return;
   }
 
-  float len = (int)tofCalibrated(0) - (int)tofCalibrated(1);
-  if (len == 0) {
-    len += 0.01;
-  }
+  float len = abs((int)tofCalibrated(lnum) - (int)tofCalibrated(rnum));
+
+  // oled.println((int) tofCalibrated(0) - (int)tofCalibrated(1));
+  // delay(2000);
+
+  if(len <= tolerance)
+    return;
+
   const int width = TOF_DISTANCE;
-  const int angle = 90 - (atan(width/len) * (180/3.1415)); 
+  const int angle = atan(width/len) * (180/PI); 
+
+  if ( (int) tofCalibrated(lnum) - (int)tofCalibrated(rnum) < 0) {
+
+    while(len >= tolerance) {
+      utils::forward(-speed, speed);
+      len = abs((int)tofCalibrated(lnum) - (int)tofCalibrated(rnum));
+    }
+  } else {
+    
+    while(len >= tolerance) {
+      utils::forward(speed, -speed);
+      len = abs((int)tofCalibrated(lnum) - (int)tofCalibrated(rnum));
+    }
+  }
+  utils::stopMotors();
+
   //Serial.println(len);  
   //Serial.println(atan(width/len) * (180/3.1415)  );
   //Serial.println(angle);
-  Serial.print("Length: ");
-  Serial.print(len);
-  if(angle > 10 && angle < 170) {
-  if (angle > 135) {
-    // Serial.print(" Turn Right\t");
-    // Serial.println(angle);
-    right(180 - angle, speed);
-  } else {
-    // Serial.print(" Turn Left\t");
-    // Serial.println(angle);
-    left(angle, speed);
-  }
-  } else {
-    Serial.println();
-  }
+  // Serial.print("Length: ");
+  // Serial.print(len);
+  // if (angle > 0) {
+  //   // Serial.print(" Turn Right\t");
+  //   // Serial.println(angle);
+  //   raw_right(180 - angle, speed);
+  // } else {
+  //   // Serial.print(" Turn Left\t");
+  //   // Serial.println(angle);
+  //   raw_left(180 - angle, speed);
+  // }
    
   /*
   while (abs(tofR1 - tofR2) > tolerance) {
@@ -874,7 +970,7 @@ unsigned int tofCalibrated(int select)
     {
         tcaselect(1);
         dist = tof.readRangeSingleMillimeters();
-        cal = (1.09 * dist) - 21.3;
+        cal = (1.09 * dist);
         cal = min(cal, max_dist);        
         return cal;
         //accurate (50, 150), still works < 25ish
@@ -892,7 +988,7 @@ unsigned int tofCalibrated(int select)
     { 
         tcaselect(3); 
         dist = tof.readRangeSingleMillimeters(); 
-        cal = -0.848 + (0.671 * dist) + (0.00165 * dist * dist); 
+        cal = dist - 40;
         cal = min(cal, max_dist);
         return cal; 
         //decent accuracy 
@@ -1047,8 +1143,15 @@ void loop()
 
   #ifndef NO_PI
 
-  driveCM(27, 110);
-  delay(1000);
+  // driveCM(27, 110);
+  // delay(1000);
+  alignAngle(110);
+  // for (int i = 2; i <= 3; i++) {
+  //   oled.print(i);
+  //   oled.print(": ");
+  //   oled.println(tofCalibrated(i));
+  // }
+  // delay(1000);
 
   #else
       bool* arr = get_tof_vals(150);
@@ -1083,6 +1186,7 @@ void loop()
 
   oled.clearDisplay();
   oled.setCursor(0,0);
+
   //Serial.println(returnColor());
 }
 
