@@ -10,6 +10,11 @@ serial_port = '/dev/ttyS0'
 if not simulation:
     video = cv2.VideoCapture(0)
     video1 = cv2.VideoCapture(1)
+    video.set(3, 320)
+    video.set(4, 240)
+    video1.set(3, 320)
+    video1.set(4, 240)
+
     if not video.isOpened():
         print("failed to open video 0")
     if not video1.isOpened():

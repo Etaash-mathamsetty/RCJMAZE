@@ -10,7 +10,7 @@ namespace utils{
 Motor* motor;
 Motor* motor2;
 Servo myservo; 
-int16_t servopin = A6; 
+int16_t servopin = A6;
 const int num_per_column = 4;
 const int num_columns = 3;
 const int total = num_per_column * num_columns;

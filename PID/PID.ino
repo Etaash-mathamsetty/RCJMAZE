@@ -2,8 +2,8 @@
 //#define FAKE_SERIAL
 #define DEBUG_DISPLAY
 //#define MOTORSOFF
-#define TEST
-#define NO_PI //basic auto when no raspberry pi
+// #define TEST
+// #define NO_PI //basic auto when no raspberry pi
 
 #include "Motors.h"
 #include "utils.h"
@@ -19,7 +19,6 @@ void setup() {
   Serial.println("starting the code!");
   //Wire.begin();
   //Wire.setClockStretchLimit(200000L);
-
   oled.begin();
   oled.setFlipMode(0);
   oled.setFont(u8x8_font_chroma48medium8_r);
@@ -36,7 +35,9 @@ void setup() {
     //tof.startContinuous();
   } 
   oled.println("TOF init done!");
-  
+  utils::myservo.attach(utils::servopin); 
+  utils::resetServo();
+  oled.println("Servo reset");
   tcaselect(6);
   if (!tcs.begin())
   {
@@ -56,6 +57,7 @@ void setup() {
     oled.setCursor(0, 0);
     oled.clearDisplay();    
   #endif
+  
   analogWrite(2, 0); 
   // delay(500);
  
@@ -250,7 +252,7 @@ void pi_read_data() {
         if (cur_cmd[0] == 'g' || cur_cmd[0] == 'f') {
           Serial.println("FORWARD");
           oled.println("forward");
-          driveCM(27, 110, 1);
+          driveCM(28, 110, 1);
         } else {
           Serial.println("ERR: Invalid Parameter");
         }
@@ -269,7 +271,7 @@ void pi_read_data() {
           oled.println("forward");
           turn(c);
           //pi_send_data({ false, false, false, false });
-          driveCM(27, 110, 1);
+          driveCM(28, 110, 1);
         } else if (cur_cmd[0] == 't') {
           Serial.print("turn to ");
           Serial.println(c);
@@ -293,7 +295,7 @@ void pi_read_data() {
         if (cur_cmd[0] == 'g' || cur_cmd[0] == 'f') {
           Serial.println("FORWARD");
           oled.println("forward");
-          driveCM(27, 110, 1);
+          driveCM(28, 110, 1);
         } else {
           Serial.println("ERR: Invalid Parameter");
         }
@@ -593,10 +595,11 @@ void turn(char char_end_direction) {
   cur_direction = end_direction;
 }
 
-void alignAngle(int, int x = 10);
+void alignAngle(int, bool, int x = 10);
 
 void driveCM(float cm, int speed = 200, int tolerance = 10) {
   //utils::kitDrop(1);
+  alignAngle(90, false);
 #if 1
   const float mult_factor = 1.0;
   unsigned int left = (tofCalibrated(0) + tofCalibrated(1))/2;
@@ -645,7 +648,7 @@ void driveCM(float cm, int speed = 200, int tolerance = 10) {
     }
     utils::stopMotors();
   }
-  alignAngle(90);
+  alignAngle(90, false);
 }
 
 
@@ -720,14 +723,15 @@ void drive(int encoders, int speed) {
     //   utils::stopMotors();
     //   return;
     // }
+
     
     //we are close enough to the target at this point, so quit the loop
-    if (abs(p_turn * DRIVE_STRAIGHT_KP) <= 0.01 && PID <= 0.01)
+    if ( /* abs(p_turn * DRIVE_STRAIGHT_KP) <= 0.01 && */ PID <= 0.01)
       break;
     // speed = speed * (abs(encoders) - abs(motor1.getTicks()))/abs(encoders);
 
     //    Serial.println(speed * (double)(abs(encoders) - abs(motor1.getTicks()))/abs(encoders));
-    utils::forward(PID - p_turn * DRIVE_STRAIGHT_KP + DRIVE_BOOST);
+    utils::forward(PID /* - p_turn * DRIVE_STRAIGHT_KP */ + DRIVE_BOOST);
     angle = orientation;
   } 
   //correct horizontal error when inside of hallway 
@@ -847,7 +851,7 @@ int closestTo90s(int num) {
   }
 }
 
-void alignAngle(int speed, int tolerance = 10) {
+void alignAngle(int speed, bool reset, int tolerance = 10) {
   int tofR1, tofR2; 
   int tofR3, tofR4;
   int lnum = 0, rnum = 1;
@@ -899,6 +903,9 @@ void alignAngle(int speed, int tolerance = 10) {
       utils::forward(speed, -speed);
       len = abs((int)tofCalibrated(lnum) - (int)tofCalibrated(rnum));
     }
+  }
+  if (reset) {
+    bno.begin(OPERATION_MODE_IMUPLUS);
   }
   utils::stopMotors();
 
@@ -1138,6 +1145,7 @@ void loop()
   //utils::forward(255);
   //delay(1000);
 
+
   // bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
   // Serial.println(orientationData.orientation.z);
 
@@ -1145,7 +1153,9 @@ void loop()
 
   // driveCM(27, 110);
   // delay(1000);
-  alignAngle(110);
+  // alignAngle(110, false);
+  utils::kitDrop(1);
+  delay(100);
   // for (int i = 2; i <= 3; i++) {
   //   oled.print(i);
   //   oled.print(": ");
@@ -1163,7 +1173,7 @@ void loop()
 
   if(!walls[0])
   {
-    driveCM(27, 110);
+    driveCM(28, 110);
   }
   else if(!walls[1])
   {
