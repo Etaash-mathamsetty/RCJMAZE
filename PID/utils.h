@@ -64,6 +64,8 @@ void kitDrop(int num) {
   static int columnNum = 1; 
   static int numDropped = 0; 
 
+  analogWrite(5, 10);
+
   for (int i = 0; i < num; i++) {  
     if (numDropped && !(numDropped % num_per_column))
       columnNum++; 
@@ -73,20 +75,19 @@ void kitDrop(int num) {
       return;
     }
 
-    analogWrite(5, 10);
-
     myservo.write(180 - 60*columnNum - 3); 
     Serial.print("columnNum");
     Serial.println(columnNum);
     Serial.println("numDropped");
     Serial.println(numDropped);
     delay(1000); 
-    myservo.write(180); 
+    myservo.write(175); 
     delay(1000); 
     numDropped++;
-
-    analogWrite(5, 0);
   }
+
+  delay(1000);
+  analogWrite(5, 0);
 }
 
 void resetServo() {

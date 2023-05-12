@@ -37,6 +37,7 @@ void setup() {
   oled.println("TOF init done!");
   utils::myservo.attach(utils::servopin); 
   utils::resetServo();
+  utils::myservo.write(175);
   oled.println("Servo reset");
   tcaselect(6);
   if (!tcs.begin())
@@ -247,7 +248,7 @@ void pi_read_data() {
       cur_cmd.remove(0);
       cur_cmd += c;
     }
-    if (c == 'g' || c == 'f' || c == 't') {
+    if (c == 'g' || c == 'f' || c == 't' || c == 'd') {
       if (cur_cmd.length() > 0) {
         if (cur_cmd[0] == 'g' || cur_cmd[0] == 'f') {
           Serial.println("FORWARD");
@@ -259,6 +260,21 @@ void pi_read_data() {
       }
       cur_cmd.remove(0);
       cur_cmd += c;
+    }
+    if(c >= '0' && c <= '9')
+    {
+      if(cur_cmd.length() > 0)
+      {
+        if(cur_cmd[0] == 'd')
+        {
+          utils::kitDrop(c - '0');
+        }
+        else
+        {
+          Serial.println("invalid command");
+        }
+        cur_cmd.remove(0);
+      }
     }
     if (c == 'e' || c == 'w' || c == 's' || c == 'n') {
       if (cur_cmd.length() > 0) {
@@ -492,6 +508,11 @@ void raw_right(int relative_angle, int speed) {
     //d = p - last_error;
     PID = KP_TURN * p;
     //last_error = p;
+    // while(PI_SERIAL.available())
+    // {
+    //   utils::stopMotors();
+    //   pi_read_data();
+    // }
     utils::forward((PID * -speed), (PID * speed));
 
     if (PID <= 0.01)
@@ -550,6 +571,11 @@ void raw_left(int relative_angle, int speed) {
     //d = p - last_error;
     PID = KP_TURN * p;
     //last_error = p;
+    // while(PI_SERIAL.available())
+    // {
+    //   utils::stopMotors();
+    //   pi_read_data();
+    // }
     utils::forward((PID * speed), (PID * -speed));
 
     if (PID <= 0.01)
@@ -599,7 +625,11 @@ void alignAngle(int, bool, int x = 10);
 
 void driveCM(float cm, int speed = 200, int tolerance = 10) {
   //utils::kitDrop(1);
-  alignAngle(90, false);
+
+  bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
+  if (abs(orientationData.orientation.z) < 7) {
+    alignAngle(90, false);
+  }
 #if 1
   const float mult_factor = 1.0;
   unsigned int left = (tofCalibrated(0) + tofCalibrated(1))/2;
@@ -607,7 +637,8 @@ void driveCM(float cm, int speed = 200, int tolerance = 10) {
   double horizontalError = abs((int)left - (int)right) / 2;
   double angle = abs(atan((cm * 10) / horizontalError) * (180/PI));
   oled.println(angle * mult_factor);
-  if (horizontalError >= tolerance && left < 150 && right < 150) {
+  bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
+  if (horizontalError >= tolerance && left < 150 && right < 150 && abs(orientationData.orientation.z) < 7) {
 
     if (left > right) {
 
@@ -648,7 +679,11 @@ void driveCM(float cm, int speed = 200, int tolerance = 10) {
     }
     utils::stopMotors();
   }
-  alignAngle(90, false);
+
+  bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
+  if (abs(orientationData.orientation.z) < 7) {
+    alignAngle(90, false);
+  }
 }
 
 
@@ -681,15 +716,15 @@ void drive(int encoders, int speed) {
     // encoders = orig_encoders / cos(abs(orientationData.orientation.z * (2 * PI / 360)));
 
 
-    // if (abs(orientationData.orientation.z) > 7) {
-    //   start_ramp = millis();
-    //   oled.println("ramp detected!");
-    // }
+    if (orientationData.orientation.z > 7) {
+      start_ramp = millis();
+      oled.println("ramp detected!");
+    }
 
-    // if (millis() - start_ramp > 75 && ramp_detect) {
-    //   encoders = motorR.getTicks() + (encoders - motorR.getTicks()) / cos(abs(orientationData.orientation.z * (PI / 180))) + 5 * CM_TO_ENCODERS;
-    //   ramp_detect = false;
-    // }
+    if (millis() - start_ramp > 75 && ramp_detect) {
+      encoders = motorR.getTicks() + (encoders - motorR.getTicks()) / cos(abs(orientationData.orientation.z * (PI / 180))) + 5 * CM_TO_ENCODERS;
+      ramp_detect = false;
+    }
 
     // oled.print("encoders: ");
     // oled.println(encoders);
@@ -731,6 +766,12 @@ void drive(int encoders, int speed) {
     // speed = speed * (abs(encoders) - abs(motor1.getTicks()))/abs(encoders);
 
     //    Serial.println(speed * (double)(abs(encoders) - abs(motor1.getTicks()))/abs(encoders));
+    // while(PI_SERIAL.available())
+    // {
+    //   utils::stopMotors();
+    //   pi_read_data();
+    // }
+
     utils::forward(PID /* - p_turn * DRIVE_STRAIGHT_KP */ + DRIVE_BOOST);
     angle = orientation;
   } 
@@ -1154,8 +1195,14 @@ void loop()
   // driveCM(27, 110);
   // delay(1000);
   // alignAngle(110, false);
-  utils::kitDrop(1);
+  // utils::kitDrop(1);
+  // delay(100);
+  // bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
+  
+  Serial.println(returnColor());
+  oled.print(returnColor());
   delay(100);
+  oled.setCursor(0,0);
   // for (int i = 2; i <= 3; i++) {
   //   oled.print(i);
   //   oled.print(": ");
