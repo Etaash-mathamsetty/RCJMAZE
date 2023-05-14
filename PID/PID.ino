@@ -2,8 +2,8 @@
 //#define FAKE_SERIAL
 #define DEBUG_DISPLAY
 //#define MOTORSOFF
-#define TEST
-#define NO_PI //basic auto when no raspberry pi (brain stem mode)
+// #define TEST
+// #define NO_PI //basic auto when no raspberry pi (brain stem mode)
 
 #include "Motors.h"
 #include "utils.h"
@@ -175,7 +175,7 @@ void pi_read_vision() {
         cur_cmd.remove(0);
       }
     }
-    else if (c >= 0 && c <= 9) {
+    else if (c >= '0' && c <= '9') {
       if(cur_cmd.length() > 0 && cur_cmd[0] == 'd')
       {
         num = c - '0';
@@ -288,7 +288,7 @@ void pi_read_data() {
         }
         if (cur_cmd[0] == 'r')
         {
-          bool* arr = get_tof_vals(150);
+          bool* arr = get_tof_vals(wall_tresh);
 
           //oled.println("test2");
           
@@ -412,7 +412,7 @@ void right(int relative_angle, int speed) {
 
   raw_right(relative_angle, speed);
 
-  bool* arr = get_tof_vals(150);
+  bool* arr = get_tof_vals(wall_tresh);
 
   //n e s w
   bool walls[4] = {arr[4], arr[0] && arr[1], arr[5], arr[2] && arr[3]};
@@ -466,7 +466,7 @@ void left(int relative_angle, int speed) {
 
   raw_left(relative_angle, speed);
 
-  bool* arr = get_tof_vals(150);
+  bool* arr = get_tof_vals(wall_tresh);
 
   //n e s w
   bool walls[4] = {arr[4], arr[0] && arr[1], arr[5], arr[2] && arr[3]};
@@ -508,6 +508,8 @@ void raw_right(int relative_angle, int speed) {
   double angle = orientation + relative_angle;
   double last_error = abs((orientationData.orientation.x - angle) / angle);
 
+  double tstart = millis();
+
   while (abs(orientation - angle) > 1) {
 
     // Serial.print("Orientation Right: ");
@@ -528,7 +530,12 @@ void raw_right(int relative_angle, int speed) {
     //   pi_read_vision();
     //   oled.println("detected");
     // }
-    utils::forward((PID * -speed), (PID * speed));
+
+    if (millis() - tstart < 6000) {
+      utils::forward((PID * -speed), (PID * speed));
+    } else {
+      utils::forward((PID * -speed) - TURN_BOOST, (PID * speed) + TURN_BOOST);
+    }
 
     if (PID <= 0.01)
       break;
@@ -573,6 +580,8 @@ void raw_left(int relative_angle, int speed) {
   double angle = orientation - relative_angle;
   double last_error = abs((orientationData.orientation.x - angle) / angle);
 
+  double tstart = millis();
+
   while (abs(orientation - angle) > 1) {
     // Serial.print("Orientation Left:  ");
     // Serial.print(orientation);
@@ -592,7 +601,12 @@ void raw_left(int relative_angle, int speed) {
     //   pi_read_vision();
     //   oled.println("detected");
     // }
-    utils::forward((PID * speed), (PID * -speed));
+
+    if (millis() - tstart < 6000) {
+      utils::forward((PID * speed), (PID * -speed));
+    } else {
+      utils::forward((PID * speed) + TURN_BOOST, (PID * -speed) - TURN_BOOST);
+    }
 
     if (PID <= 0.01)
       break;
@@ -663,7 +677,7 @@ void driveCM(float cm, int speed = 200, int tolerance = 10) {
     if (left > right) {
 
       raw_right(90 - min(90, angle * mult_factor), SPEED);
-      drive((cm * CM_TO_ENCODERS) / abs(sin(angle * (PI/180)) * 0.9), speed);
+      drive((cm * CM_TO_ENCODERS) / abs(sin(angle * (PI/180))), speed);
 
       bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
       if (abs(orientationData.orientation.z) < 7)
@@ -673,7 +687,7 @@ void driveCM(float cm, int speed = 200, int tolerance = 10) {
 
     } else {
       raw_left(90 - min(90, angle * mult_factor), SPEED);
-      drive((cm * CM_TO_ENCODERS) / abs(sin(angle * (PI/180)) * 0.9), speed);
+      drive((cm * CM_TO_ENCODERS) / abs(sin(angle * (PI/180))), speed);
       if (abs(orientationData.orientation.z) < 7)
         raw_right(90 - min(90, angle * mult_factor), SPEED);
       // bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
@@ -688,7 +702,7 @@ void driveCM(float cm, int speed = 200, int tolerance = 10) {
 
 #endif
   
-  bool* arr = get_tof_vals(150);
+  bool* arr = get_tof_vals(wall_tresh);
 
   //n e s w
   bool walls[4] = {arr[4], arr[0] && arr[1], arr[5], arr[2] && arr[3]};
@@ -696,7 +710,7 @@ void driveCM(float cm, int speed = 200, int tolerance = 10) {
 
   if(walls[0])
   {
-    while(tofCalibrated(4) >= 50)
+    while(tofCalibrated(4) >= 60)
     {
       utils::forward(speed * 0.7);
 
@@ -734,11 +748,14 @@ void drive(int encoders, int speed) {
   double orientation;
   double orig_encoders = encoders;
   bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
+  double start_pitch = orientationData.orientation.z;
   bool ramp_detect = true;
+  bool down_ramp_detect = false;
   double start_ramp = INT_MAX;
   // encoders = orig_encoders / cos(-orientationData.orientation.z * (2 * PI / 360));
 
-  while (abs(motorR.getTicks()) < abs(encoders) && abs(motorL.getTicks()) < abs(encoders) && tofCalibrated(4) >= 50) {
+
+  while (abs(motorR.getTicks()) < abs(encoders) && abs(motorL.getTicks()) < abs(encoders) && ((tofCalibrated(4) >= 50) || (start_pitch <= -7))) {
     bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
     // encoders = orig_encoders / cos(abs(orientationData.orientation.z * (2 * PI / 360)));
 
@@ -751,6 +768,15 @@ void drive(int encoders, int speed) {
     if (millis() - start_ramp > 75 && ramp_detect) {
       encoders = motorR.getTicks() + (encoders - motorR.getTicks()) / cos(abs(orientationData.orientation.z * (PI / 180))) + 5 * CM_TO_ENCODERS;
       ramp_detect = false;
+    }
+
+    if (orientationData.orientation.z < -7 && abs(start_pitch) < 3) {
+      speed *= 0.7;
+      down_ramp_detect = true;
+    }
+
+    if (orientationData.orientation.z >= -7 && down_ramp_detect) {
+      speed *= (1.0/0.7);
     }
 
     // if (orientationData.orientation.z <= 7 && !ramp_detect) {
@@ -865,6 +891,7 @@ int closestTo90s(int num) {
 void alignAngle(int speed, bool reset, int tolerance = 5) {
   int tofR1, tofR2; 
   int tofR3, tofR4;
+  bool tofAlign = false;
   int lnum = 0, rnum = 1;
 
   tofR1 = tofCalibrated(0); 
@@ -873,12 +900,12 @@ void alignAngle(int speed, bool reset, int tolerance = 5) {
   tofR4 = tofCalibrated(3); 
 
          
-  if (tofR1 >= 149 || tofR2 >= 149) {
+  if (tofR1 >= 120 || tofR2 >= 120) {
     lnum = 3;
     rnum = 2;
   }
 
-  if (tofR3 >= 149 || tofR4 >= 149 && tofR1 >= 149 || tofR2 >= 149) {
+  if (tofR3 >= 120 || tofR4 >= 120 && tofR1 >= 120 || tofR2 >= 120) {
     bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
     int new_angle = closestTo90s((int) orientationData.orientation.x);
 
@@ -889,6 +916,8 @@ void alignAngle(int speed, bool reset, int tolerance = 5) {
     }
     
     return;
+  } else {
+    tofAlign = true;
   }
 
   float len = abs((int)tofCalibrated(lnum) - (int)tofCalibrated(rnum));
@@ -915,9 +944,14 @@ void alignAngle(int speed, bool reset, int tolerance = 5) {
       len = abs((int)tofCalibrated(lnum) - (int)tofCalibrated(rnum));
     }
   }
-  if (reset) {
+  // if (reset) {
+  //   bno.begin(OPERATION_MODE_IMUPLUS);
+  // }
+
+  if (!tofAlign) {
     bno.begin(OPERATION_MODE_IMUPLUS);
   }
+
   utils::stopMotors();
 
   //Serial.println(len);  
@@ -1062,13 +1096,12 @@ int clear_oled_counter = 0;
 void loop() 
 {
 
-  bool* arr = get_tof_vals(180);
+  bool* arr = get_tof_vals(wall_tresh);
 
   // //n e s w
   bool walls[4] = {arr[4], arr[0] && arr[1], arr[5], arr[2] && arr[3]};
   // not wrapped around and stuff 
   oled_display_walls(walls);
-
   //acceleration_position();
   //pi_read_data();
   /*
@@ -1161,21 +1194,25 @@ void loop()
   // oled.print(returnColor());
   // delay(100);
   // oled.setCursor(0,0);
-  Serial.print("Front:");
-  Serial.print(tofCalibrated(4));
-  Serial.print(",");
-  Serial.print("Right:");
-  Serial.print((tofCalibrated(0) + tofCalibrated(1)) / 2);
-  Serial.print(",");
-  Serial.print("Back:");
-  Serial.print(tofCalibrated(5));
-  Serial.print(",");
-  Serial.print("Left:");
-  Serial.println((tofCalibrated(2) + tofCalibrated(3)) / 2);
+  // Serial.print("Front:");
+  // Serial.print(tofCalibrated(4));
+  // Serial.print(",");
+  // Serial.print("Right:");
+  // Serial.print((tofCalibrated(0) + tofCalibrated(1)) / 2);
+  // Serial.print(",");
+  // Serial.print("Back:");
+  // Serial.print(tofCalibrated(5));
+  // Serial.print(",");
+  // Serial.print("Left:");
+  // Serial.println((tofCalibrated(2) + tofCalibrated(3)) / 2);
   // delay(1000);
+  turn('e');
+  delay(500);
+  turn('w');
+  delay(500);
 
   #else
-      bool* arr = get_tof_vals(150);
+  bool* arr = get_tof_vals(wall_tresh);
 
   // //n e s w
   bool walls[4] = {arr[4], arr[0] && arr[1], arr[5], arr[2] && arr[3]};

@@ -74,6 +74,8 @@ uint16_t BNO055_SAMPLERATE_DELAY_MS = 10;
 double ACCEL_VEL_TRANSITION = (double)(BNO055_SAMPLERATE_DELAY_MS) / 1000.0;
 double ACCEL_POS_TRANSITION = 0.5 * ACCEL_VEL_TRANSITION * ACCEL_VEL_TRANSITION;
 
+const int wall_tresh = 180;
+
 inline void tcaselect(uint8_t i) {
   if (i > 7)
     return;
