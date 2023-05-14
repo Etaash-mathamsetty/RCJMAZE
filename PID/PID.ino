@@ -242,30 +242,30 @@ void pi_read_vision() {
       cur_cmd.remove(0);
       cur_cmd += c;
     } else if (c == 'l') {
-      if(cur_cmd.length() > 0 && cur_cmd[0] == 'd' && num > 0) {
-        left(90, 100);
-        direction = c;
+      if(cur_cmd.length() > 0 && cur_cmd[0] == 'd') {
+        if(num > 0)
+          left(90, 100);
+        utils::kitDrop(num);
+        if(num > 0)
+          right(90, 100);
+        cur_cmd.remove(0);
       }
     } else if (c == 'r') {
-      if(cur_cmd.length() > 0 && cur_cmd[0] == 'd' && num > 0) {
-        right(90, 100);
-        direction = c;
+      if(cur_cmd.length() > 0 && cur_cmd[0] == 'd') {
+        if(num > 0)
+          right(90, 100);
+        utils::kitDrop(num);
+        if(num > 0)
+          left(90, 100);
+        cur_cmd.remove(0);
       }
     }
-    else if (c >= 0 || c <= 9) {
+    else if (c >= 0 && c <= 9) {
       if(cur_cmd.length() > 0 && cur_cmd[0] == 'd')
       {
-        utils::kitDrop(c - '0');
-        cur_cmd.remove(0);
         num = c - '0';
       }
     }
-  }
-
-  if (direction == 'r') {
-    left(90, 100);
-  } else if (direction == 'l') {
-    right(90, 100);
   }
 }
 
