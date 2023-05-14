@@ -655,7 +655,7 @@ void driveCM(float cm, int speed = 200, int tolerance = 10) {
   unsigned int right = (tofCalibrated(2) + tofCalibrated(3))/2;
 
   double horizontalError = abs((int)left - (int)right) / 2;
-  double angle = abs(atan((cm * 10) / horizontalError) * (180/PI));
+  double angle = abs(atan((cm * 10.0) / horizontalError) * (180.0/PI));
   oled.println(angle * mult_factor);
   bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
   if (horizontalError >= tolerance && left < 150 && right < 150 && abs(orientationData.orientation.z) < 7 && (left <= 180 || right <= 180)) {
@@ -852,64 +852,6 @@ void drive(int encoders, int speed) {
   pi_send_data(false, true);
 #endif
   
-} 
-void shiftRight(){
-    right(15, SPEED); 
-    utils::forward(SPEED, SPEED);
-    delay(25);
-    left(15, SPEED);
-    utils::forward(-SPEED, -SPEED);
-    delay(24);
-    return; 
-} 
-void shiftLeft(){
-    left(15, SPEED); 
-    utils::forward(SPEED, SPEED);
-    delay(25);
-    right(15, SPEED);
-    utils::forward(-SPEED, -SPEED);
-    delay(24);
-    return; 
-} 
-
-void alignCenterLR(int speed) {
-  int tofR1, tofL1; 
-  tofR1 = tofCalibrated(0);
-  tofL1 = tofCalibrated(1);
-
-  const int dist = tofR1 - tofL1;
-
-  if (tofR1 < tofL1) {
-    right(90, 100);
-  } else {
-    left(90, 100);
-  }
-
-  while (abs(tofR1 - tofL1) > 10) {
-    utils::forward(speed, speed);
-  }
-
-  if (tofR1 < tofL1) {
-    left(90, 100);
-  } else {
-    right(90, 100);
-  }
-}
-
-void alignCenterFB(int speed) {
-  int tofF1, tofB1; 
-  tofF1 = tofCalibrated(0);
-  tofB1 = tofCalibrated(1);
-
-  const int dist = tofF1 - tofB1;
-
-  if (tofF1 > tofB1) {
-    speed = -speed;
-  }
-
-  while (abs(tofF1 - tofB1) > 10) {
-    utils::forward(speed, speed);
-  }
 }
 
 int closestTo90s(int num) {
@@ -1007,23 +949,7 @@ void alignAngle(int speed, bool reset, int tolerance = 5) {
     else if (tofR2 - tofR1 > 10) {
       right(10, SPEED);
     }
-  }*/
-  
-}
-
-void acceleration_position() {
-  unsigned long tStart = micros();
-  bno.getEvent(&linearAccelData, Adafruit_BNO055::VECTOR_LINEARACCEL);
-
-  if ((micros() - tStart) < (BNO055_SAMPLERATE_DELAY_MS * 1000)) {
-    xPos = xPos + ACCEL_POS_TRANSITION * linearAccelData.acceleration.x;
-    yPos = yPos + ACCEL_POS_TRANSITION * linearAccelData.acceleration.y;
-  }
-
-  Serial.print("xPos: ");
-  Serial.print(xPos);
-  Serial.print("yPos: ");
-  Serial.println(yPos);
+  }*/  
 }
 
 unsigned int tofCalibrated(int select) 
