@@ -2,8 +2,8 @@
 //#define FAKE_SERIAL
 #define DEBUG_DISPLAY
 //#define MOTORSOFF
-// #define TEST
-// #define NO_PI //basic auto when no raspberry pi
+#define TEST
+#define NO_PI //basic auto when no raspberry pi
 
 #include "Motors.h"
 #include "utils.h"
@@ -125,13 +125,22 @@ void pi_send_data(bool forward, bool black_tile) {
 }
 
 void pi_send_data(bool walls[4]) {
-  pi_send_tag("NW");
-  PI_SERIAL.println(walls[utils::math::wrapAround((int) (n - cur_direction), 4)]);
-  pi_send_tag("EW");
-  PI_SERIAL.println(walls[utils::math::wrapAround((int) (e - cur_direction), 4)]);
-  pi_send_tag("SW");
-  PI_SERIAL.println(walls[utils::math::wrapAround((int) (s - cur_direction), 4)]);
-  pi_send_tag("WW");
+  // pi_send_tag("NW");
+  // PI_SERIAL.println(walls[utils::math::wrapAround((int) (n - cur_direction), 4)]);
+  // pi_send_tag("EW");
+  // PI_SERIAL.println(walls[utils::math::wrapAround((int) (e - cur_direction), 4)]);
+  // pi_send_tag("SW");
+  // PI_SERIAL.println(walls[utils::math::wrapAround((int) (s - cur_direction), 4)]);
+  // pi_send_tag("WW");
+  // PI_SERIAL.println(walls[utils::math::wrapAround((int) (w - cur_direction), 4)]);
+
+  pi_send_tag("W");
+  PI_SERIAL.print(walls[utils::math::wrapAround((int) (n - cur_direction), 4)]);
+  PI_SERIAL.print(",");
+  PI_SERIAL.print(walls[utils::math::wrapAround((int) (e - cur_direction), 4)]);
+  PI_SERIAL.print(",");
+  PI_SERIAL.print(walls[utils::math::wrapAround((int) (s - cur_direction), 4)]);
+  PI_SERIAL.print(",");
   PI_SERIAL.println(walls[utils::math::wrapAround((int) (w - cur_direction), 4)]);
 }
 
@@ -208,6 +217,58 @@ void send_tof_vals(byte tof_val) {
 
 void driveCM(float,int,int);
 
+void pi_read_vision() {
+  String data = "";
+  char ch = 0;
+  char direction = 0;
+  int num = 0;
+
+  while(PI_SERIAL.available() && ch != '\n') 
+  {
+    ch = PI_SERIAL.read();
+    data += ch;
+    delay(10);
+  }
+  data.trim();
+  data.toLowerCase();
+  data += '\n';
+  String cur_cmd = "";
+  Serial.println(data);
+
+  
+
+  for (char c : data) {
+    if (c == 'd') {
+      cur_cmd.remove(0);
+      cur_cmd += c;
+    } else if (c == 'l') {
+      if(cur_cmd.length() > 0 && cur_cmd[0] == 'd' && num > 0) {
+        left(90, 100);
+        direction = c;
+      }
+    } else if (c == 'r') {
+      if(cur_cmd.length() > 0 && cur_cmd[0] == 'd' && num > 0) {
+        right(90, 100);
+        direction = c;
+      }
+    }
+    else if (c >= 0 || c <= 9) {
+      if(cur_cmd.length() > 0 && cur_cmd[0] == 'd')
+      {
+        utils::kitDrop(c - '0');
+        cur_cmd.remove(0);
+        num = c - '0';
+      }
+    }
+  }
+
+  if (direction == 'r') {
+    left(90, 100);
+  } else if (direction == 'l') {
+    right(90, 100);
+  }
+}
+
 /* there is a bug in this function somewhere 
 the problem is that we need to read & execute every single command before continuing */
 void pi_read_data() {
@@ -243,12 +304,7 @@ void pi_read_data() {
   String cur_cmd = "";
   Serial.println(data);
   for (char c : data) {
-    if(c == 'r')
-    {
-      cur_cmd.remove(0);
-      cur_cmd += c;
-    }
-    if (c == 'g' || c == 'f' || c == 't' || c == 'd') {
+    if (c == 'g' || c == 'f' || c == 't' /* || c == 'd' */ || c == 'r') {
       if (cur_cmd.length() > 0) {
         if (cur_cmd[0] == 'g' || cur_cmd[0] == 'f') {
           Serial.println("FORWARD");
@@ -261,22 +317,22 @@ void pi_read_data() {
       cur_cmd.remove(0);
       cur_cmd += c;
     }
-    if(c >= '0' && c <= '9')
-    {
-      if(cur_cmd.length() > 0)
-      {
-        if(cur_cmd[0] == 'd')
-        {
-          utils::kitDrop(c - '0');
-        }
-        else
-        {
-          Serial.println("invalid command");
-        }
-        cur_cmd.remove(0);
-      }
-    }
-    if (c == 'e' || c == 'w' || c == 's' || c == 'n') {
+    // else if(c >= '0' && c <= '9')
+    // {
+    //   if(cur_cmd.length() > 0)
+    //   {
+    //     if(cur_cmd[0] == 'd')
+    //     {
+    //       utils::kitDrop(c - '0');
+    //     }
+    //     else
+    //     {
+    //       Serial.println("invalid command");
+    //     }
+    //     cur_cmd.remove(0);
+    //   }
+    // }
+    else if (c == 'e' || c == 'w' || c == 's' || c == 'n') {
       if (cur_cmd.length() > 0) {
         if (cur_cmd[0] == 'f' || cur_cmd[0] == 'g') {
           Serial.print("turn to ");
@@ -306,7 +362,7 @@ void pi_read_data() {
         continue;
       }
     }
-    if (c == '\n' || c == '\0') {
+    else if (c == '\n' || c == '\0') {
       if (cur_cmd.length() > 0) {
         if (cur_cmd[0] == 'g' || cur_cmd[0] == 'f') {
           Serial.println("FORWARD");
@@ -330,17 +386,41 @@ void pi_read_data() {
           //oled_display_walls(walls);
           //  this is wrapped
           pi_send_data(walls);
+
+          //Serial.println("sending wall data");
         }
       }
-      cur_cmd.remove(0);
+      cur_cmd = "";
     }
   }
 }
 
-int returnColor(bool only_black = false){
-    uint16_t r, g, b, c = 0;  
+int returnColor(){
+    uint16_t r, g, b, c = 0;
+    int silver_detect = 0;
+    int black_detect = 0;
+    int blue_detect = 0;
     tcaselect(6);
-    tcs.getRawData(&r, &g, &b, &c); 
+    tcs.getRawData(&r, &g, &b, &c);
+    Serial.print("red:");
+    Serial.print(r);
+    Serial.print(",");
+    Serial.print("green:");
+    Serial.print(g);
+    Serial.print(",");
+    Serial.print("blue:");
+    Serial.print(b);
+    Serial.print(",");
+    Serial.print("clear:");
+    Serial.println(c); 
+    Serial.print("r/c:");
+    Serial.print((float)r/c * 100.0);
+    Serial.print(",");
+    Serial.print("g/c:");
+    Serial.print((float)g/c * 100.0);
+    Serial.print(",");
+    Serial.print("r/g:");
+    Serial.println((double)r/g * 100.0);
     // oled.println(r);
     // delay(50);
     // oled.println(g);
@@ -349,29 +429,46 @@ int returnColor(bool only_black = false){
     // delay(50);
     // oled.println(c);
     // delay(2000);
-    if (c >= 500 /* && (r / (float)g) * 10 >= 10.5*/ && !only_black) {
-
+    for (int i = 0; i <= 19; i++) {
+      if (c < 270  && c >= 180 && (r / (double)g) * 100.0 >= 115) {
    //   silver_persistance++;
-      Serial.println("silver detected"); 
-      oled.println("silver");
+      // Serial.println("silver detected"); 
+      // oled.println("silver");
       //pi_send_tag("color");
       //PI_SERIAL.println("silver");
-      return 0; //change later
-    }
-    if(c < 100){ 
-      Serial.println("black detected"); 
+        silver_detect++; //change later
+      }
+      if(c < 110){ 
+      // Serial.println("black detected"); 
       //oled.println("black");
       //pi_send_tag("color");
       //PI_SERIAL.println("black");  
-      return 1;  
+        black_detect++;  
+      }
+      if(b > (r * 2.5)) {
+        blue_detect++;
+      }
     }
-    if(b > (r * 2.5) && !only_black){ 
-      Serial.println("blue detected");
-      oled.println("blue");  
-      //pi_send_tag("color"); 
-     //PI_SERIAL.println("blue"); 
-      return 0; //change later
+    if (black_detect >= 19) {
+      return 1;
+    } else if (silver_detect >= 19) {
+      return 2;
+    } else if (blue_detect >= 19) {
+      utils::stopMotors();
+      delay(5000);
+      return 0;
     }
+    else {
+      return 0;
+    }
+
+    // if(b > (r * 2.5) && !only_black){ 
+    //   // Serial.println("blue detected");
+    //   // oled.println("blue");  
+    //   //pi_send_tag("color"); 
+    //  //PI_SERIAL.println("blue"); 
+    //   return 0; //change later
+    // }
   return 0;  
 }
 
@@ -405,9 +502,10 @@ void right(int relative_angle, int speed) {
   bool walls[4] = {arr[4], arr[0] && arr[1], arr[5], arr[2] && arr[3]};
 
 
+
   if(walls[2])
   {
-    while(tofCalibrated(5) >= 50)
+    while(tofCalibrated(5) >= 60)
     {
       utils::forward(-speed);
     }
@@ -460,7 +558,7 @@ void left(int relative_angle, int speed) {
 
   if(walls[2])
   {
-    while(tofCalibrated(5) >= 50)
+    while(tofCalibrated(5) >= 60)
     {
       utils::forward(-speed);
     }
@@ -511,7 +609,8 @@ void raw_right(int relative_angle, int speed) {
     // while(PI_SERIAL.available())
     // {
     //   utils::stopMotors();
-    //   pi_read_data();
+    //   pi_read_vision();
+    //   oled.println("detected");
     // }
     utils::forward((PID * -speed), (PID * speed));
 
@@ -570,11 +669,12 @@ void raw_left(int relative_angle, int speed) {
     //i = i + p;
     //d = p - last_error;
     PID = KP_TURN * p;
-    //last_error = p;
+    last_error = p;
     // while(PI_SERIAL.available())
     // {
     //   utils::stopMotors();
-    //   pi_read_data();
+    //   pi_read_vision();
+    //   oled.println("detected");
     // }
     utils::forward((PID * speed), (PID * -speed));
 
@@ -621,37 +721,43 @@ void turn(char char_end_direction) {
   cur_direction = end_direction;
 }
 
-void alignAngle(int, bool, int x = 10);
+void alignAngle(int, bool, int x = 5);
 
 void driveCM(float cm, int speed = 200, int tolerance = 10) {
   //utils::kitDrop(1);
 
   bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
   if (abs(orientationData.orientation.z) < 7) {
+    //pi_read_data();
     alignAngle(90, false);
   }
 #if 1
   const float mult_factor = 1.0;
   unsigned int left = (tofCalibrated(0) + tofCalibrated(1))/2;
   unsigned int right = (tofCalibrated(2) + tofCalibrated(3))/2;
+
   double horizontalError = abs((int)left - (int)right) / 2;
   double angle = abs(atan((cm * 10) / horizontalError) * (180/PI));
   oled.println(angle * mult_factor);
   bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
-  if (horizontalError >= tolerance && left < 150 && right < 150 && abs(orientationData.orientation.z) < 7) {
+  if (horizontalError >= tolerance && left < 150 && right < 150 && abs(orientationData.orientation.z) < 7 && (left <= 180 || right <= 180)) {
 
     if (left > right) {
 
       raw_right(90 - min(90, angle * mult_factor), SPEED);
       drive((cm * CM_TO_ENCODERS) / abs(sin(angle * (PI/180)) * 0.9), speed);
-      raw_left(90 - min(90, angle * mult_factor), SPEED);
+
+      bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
+      if (abs(orientationData.orientation.z) < 7)
+        raw_left(90 - min(90, angle * mult_factor), SPEED);
       // bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
       // raw_left(orientationData.orientation.x, SPEED);
 
     } else {
       raw_left(90 - min(90, angle * mult_factor), SPEED);
       drive((cm * CM_TO_ENCODERS) / abs(sin(angle * (PI/180)) * 0.9), speed);
-      raw_right(90 - min(90, angle * mult_factor), SPEED);
+      if (abs(orientationData.orientation.z) < 7)
+        raw_right(90 - min(90, angle * mult_factor), SPEED);
       // bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
       // raw_right(360-orientationData.orientation.x, SPEED);
     }
@@ -682,6 +788,7 @@ void driveCM(float cm, int speed = 200, int tolerance = 10) {
 
   bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
   if (abs(orientationData.orientation.z) < 7) {
+    //pi_read_data();
     alignAngle(90, false);
   }
 }
@@ -726,6 +833,10 @@ void drive(int encoders, int speed) {
       ramp_detect = false;
     }
 
+    // if (orientationData.orientation.z <= 7 && !ramp_detect) {
+    //   encoders = orig_encoders;
+    // }
+
     // oled.print("encoders: ");
     // oled.println(encoders);
     // oled.clearDisplay();
@@ -744,20 +855,17 @@ void drive(int encoders, int speed) {
       p_turn = -orientation - (startX - xPos);
     }
 
-    // if(returnColor(true) == 1)
-    // {
-    //   utils::stopMotors();
-    //   unsigned int ticks = (motorR.getTicks() + motorL.getTicks()) / 2;
-    //   utils::resetTicks();
-    //   while(abs(motorR.getTicks()) < abs(ticks) && abs(motorL.getTicks()) < abs(ticks) && tofCalibrated(5) >= 40)
-    //   {
-    //     utils::forward(-speed);
-    //   }
-    //   pi_send_data(false, false);
-    //   utils::resetBoost();
-    //   utils::stopMotors();
-    //   return;
-    // }
+    if(returnColor() == 1)
+    {
+      while(/* motorR.getTicks() > 0 && */ motorL.getTicks() > 0 && tofCalibrated(5) >= 40)
+      {
+        utils::forward(-speed);
+      }
+      utils::stopMotors();
+      pi_send_data(false, false);
+      utils::resetBoost();
+      return;
+    }
 
     
     //we are close enough to the target at this point, so quit the loop
@@ -765,12 +873,13 @@ void drive(int encoders, int speed) {
       break;
     // speed = speed * (abs(encoders) - abs(motor1.getTicks()))/abs(encoders);
 
-    //    Serial.println(speed * (double)(abs(encoders) - abs(motor1.getTicks()))/abs(encoders));
-    // while(PI_SERIAL.available())
-    // {
-    //   utils::stopMotors();
-    //   pi_read_data();
-    // }
+    // Serial.println(speed * (double)(abs(encoders) - abs(motor1.getTicks()))/abs(encoders));
+    while(PI_SERIAL.available())
+    {
+      utils::stopMotors();
+      pi_read_vision();
+      oled.println("detected");
+    }
 
     utils::forward(PID /* - p_turn * DRIVE_STRAIGHT_KP */ + DRIVE_BOOST);
     angle = orientation;
@@ -892,7 +1001,7 @@ int closestTo90s(int num) {
   }
 }
 
-void alignAngle(int speed, bool reset, int tolerance = 10) {
+void alignAngle(int speed, bool reset, int tolerance = 5) {
   int tofR1, tofR2; 
   int tofR3, tofR4;
   int lnum = 0, rnum = 1;
@@ -1002,7 +1111,7 @@ unsigned int tofCalibrated(int select)
 {
   unsigned int dist = 0;
   unsigned int cal = 0;
-  const unsigned int max_dist = 200;
+  const unsigned int max_dist = 250;
   switch (select) 
   {
     case 0: 
@@ -1108,7 +1217,7 @@ int clear_oled_counter = 0;
 void loop() 
 {
 
-  bool* arr = get_tof_vals(150);
+  bool* arr = get_tof_vals(180);
 
   // //n e s w
   bool walls[4] = {arr[4], arr[0] && arr[1], arr[5], arr[2] && arr[3]};
@@ -1161,7 +1270,7 @@ void loop()
 #ifdef DEBUG_DISPLAY
   oled.setCursor(0, 0);
   clear_oled_counter++;
-  if(clear_oled_counter > 50)
+  if(clear_oled_counter > 5)
   {
     oled.clearDisplay();
     clear_oled_counter = 0;
@@ -1197,17 +1306,27 @@ void loop()
   // alignAngle(110, false);
   // utils::kitDrop(1);
   // delay(100);
+
+
   // bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
+
+  // returnColor();
   
-  Serial.println(returnColor());
-  oled.print(returnColor());
-  delay(100);
-  oled.setCursor(0,0);
-  // for (int i = 2; i <= 3; i++) {
-  //   oled.print(i);
-  //   oled.print(": ");
-  //   oled.println(tofCalibrated(i));
-  // }
+  // Serial.println(returnColor());
+  // oled.print(returnColor());
+  // delay(100);
+  // oled.setCursor(0,0);
+  Serial.print("Front:");
+  Serial.print(tofCalibrated(4));
+  Serial.print(",");
+  Serial.print("Right:");
+  Serial.print((tofCalibrated(0) + tofCalibrated(1)) / 2);
+  Serial.print(",");
+  Serial.print("Back:");
+  Serial.print(tofCalibrated(5));
+  Serial.print(",");
+  Serial.print("Left:");
+  Serial.println((tofCalibrated(2) + tofCalibrated(3)) / 2);
   // delay(1000);
 
   #else

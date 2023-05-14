@@ -62,7 +62,7 @@ const double TOF_DISTANCE = 58.64;
 
 enum type { Color,
             Distance };
-enum direction { n,
+enum direction { n = 0,
                  e,
                  s,
                  w };

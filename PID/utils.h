@@ -72,6 +72,7 @@ void kitDrop(int num) {
     
     if (numDropped > total) {
       myservo.write(0);
+      analogWrite(5, 0);
       return;
     }
 
