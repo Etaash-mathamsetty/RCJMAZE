@@ -3,7 +3,7 @@
 #define DEBUG_DISPLAY
 //#define MOTORSOFF
 #define TEST
-#define NO_PI //basic auto when no raspberry pi
+#define NO_PI //basic auto when no raspberry pi (brain stem mode)
 
 #include "Motors.h"
 #include "utils.h"
@@ -74,45 +74,6 @@ inline void display_tag(const char* tag) {
   Serial.print(": ");
 }
 
-void display_bno_data(const sensors_event_t& data) {
-
-  switch (data.type) {
-    case SENSOR_TYPE_ACCELEROMETER:
-      {
-        display_tag("accel");
-        Serial.print("X: ");
-        Serial.print(data.acceleration.x);
-        Serial.print(" Y: ");
-        Serial.print(data.acceleration.y);
-        Serial.print(" Z: ");
-        Serial.println(data.acceleration.z);
-        break;
-      }
-    case SENSOR_TYPE_GYROSCOPE:
-      {
-        display_tag("gyro");
-        Serial.print("X: ");
-        Serial.print(data.gyro.x);
-        Serial.print(" Y: ");
-        Serial.print(data.gyro.y);
-        Serial.print(" Z: ");
-        Serial.println(data.gyro.z);
-        break;
-      }
-    case SENSOR_TYPE_ORIENTATION:
-      {
-        display_tag("orientation");
-        Serial.print("X: ");
-        Serial.print(data.orientation.x);
-        Serial.print(" Y: ");
-        Serial.print(data.orientation.y);
-        Serial.print(" Z: ");
-        Serial.println(data.orientation.z);
-      }
-    default:
-      break;
-  }
-}
 //forward_status[0] = is forward command runnning
 //forward_status[1] = true succeed ? (or command failed, black tile, etc)
 void pi_send_data(bool forward, bool black_tile) {
@@ -144,43 +105,6 @@ void pi_send_data(bool walls[4]) {
   PI_SERIAL.println(walls[utils::math::wrapAround((int) (w - cur_direction), 4)]);
 }
 
-void pi_send_data(const sensors_event_t& data) {
-
-  switch (data.type) {
-    case SENSOR_TYPE_ACCELEROMETER:
-      {
-        pi_send_tag("accel");
-        PI_SERIAL.print(data.acceleration.x);
-        PI_SERIAL.print(",");
-        PI_SERIAL.print(data.acceleration.y);
-        PI_SERIAL.print(",");
-        PI_SERIAL.println(data.acceleration.z);
-      }
-    case SENSOR_TYPE_GYROSCOPE:
-      {
-        pi_send_tag("gyro");
-        PI_SERIAL.print(data.gyro.x);
-        PI_SERIAL.print(",");
-        PI_SERIAL.print(data.gyro.y);
-        PI_SERIAL.print(",");
-        PI_SERIAL.println(data.gyro.z);
-      }
-    case SENSOR_TYPE_ORIENTATION:
-      {
-        pi_send_tag("orientation");
-        PI_SERIAL.print(data.orientation.x);
-        PI_SERIAL.print(",");
-        PI_SERIAL.print(data.orientation.y);
-        PI_SERIAL.print(",");
-        PI_SERIAL.println(data.orientation.z);
-      }
-    default:
-      break;
-  }
-}
-
-#define ARRAY_SIZE(arr) (sizeof(arr) / sizeof(arr[0]))
-
 bool* get_tof_vals(double threshold) {
 
   static bool arr[TOF_NUMBER + 1];
@@ -188,7 +112,7 @@ bool* get_tof_vals(double threshold) {
 
   memset(arr, 0, ARRAY_SIZE(arr));
 
-  Serial.println("start");
+  //Serial.println("start");
 
   for (int i = TOF_START; i <= TOF_NUMBER; i++) {
 
@@ -196,23 +120,17 @@ bool* get_tof_vals(double threshold) {
 
     if (reading < threshold) {
       arr[i] = true;
-      Serial.println("Wall");
+      Serial.print("Wall: ");
     } else {
-      Serial.println("No Wall");
+      Serial.print("No Wall: ");
     }
     Serial.println(reading);
   }
 
-  Serial.println("end");
+  //Serial.println("end");
   //Serial.println("passed");
 
   return arr;
-}
-
-void send_tof_vals(byte tof_val) {
-  pi_send_tag("tof");
-  PI_SERIAL.write(tof_val);
-  PI_SERIAL.println();
 }
 
 void driveCM(float,int,int);
@@ -220,7 +138,6 @@ void driveCM(float,int,int);
 void pi_read_vision() {
   String data = "";
   char ch = 0;
-  char direction = 0;
   int num = 0;
 
   while(PI_SERIAL.available() && ch != '\n') 
@@ -234,8 +151,6 @@ void pi_read_vision() {
   data += '\n';
   String cur_cmd = "";
   Serial.println(data);
-
-  
 
   for (char c : data) {
     if (c == 'd') {
@@ -402,25 +317,26 @@ int returnColor(){
     int blue_detect = 0;
     tcaselect(6);
     tcs.getRawData(&r, &g, &b, &c);
-    Serial.print("red:");
-    Serial.print(r);
-    Serial.print(",");
-    Serial.print("green:");
-    Serial.print(g);
-    Serial.print(",");
-    Serial.print("blue:");
-    Serial.print(b);
-    Serial.print(",");
-    Serial.print("clear:");
-    Serial.println(c); 
-    Serial.print("r/c:");
-    Serial.print((float)r/c * 100.0);
-    Serial.print(",");
-    Serial.print("g/c:");
-    Serial.print((float)g/c * 100.0);
-    Serial.print(",");
-    Serial.print("r/g:");
-    Serial.println((double)r/g * 100.0);
+    const int persistance_count = 14;
+    // Serial.print("red:");
+    // Serial.print(r);
+    // Serial.print(",");
+    // Serial.print("green:");
+    // Serial.print(g);
+    // Serial.print(",");
+    // Serial.print("blue:");
+    // Serial.print(b);
+    // Serial.print(",");
+    // Serial.print("clear:");
+    // Serial.println(c); 
+    // Serial.print("r/c:");
+    // Serial.print((float)r/c * 100.0);
+    // Serial.print(",");
+    // Serial.print("g/c:");
+    // Serial.print((float)g/c * 100.0);
+    // Serial.print(",");
+    // Serial.print("r/g:");
+    // Serial.println((double)r/g * 100.0);
     // oled.println(r);
     // delay(50);
     // oled.println(g);
@@ -429,7 +345,7 @@ int returnColor(){
     // delay(50);
     // oled.println(c);
     // delay(2000);
-    for (int i = 0; i <= 19; i++) {
+    for (int i = 0; i <= persistance_count; i++) {
       if (c < 270  && c >= 180 && (r / (double)g) * 100.0 >= 115) {
    //   silver_persistance++;
       // Serial.println("silver detected"); 
@@ -449,11 +365,11 @@ int returnColor(){
         blue_detect++;
       }
     }
-    if (black_detect >= 19) {
+    if (black_detect >= persistance_count) {
       return 1;
-    } else if (silver_detect >= 19) {
+    } else if (silver_detect >= persistance_count) {
       return 2;
-    } else if (blue_detect >= 19) {
+    } else if (blue_detect >= persistance_count) {
       utils::stopMotors();
       delay(5000);
       return 0;
@@ -731,6 +647,8 @@ void driveCM(float cm, int speed = 200, int tolerance = 10) {
     //pi_read_data();
     alignAngle(90, false);
   }
+  
+  pi_send_data(true, true);
 #if 1
   const float mult_factor = 1.0;
   unsigned int left = (tofCalibrated(0) + tofCalibrated(1))/2;
@@ -791,6 +709,9 @@ void driveCM(float cm, int speed = 200, int tolerance = 10) {
     //pi_read_data();
     alignAngle(90, false);
   }
+
+  //WARN: drive function can no longer be used on it's own (when communicating with stereo pi) !!!!!
+  pi_send_data(false, true);
 }
 
 
@@ -816,7 +737,6 @@ void drive(int encoders, int speed) {
   bool ramp_detect = true;
   double start_ramp = INT_MAX;
   // encoders = orig_encoders / cos(-orientationData.orientation.z * (2 * PI / 360));
-  pi_send_data(true, true);
 
   while (abs(motorR.getTicks()) < abs(encoders) && abs(motorL.getTicks()) < abs(encoders) && tofCalibrated(4) >= 50) {
     bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
@@ -925,7 +845,6 @@ void drive(int encoders, int speed) {
   */
   
   utils::stopMotors();
-  pi_send_data(false, true);
   utils::resetBoost();
 #else
   pi_send_data(true, true);
