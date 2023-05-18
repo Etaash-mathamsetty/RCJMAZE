@@ -548,10 +548,12 @@ namespace driver
 				std::cout << "driver::forward: WARN: Black tile detected, returning false" << std::endl;
 			}
 
-			std::cout << "drive::forward: WARN: Failed to move forward, returning false" << std::endl;
+			std::cout << "drive::forward: WARN: Failed to move forward, returning true" << std::endl;
 
 			bot->index = org_index;
-			return false;
+
+			//don't read wall data only when black tile
+			return failed;
 		}
 
 		return true;
