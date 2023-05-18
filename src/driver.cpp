@@ -505,7 +505,7 @@ namespace driver
 			std::this_thread::sleep_for(std::chrono::milliseconds(20));
 		}
 
-		bool black_tile = !(bool)(*Bridge::get_data_value("forward_status"))[1];
+		bool black_tile = !((bool)(*Bridge::get_data_value("forward_status"))[1]);
 		bool failed = (bool)(*Bridge::get_data_value("forward_status"))[2];
 
 		//black_tile = true when black tile (since we negated above)
