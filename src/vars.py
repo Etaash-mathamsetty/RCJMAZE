@@ -1,11 +1,21 @@
 import cv2
 import Robot as Rb
-import serial 
+import serial
+import numpy as np
+import math
 
 print("Initializing Python subsystem")
 
 simulation = Rb.isSimulation()
 serial_port = '/dev/ttyS0'
+camera_num = True
+resize_size = 20
+label_txt = np.empty((0,1))
+feature_txt = np.empty((0, resize_size ** 2))
+knn = cv2.ml.KNearest_create()
+feature_txt = np.loadtxt("feature.txt", np.float32)
+label_txt = np.loadtxt("label.txt", np.float32).reshape((feature_txt.shape[0], 1))
+knn.train(feature_txt, cv2.ml.ROW_SAMPLE, label_txt)
 
 if not simulation:
     video = cv2.VideoCapture(0)

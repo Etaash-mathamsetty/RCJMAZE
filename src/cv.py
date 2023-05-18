@@ -20,18 +20,24 @@
 # if debug_cv and video.isOpened() and video1.isOpened():
 #     cv2.imshow("frame", frame)
 #     cv2.imshow("frame2", frame2)
-import numpy as np
-import math
+#import numpy as np
+#import math
 
-resize_size = 20
+rescue = 0
+
+Rb.SetDataValue("NRK", [0.0])
+Rb.SetDataValue("victim", [0.0])
+Rb.SetDataValue("left", [float(camera_num)])
+
+#resize_size = 20
 pix_thresh = 125
-label_txt = np.empty((0,1))
-feature_txt = np.empty((0,resize_size**2))
-knn = cv2.ml.KNearest_create()
-feature_txt = np.loadtxt("feature.txt", np.float32)
-print(feature_txt.shape)
-label_txt = np.loadtxt("label.txt",np.float32).reshape((feature_txt.shape[0],1))
-knn.train(feature_txt, cv2.ml.ROW_SAMPLE, label_txt)
+#label_txt = np.empty((0,1))
+#feature_txt = np.empty((0,resize_size**2))
+#knn = cv2.ml.KNearest_create()
+#feature_txt = np.loadtxt("feature.txt", np.float32)
+#print(feature_txt.shape)
+#label_txt = np.loadtxt("label.txt",np.float32).reshape((feature_txt.shape[0],1))
+#knn.train(feature_txt, cv2.ml.ROW_SAMPLE, label_txt)
 
 #processed image
 def label_img(frame):
@@ -48,19 +54,17 @@ def label_img(frame):
         return ()
 
 
-green_low_hsv = [50,80,0]
+green_low_hsv = [50,80, 50]
 green_high_hsv = [90, 239, 231]
-red_low_hsv = [120, 150, 0]
+red_low_hsv = [120, 150, 50]
 red_high_hsv = [200, 239, 231]
-yellow_low_hsv = [7, 80, 0]
+yellow_low_hsv = [7, 80, 80]
 yellow_high_hsv = [40, 239, 231]
 
 if True:
-    camera_num = True
-    
     count = 0
     
-    while True:
+    for i in range(1):
         count += 1
         if camera_num:
             org = cv2.flip(video.read()[1], -1)
@@ -82,7 +86,7 @@ if True:
             if len(color_contours) > 0:
                 mask = cv2.drawContours(mask, color_contours, -1, (0,255,0), 3)
                 color_cont = max(color_contours, key=cv2.contourArea)
-                if cv2.contourArea(color_cont) >= 400:
+                if cv2.contourArea(color_cont) >= 600:
                     bounding_rect.append(cv2.boundingRect(color_cont))
                 else:
                     bounding_rect.append([])
@@ -163,6 +167,17 @@ if True:
                     
                 cv2.putText(org, letter[0].upper(), (100,100), cv2.FONT_HERSHEY_SIMPLEX, 4, (0,0,0), 10)
                 cv2.putText(org, str(letter[1]), (200,100), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,0), 5)
+                if(letter[0].upper() == 'H'):
+                    rescue += 2
+                    Rb.SetDataValue("victim", [1.0])
+                    print("H")
+                if(letter[0].upper() == 'S'):
+                    rescue += 1
+                    Rb.SetDataValue("victim", [1.0])
+                    print("S")
+                if(letter[0].upper() == 'U'):
+                    Rb.SetDataValue("victim", [1.0])
+                    print("U")
                 #print(letter)
                 #print(nears)
                 #print(dists)
@@ -175,11 +190,18 @@ if True:
                 h = bounding_rect[i][3]
                 if i % 3 == 0:
                     cv2.rectangle(org, (x,y), (x+w, y+h), (0,0,255), 3)
+                    rescue += 2
+                    Rb.SetDataValue("victim", [1.0])
+                    print("red")
                 elif i % 3 == 1:
                     cv2.rectangle(org, (x,y), (x+w, y+h), (0,255,0), 3)
+                    Rb.SetDataValue("victim", [1.0])
+                    print("green")
                 else:
                     cv2.rectangle(org, (x,y), (x+w, y+h), (0,255,255), 3)
-
+                    rescue += 1
+                    Rb.SetDataValue("victim", [1.0])
+                    print("yellow")
 
                 
         if camera_num:
@@ -208,3 +230,5 @@ if True:
     #     np.savetxt("feature.txt", feature_txt)
     #     print('written')
 
+
+Rb.SetDataValue("NRK", [float(rescue)])
