@@ -53,7 +53,7 @@ green_high_hsv = [90, 239, 231]
 red_low_hsv = [120, 150, 0]
 red_high_hsv = [200, 239, 231]
 yellow_low_hsv = [7, 80, 0]
-yellow_high_hsv = [40, 239, 231]
+yellow_high_hsv = [30, 239, 231]
 
 if True:
     camera_num = True
@@ -93,7 +93,7 @@ if True:
     #         mask = mask1 + mask2
             
             #frame_red = cvb2.bitwise_and(fra
-            mask = cv2.bitwise_and(org, org, mask = mask)
+            #mask = cv2.bitwise_and(org, org, mask = mask)
             # cv2.imshow(str(i), mask)
 
         frame2 = cv2.cvtColor(org, cv2.COLOR_BGR2GRAY)
