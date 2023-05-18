@@ -2,7 +2,7 @@
 //#define FAKE_SERIAL
 #define DEBUG_DISPLAY
 //#define MOTORSOFF
-// #define TEST
+#define TEST
 // #define NO_PI //basic auto when no raspberry pi (brain stem mode)
 
 #include "Motors.h"
@@ -37,7 +37,7 @@ void setup() {
   oled.println("TOF init done!");
   utils::myservo.attach(utils::servopin); 
   utils::resetServo();
-  utils::myservo.write(175);
+  utils::myservo.write(180);
   oled.println("Servo reset");
   tcaselect(6);
   if (!tcs.begin())
@@ -224,7 +224,7 @@ void pi_read_data() {
         if (cur_cmd[0] == 'g' || cur_cmd[0] == 'f') {
           Serial.println("FORWARD");
           oled.println("forward");
-          driveCM(28, 110, 1);
+          driveCM(27.5, 110, 1);
         } else {
           Serial.println("ERR: Invalid Parameter");
         }
@@ -258,7 +258,7 @@ void pi_read_data() {
           oled.println("forward");
           turn(c);
           //pi_send_data({ false, false, false, false });
-          driveCM(28, 110, 1);
+          driveCM(27.5, 110, 1);
         } else if (cur_cmd[0] == 't') {
           Serial.print("turn to ");
           Serial.println(c);
@@ -282,7 +282,7 @@ void pi_read_data() {
         if (cur_cmd[0] == 'g' || cur_cmd[0] == 'f') {
           Serial.println("FORWARD");
           oled.println("forward");
-          driveCM(28, 110, 1);
+          driveCM(27.5, 110, 1);
         } else {
           Serial.println("ERR: Invalid Parameter");
         }
@@ -318,17 +318,17 @@ int returnColor(){
     tcaselect(6);
     tcs.getRawData(&r, &g, &b, &c);
     const int persistance_count = 14;
-    // Serial.print("red:");
-    // Serial.print(r);
-    // Serial.print(",");
-    // Serial.print("green:");
-    // Serial.print(g);
-    // Serial.print(",");
-    // Serial.print("blue:");
-    // Serial.print(b);
-    // Serial.print(",");
-    // Serial.print("clear:");
-    // Serial.println(c); 
+    Serial.print("red:");
+    Serial.print(r);
+    Serial.print(",");
+    Serial.print("green:");
+    Serial.print(g);
+    Serial.print(",");
+    Serial.print("blue:");
+    Serial.print(b);
+    Serial.print(",");
+    Serial.print("clear:");
+    Serial.println(c); 
     // Serial.print("r/c:");
     // Serial.print((float)r/c * 100.0);
     // Serial.print(",");
@@ -1182,7 +1182,7 @@ void loop()
   // driveCM(27, 110);
   // delay(1000);
   // alignAngle(110, false);
-  // utils::kitDrop(1);
+  // utils::myservo.write(180);
   // delay(100);
 
 
@@ -1206,10 +1206,9 @@ void loop()
   // Serial.print("Left:");
   // Serial.println((tofCalibrated(2) + tofCalibrated(3)) / 2);
   // delay(1000);
-  turn('e');
-  delay(500);
-  turn('w');
-  delay(500);
+
+  // utils::kitDrop(1);
+  // delay(100);
 
   #else
   bool* arr = get_tof_vals(wall_tresh);
@@ -1221,7 +1220,7 @@ void loop()
 
   if(!walls[0])
   {
-    driveCM(28, 110);
+    driveCM(27.5, 110);
   }
   else if(!walls[1])
   {
