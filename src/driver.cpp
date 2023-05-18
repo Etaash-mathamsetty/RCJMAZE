@@ -356,10 +356,11 @@ namespace driver
 		PythonScript::Exec(cleanup_py_file);
 	}
 
-	CREATE_DRIVER(void, drop_vic, int num)
+	CREATE_DRIVER(void, drop_vic, int num, bool left)
 	{
-		//d [drop] N [number of kits, single digit only] \n
-		PythonScript::CallPythonFunction<bool, std::string>("SendSerialCommand", com::drop_vic + std::to_string(num) + "\n");
+		//d [drop] N [number of kits, single digit only, can be 0 which will trigger the led] l/r [direction] \n
+		std::string direction = left ? "l" : "r";
+		PythonScript::CallPythonFunction<bool, std::string>("SendSerialCommand", com::drop_vic + std::to_string(num) + direction + "\n");
 	}
 
 	void notify_wall_read()
@@ -371,7 +372,7 @@ namespace driver
 	/* COULD HANG WITH INCORRECT TAG, ONLY USE FOR SERIAL
 	only returns the first element of the array, so don't use for everything */
 	template<typename T>
-	T wait_for_data(const std::string& tag)
+	T wait_for_data(const std::string& tag, bool remove = true)
 	{
 		while(!Bridge::get_data_value(tag).has_value())
 		{
@@ -379,6 +380,7 @@ namespace driver
 			std::this_thread::sleep_for(std::chrono::milliseconds(80));
 		}
 		T data = (T)(*Bridge::get_data_value(tag))[0];
+		if(remove)
 		Bridge::remove_data_value(tag);
 		return data;
 	}
@@ -395,19 +397,22 @@ namespace driver
 
 			notify_wall_read();
 
-			bot->map[bot->index].N = wait_for_data<bool>("NW");
-			bot->map[bot->index].E = wait_for_data<bool>("EW");
-			bot->map[bot->index].S = wait_for_data<bool>("SW");
-			bot->map[bot->index].W = wait_for_data<bool>("WW");
+			bot->map[bot->index].N = wait_for_data<bool>("W", false);
+			bot->map[bot->index].E = (bool)(*Bridge::get_data_value("W"))[1];
+			bot->map[bot->index].S = (bool)(*Bridge::get_data_value("W"))[2];
+			bot->map[bot->index].W = (bool)(*Bridge::get_data_value("W"))[3];
+			Bridge::remove_data_value("W");
 			bot->map[bot->index].checkpoint = wait_for_data<bool>("CP");
 		}
 		//debug::print_node(bot->map[bot->index]);
 
 		PythonScript::Exec(cv_py_file);
+		bool victim = (bool)(*Bridge::get_data_value("victim"))[0];
+		bool left = (bool)(*Bridge::get_data_value("left"))[0];
 		int num_rescue = (int)(*Bridge::get_data_value("NRK"))[0];
-		if(num_rescue > 0 && !bot->map[bot->index].vic)
+		if(victim && !bot->map[bot->index].vic)
 		{
-			drop_vic(num_rescue);
+			drop_vic(num_rescue, left);
 			bot->map[bot->index].vic = true;
 		}
 	}
@@ -501,50 +506,68 @@ namespace driver
 		//wait for it to finish running
 		while((bool)(*Bridge::get_data_value("forward_status"))[0]) 
 		{ 
-			PythonScript::Exec(ser_py_file); 
+			PythonScript::Exec(ser_py_file);
+			PythonScript::Exec(cv_py_file);
+			bool victim = (*Bridge::get_data_value("victim"))[0];
+			bool left = (*Bridge::get_data_value("left"))[0];
+			int nrk = (*Bridge::get_data_value("NRK"))[0];
+			if(victim && !bot->map[bot->index].vic)
+			{
+				drop_vic(nrk, left);
+				bot->map[bot->index].vic = true;
+			}
 			std::this_thread::sleep_for(std::chrono::milliseconds(20));
 		}
 
-		bool status = (bool)(*Bridge::get_data_value("forward_status"))[1];
+		bool black_tile = !((bool)(*Bridge::get_data_value("forward_status"))[1]);
+		bool failed = (bool)(*Bridge::get_data_value("forward_status"))[2];
 
-		//false for black tile
-		if(!status)
+		//black_tile = true when black tile (since we negated above)
+		//failed = true when failed
+		if(failed || black_tile)
 		{
 			bot->map[org_index].bot = true;
 			bot->map[bot->index].bot = false;
-			bot->map[bot->index].N = true;
-			bot->map[bot->index].E = true;
-			bot->map[bot->index].W = true;
-			bot->map[bot->index].S = true;
-			//W:
-			if(helper::is_valid_index(bot->index - 1))
+			if(black_tile)
 			{
-				bot->map[bot->index - 1].E = true;
-				// nodes[sim::sim_robot_index - 1].E = true;
+				bot->map[bot->index].N = true;
+				bot->map[bot->index].E = true;
+				bot->map[bot->index].W = true;
+				bot->map[bot->index].S = true;
+				//W:
+				if(helper::is_valid_index(bot->index - 1))
+				{
+					bot->map[bot->index - 1].E = true;
+					// nodes[sim::sim_robot_index - 1].E = true;
+				}
+				//E:
+				if(helper::is_valid_index(bot->index + 1))
+				{
+					bot->map[bot->index + 1].W = true;
+					// nodes[sim::sim_robot_index + 1].W = true;
+				}
+				//S:
+				if(helper::is_valid_index(bot->index + horz_size))
+				{
+					bot->map[bot->index + horz_size].N = true;
+					// nodes[sim::sim_robot_index + horz_size].N = true;
+				}
+				//N:
+				if(helper::is_valid_index(bot->index - horz_size))
+				{
+					bot->map[bot->index - horz_size].S = true;
+					// nodes[sim::sim_robot_index - horz_size].S = true;
+				}
+				
+				std::cout << "driver::forward: WARN: Black tile detected, returning false" << std::endl;
 			}
-			//E:
-			if(helper::is_valid_index(bot->index + 1))
-			{
-				bot->map[bot->index + 1].W = true;
-				// nodes[sim::sim_robot_index + 1].W = true;
-			}
-			//S:
-			if(helper::is_valid_index(bot->index + horz_size))
-			{
-				bot->map[bot->index + horz_size].N = true;
-				// nodes[sim::sim_robot_index + horz_size].N = true;
-			}
-			//N:
-			if(helper::is_valid_index(bot->index - horz_size))
-			{
-				bot->map[bot->index - horz_size].S = true;
-				// nodes[sim::sim_robot_index - horz_size].S = true;
-			}
+			else
+				std::cout << "drive::forward: WARN: Failed to move forward, returning true" << std::endl;
 
 			bot->index = org_index;
 
-			std::cout << "driver::forward: WARN: Black tile detected, returning false" << std::endl;
-			return false;
+			//don't read wall data only when black tile
+			return failed;
 		}
 
 		return true;

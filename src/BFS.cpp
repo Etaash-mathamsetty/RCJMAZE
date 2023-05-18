@@ -49,7 +49,7 @@ Stack<int> BFS(robot& robot)
 			std::cout << "finished with the maze!" << std::endl;
 			std::cout << "returning to starting..." << std::endl;
 			quitable = true;
-			robot.map[helper::get_index(default_index, default_index)].vis = false;
+			robot::get_instance()->map[helper::get_index(default_index, default_index)].vis = false;
 			return BFS(robot);
 		}
 
