@@ -75,14 +75,16 @@ inline void display_tag(const char* tag) {
 }
 
 //forward_status[0] = is forward command runnning
-//forward_status[1] = true succeed ? (or command failed, black tile, etc)
-void pi_send_data(bool forward, bool black_tile) {
-  double arr[2] = { forward, black_tile };
+//forward_status[1] = true = no black tile
+//forward_status[2] = true = failed for other reason, (wall in front for ex)
+void pi_send_data(bool forward, bool black_tile, bool failed = false) {
   pi_send_tag("forward_status");
 
-  PI_SERIAL.print(arr[0]);
+  PI_SERIAL.print((double)forward);
   PI_SERIAL.print(',');
-  PI_SERIAL.println(arr[1]);
+  PI_SERIAL.print((double)black_tile);
+  PI_SERIAL.print(',');
+  PI_SERIAL.println((double)failed);
 }
 
 void pi_send_data(bool walls[4]) {
@@ -310,6 +312,7 @@ void pi_read_data() {
   }
 }
 
+// FIXME: Blue being detected as black
 int returnColor(){
     uint16_t r, g, b, c = 0;
     int silver_detect = 0;
@@ -677,7 +680,27 @@ void driveCM(float cm, int speed = 200, int tolerance = 10) {
     if (left > right) {
 
       raw_right(90 - min(90, angle * mult_factor), SPEED);
-      drive((cm * CM_TO_ENCODERS) / abs(sin(angle * (PI/180))), speed);
+
+      if(tofCalibrated(4) > wall_tresh)
+        drive((cm * CM_TO_ENCODERS) / abs(sin(angle * (PI/180))), speed);
+      else
+      {
+        Serial.println("achievement unlocked! How did we get here?");
+        if(tofCalibrated(4) <= wall_tresh)
+        {
+          while(tofCalibrated(4) >= 60)
+          {
+            utils::forward(speed * 0.7);
+
+          }
+          
+          utils::stopMotors();
+        }
+
+        raw_left(90 - min(90, angle * mult_factor), SPEED);
+        pi_send_data(false, true, true);
+        return;
+      }
 
       bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
       if (abs(orientationData.orientation.z) < 7)
@@ -687,7 +710,29 @@ void driveCM(float cm, int speed = 200, int tolerance = 10) {
 
     } else {
       raw_left(90 - min(90, angle * mult_factor), SPEED);
-      drive((cm * CM_TO_ENCODERS) / abs(sin(angle * (PI/180))), speed);
+
+      if(tofCalibrated(4) > wall_tresh)
+        drive((cm * CM_TO_ENCODERS) / abs(sin(angle * (PI/180))), speed);
+      else
+      {
+        Serial.println("achievement unlocked! How did we get here?");
+        if(tofCalibrated(4) <= wall_tresh)
+        {
+          while(tofCalibrated(4) >= 60)
+          {
+            utils::forward(speed * 0.7);
+
+          }
+          
+          utils::stopMotors();
+        }
+        raw_right(90 - min(90, angle * mult_factor), SPEED);
+        
+        pi_send_data(false, true, true);
+        return;
+      }
+
+      bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
       if (abs(orientationData.orientation.z) < 7)
         raw_right(90 - min(90, angle * mult_factor), SPEED);
       // bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
@@ -701,14 +746,8 @@ void driveCM(float cm, int speed = 200, int tolerance = 10) {
   drive((cm * CM_TO_ENCODERS), speed);
 
 #endif
-  
-  bool* arr = get_tof_vals(wall_tresh);
 
-  //n e s w
-  bool walls[4] = {arr[4], arr[0] && arr[1], arr[5], arr[2] && arr[3]};
-
-
-  if(walls[0])
+  if(tofCalibrated(4) <= wall_tresh)
   {
     while(tofCalibrated(4) >= 60)
     {
@@ -1041,7 +1080,7 @@ unsigned int tofCalibrated(int select)
     }
     case 5:
     {
-        //TODO: calibrate 
+        //TODO: calibrate (low priority)
         tcaselect(5);
         dist = tof.readRangeSingleMillimeters();
         cal = dist;

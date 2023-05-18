@@ -519,46 +519,55 @@ namespace driver
 			std::this_thread::sleep_for(std::chrono::milliseconds(20));
 		}
 
-		bool status = (bool)(*Bridge::get_data_value("forward_status"))[1];
+		bool black_tile = !((bool)(*Bridge::get_data_value("forward_status"))[1]);
+		bool failed = (bool)(*Bridge::get_data_value("forward_status"))[2];
 
-		//false for black tile
-		if(!status)
+		//black_tile = true when black tile (since we negated above)
+		//failed = true when failed
+		if(failed || black_tile)
 		{
 			bot->map[org_index].bot = true;
 			bot->map[bot->index].bot = false;
-			bot->map[bot->index].N = true;
-			bot->map[bot->index].E = true;
-			bot->map[bot->index].W = true;
-			bot->map[bot->index].S = true;
-			//W:
-			if(helper::is_valid_index(bot->index - 1))
+			if(black_tile)
 			{
-				bot->map[bot->index - 1].E = true;
-				// nodes[sim::sim_robot_index - 1].E = true;
+				bot->map[bot->index].N = true;
+				bot->map[bot->index].E = true;
+				bot->map[bot->index].W = true;
+				bot->map[bot->index].S = true;
+				//W:
+				if(helper::is_valid_index(bot->index - 1))
+				{
+					bot->map[bot->index - 1].E = true;
+					// nodes[sim::sim_robot_index - 1].E = true;
+				}
+				//E:
+				if(helper::is_valid_index(bot->index + 1))
+				{
+					bot->map[bot->index + 1].W = true;
+					// nodes[sim::sim_robot_index + 1].W = true;
+				}
+				//S:
+				if(helper::is_valid_index(bot->index + horz_size))
+				{
+					bot->map[bot->index + horz_size].N = true;
+					// nodes[sim::sim_robot_index + horz_size].N = true;
+				}
+				//N:
+				if(helper::is_valid_index(bot->index - horz_size))
+				{
+					bot->map[bot->index - horz_size].S = true;
+					// nodes[sim::sim_robot_index - horz_size].S = true;
+				}
+				
+				std::cout << "driver::forward: WARN: Black tile detected, returning false" << std::endl;
 			}
-			//E:
-			if(helper::is_valid_index(bot->index + 1))
-			{
-				bot->map[bot->index + 1].W = true;
-				// nodes[sim::sim_robot_index + 1].W = true;
-			}
-			//S:
-			if(helper::is_valid_index(bot->index + horz_size))
-			{
-				bot->map[bot->index + horz_size].N = true;
-				// nodes[sim::sim_robot_index + horz_size].N = true;
-			}
-			//N:
-			if(helper::is_valid_index(bot->index - horz_size))
-			{
-				bot->map[bot->index - horz_size].S = true;
-				// nodes[sim::sim_robot_index - horz_size].S = true;
-			}
+			else
+				std::cout << "drive::forward: WARN: Failed to move forward, returning true" << std::endl;
 
 			bot->index = org_index;
 
-			std::cout << "driver::forward: WARN: Black tile detected, returning false" << std::endl;
-			return false;
+			//don't read wall data only when black tile
+			return failed;
 		}
 
 		return true;
