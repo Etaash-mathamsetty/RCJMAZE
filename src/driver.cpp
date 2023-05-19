@@ -585,11 +585,7 @@ namespace driver
 
 		auto status = *Bridge::get_data_value("forward_status");
 		bool black_tile = !(bool)status[1];
-		bool failed = false;
-		if(status.size() > 2)
-		{
-			failed = (bool)status[2];
-		}
+		bool failed = (bool)status[2];
 
 		//black_tile = true when black tile (since we negated above)
 		//failed = true when failed
