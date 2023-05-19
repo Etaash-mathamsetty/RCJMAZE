@@ -15,6 +15,7 @@ namespace driver
 	{
 		robot* bot = robot::get_instance();
 		CHECK(bot);
+		CHECK(bot->map);
 		std::ifstream in;
 		in.open("save.txt");
 		in >> num_floors;
@@ -82,6 +83,7 @@ namespace driver
 	{
 		robot* bot = robot::get_instance();
 		CHECK(bot);
+		CHECK(bot->map);
 		std::ofstream out;
 		out.open("save.txt");
 		out << num_floors << std::endl;
@@ -344,11 +346,62 @@ namespace driver
 
     #else
 
+	CREATE_DRIVER(void, save_state)
+	{
+		robot* bot = robot::get_instance();
+		CHECK(bot);
+		CHECK(bot->map);
+		std::ofstream out;
+		out.open("save.txt");
+		out << helper::dir_to_char(bot->dir) << std::endl;
+		for(int i = 0; i < horz_size * vert_size; i++)
+		{
+			node n = bot->map[i];
+			out << n.N << " " << n.E << " " << n.S << " " << n.W << " ";
+			out << n.vic << " " << n.bot << " " << n.vis << " " << n.ramp << " ";
+			out << n.checkpoint << std::endl;
+		}
+	}
+
+	CREATE_DRIVER(void, load_state)
+	{
+		robot* bot = robot::get_instance();
+		CHECK(bot);
+		CHECK(bot->map);
+		std::ifstream in;
+		in.open("save.txt");
+		bool n, e, s, w, vic, vis, ramp, checkpoint, bot_here;
+		char dir;
+		in >> dir;
+		//wtf happens with directions, I think we can only restart the raspberry pi
+		bot->dir = helper::char_to_dir(dir);
+		for(int i = 0; i < horz_size * vert_size; i++)
+		{
+			in >> n >> e >> s >> w >> vic >> bot_here >> vis >> ramp >> checkpoint;
+			if(bot_here)
+				bot->index = i;
+			
+			node& temp = bot->map[i];
+			temp.N = n;
+			temp.E = e;
+			temp.S = s;
+			temp.W = w;
+			temp.vic = vic;
+			temp.vis = vis;
+			temp.ramp = ramp;
+			temp.checkpoint = checkpoint;
+			temp.bot = bot_here;
+		}
+	}
+
 	CREATE_DRIVER(void, init_robot)
 	{
 		CHECK(robot::get_instance());
 		PythonScript::initPython();
 		PythonScript::Exec(init_py_file);
+		
+		if(std::filesystem::exists("save.txt"))
+			load_state();
 	}
 
 	CREATE_DRIVER(void, cleanup)
@@ -403,6 +456,8 @@ namespace driver
 			bot->map[bot->index].W = (bool)(*Bridge::get_data_value("W"))[3];
 			Bridge::remove_data_value("W");
 			bot->map[bot->index].checkpoint = wait_for_data<bool>("CP");
+			if(bot->map[bot->index].checkpoint)
+				save_state();
 		}
 		//debug::print_node(bot->map[bot->index]);
 	

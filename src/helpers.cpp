@@ -79,6 +79,7 @@ namespace helper
 			return DIR(int(dir)+1);
     }
 
+    //returns adjacent node indexes
     nearest_quad get_nearest(const int& _index)
     {
         robot* bot = robot::get_instance();

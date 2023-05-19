@@ -321,6 +321,7 @@ int returnColor(){
     tcaselect(6);
     tcs.getRawData(&r, &g, &b, &c);
     const int persistance_count = 14;
+#if 0
     Serial.print("red:");
     Serial.print(r);
     Serial.print(",");
@@ -344,6 +345,7 @@ int returnColor(){
     Serial.print(",");
     Serial.print("b/r:");
     Serial.println((double)b/r * 100.0);
+#endif
     // oled.println(r);
     // delay(50);
     // oled.println(g);
@@ -679,7 +681,7 @@ void driveCM(float cm, int speed = 200, int tolerance = 10) {
 
   double horizontalError = abs((int)left - (int)right) / 2;
   double angle = abs(atan((cm * 10.0) / horizontalError) * (180.0/PI));
-  angle = min(angle, 7);
+  angle = min(angle, 12);
   oled.println(angle * mult_factor);
   bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
   if (horizontalError >= tolerance && left < 150 && right < 150 && abs(orientationData.orientation.z) < 7 && (left <= 180 || right <= 180)) {
@@ -1195,7 +1197,7 @@ void loop()
 
   //checkpoint detection
   pi_send_tag("CP");
-  PI_SERIAL.println("0");
+  PI_SERIAL.println(float(returnColor() == 2));
 
 #ifdef DEBUG_DISPLAY
   oled.setCursor(0, 0);
