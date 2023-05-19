@@ -321,6 +321,7 @@ int returnColor(){
     tcaselect(6);
     tcs.getRawData(&r, &g, &b, &c);
     const int persistance_count = 14;
+#if 0
     Serial.print("red:");
     Serial.print(r);
     Serial.print(",");
@@ -344,6 +345,7 @@ int returnColor(){
     Serial.print(",");
     Serial.print("b/r:");
     Serial.println((double)b/r * 100.0);
+#endif
     // oled.println(r);
     // delay(50);
     // oled.println(g);
@@ -1195,7 +1197,7 @@ void loop()
 
   //checkpoint detection
   pi_send_tag("CP");
-  PI_SERIAL.println("0");
+  PI_SERIAL.println(float(returnColor() == 2));
 
 #ifdef DEBUG_DISPLAY
   oled.setCursor(0, 0);
