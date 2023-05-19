@@ -13,7 +13,7 @@ robot::robot(){
 		//nvm, im just really freaking dumb, I know how to do it
 		index = helper::get_index(default_index,default_index);
 		//default direction
-		dir = DIR::S;
+		dir = DIR::N;
 		map = new node[horz_size * vert_size];
 		memset(map, 0, horz_size * vert_size * sizeof(node));
 
