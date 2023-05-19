@@ -2,7 +2,7 @@
 //#define FAKE_SERIAL
 #define DEBUG_DISPLAY
 //#define MOTORSOFF
-#define TEST
+//#define TEST
 // #define NO_PI //basic auto when no raspberry pi (brain stem mode)
 
 #include "Motors.h"
@@ -146,7 +146,7 @@ void pi_read_vision() {
   {
     ch = PI_SERIAL.read();
     data += ch;
-    delay(10);
+    delay(5);
   }
   data.trim();
   data.toLowerCase();
@@ -331,15 +331,19 @@ int returnColor(){
     Serial.print(b);
     Serial.print(",");
     Serial.print("clear:");
-    Serial.println(c); 
-    // Serial.print("r/c:");
-    // Serial.print((float)r/c * 100.0);
-    // Serial.print(",");
-    // Serial.print("g/c:");
-    // Serial.print((float)g/c * 100.0);
-    // Serial.print(",");
-    // Serial.print("r/g:");
-    // Serial.println((double)r/g * 100.0);
+    Serial.print(c); 
+    Serial.print(",");
+    Serial.print("r/c:");
+    Serial.print((float)r/c * 100.0);
+    Serial.print(",");
+    Serial.print("g/c:");
+    Serial.print((float)g/c * 100.0);
+    Serial.print(",");
+    Serial.print("r/g:");
+    Serial.print((float)r/g * 100.0);
+    Serial.print(",");
+    Serial.print("b/r:");
+    Serial.println((double)b/r * 100.0);
     // oled.println(r);
     // delay(50);
     // oled.println(g);
@@ -348,8 +352,10 @@ int returnColor(){
     // delay(50);
     // oled.println(c);
     // delay(2000);
+
+    bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
     for (int i = 0; i <= persistance_count; i++) {
-      if (c < 270  && c >= 180 && (r / (double)g) * 100.0 >= 115) {
+      if (c < 270  && c >= 180 && (r / (double)g) * 100.0 >= 116) {
    //   silver_persistance++;
       // Serial.println("silver detected"); 
       // oled.println("silver");
@@ -357,27 +363,26 @@ int returnColor(){
       //PI_SERIAL.println("silver");
         silver_detect++; //change later
       }
-      if(c < 110){ 
+      if(c < 110 && (double) b/r < 1 && abs(orientationData.orientation.z) < 3.5){ 
       // Serial.println("black detected"); 
       //oled.println("black");
       //pi_send_tag("color");
       //PI_SERIAL.println("black");  
         black_detect++;  
       }
-      if(b > (r * 2.5)) {
+      if((double) b/r >= 1.5) {
         blue_detect++;
       }
     }
-    if (black_detect >= persistance_count) {
+    if (blue_detect >= persistance_count) {
+      utils::stopMotors();
+      delay(5000);
+      return 3;
+    } else if (black_detect >= persistance_count) {
       return 1;
     } else if (silver_detect >= persistance_count) {
       return 2;
-    } else if (blue_detect >= persistance_count) {
-      utils::stopMotors();
-      delay(5000);
-      return 0;
-    }
-    else {
+    } else {
       return 0;
     }
 
@@ -641,6 +646,8 @@ void turn(char char_end_direction) {
     default: Serial.println("invalid"); break;
   }
 
+  cur_direction = end_direction;
+
   switch (cur_direction - end_direction) {
     case -3:
     case 1: left(90, SPEED); break;
@@ -651,7 +658,6 @@ void turn(char char_end_direction) {
     default: Serial.println("invalid");
     case 0: pi_send_tag("turn_status"); PI_SERIAL.println(0.0); break;
   }
-  cur_direction = end_direction;
 }
 
 void alignAngle(int, bool, int x = 5);
@@ -673,6 +679,7 @@ void driveCM(float cm, int speed = 200, int tolerance = 10) {
 
   double horizontalError = abs((int)left - (int)right) / 2;
   double angle = abs(atan((cm * 10.0) / horizontalError) * (180.0/PI));
+  angle = min(angle, 7);
   oled.println(angle * mult_factor);
   bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
   if (horizontalError >= tolerance && left < 150 && right < 150 && abs(orientationData.orientation.z) < 7 && (left <= 180 || right <= 180)) {
@@ -686,6 +693,9 @@ void driveCM(float cm, int speed = 200, int tolerance = 10) {
       else
       {
         Serial.println("achievement unlocked! How did we get here?");
+        oled.clearDisplay();
+        oled.println("achievement unlocked!");
+        oled.println("How did we get here?");
         if(tofCalibrated(4) <= wall_tresh)
         {
           while(tofCalibrated(4) >= 60)
@@ -716,6 +726,9 @@ void driveCM(float cm, int speed = 200, int tolerance = 10) {
       else
       {
         Serial.println("achievement unlocked! How did we get here?");
+        oled.clearDisplay();
+        oled.println("achievement unlocked!");
+        oled.println("How did we get here?");
         if(tofCalibrated(4) <= wall_tresh)
         {
           while(tofCalibrated(4) >= 60)
@@ -939,12 +952,12 @@ void alignAngle(int speed, bool reset, int tolerance = 5) {
   tofR4 = tofCalibrated(3); 
 
          
-  if (tofR1 >= 120 || tofR2 >= 120) {
+  if (tofR1 >= 160 || tofR2 >= 160) {
     lnum = 3;
     rnum = 2;
   }
 
-  if (tofR3 >= 120 || tofR4 >= 120 && tofR1 >= 120 || tofR2 >= 120) {
+  if (tofR3 >= 160 || tofR4 >= 160 && tofR1 >= 160 || tofR2 >= 160) {
     bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
     int new_angle = closestTo90s((int) orientationData.orientation.x);
 
@@ -1227,7 +1240,11 @@ void loop()
 
   // bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
 
-  // returnColor();
+  // Serial.print("return color: ");
+  // Serial.println(returnColor());
+
+  utils::kitDrop(1);
+  delay(200);
   
   // Serial.println(returnColor());
   // oled.print(returnColor());
