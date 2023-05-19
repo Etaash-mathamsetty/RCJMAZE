@@ -58,7 +58,7 @@ green_low_hsv = [50,80, 50]
 green_high_hsv = [90, 239, 231]
 red_low_hsv = [120, 150, 50]
 red_high_hsv = [200, 239, 231]
-yellow_low_hsv = [7, 80, 80]
+yellow_low_hsv = [7, 80, 100]
 yellow_high_hsv = [30, 239, 231]
 
 if True:

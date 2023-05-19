@@ -405,15 +405,18 @@ namespace driver
 			bot->map[bot->index].checkpoint = wait_for_data<bool>("CP");
 		}
 		//debug::print_node(bot->map[bot->index]);
-
-		PythonScript::Exec(cv_py_file);
-		bool victim = (bool)(*Bridge::get_data_value("victim"))[0];
-		bool left = (bool)(*Bridge::get_data_value("left"))[0];
-		int num_rescue = (int)(*Bridge::get_data_value("NRK"))[0];
-		if(victim && !bot->map[bot->index].vic)
-		{
-			drop_vic(num_rescue, left);
-			bot->map[bot->index].vic = true;
+	
+		if(!bot->map[bot->index].vic)
+			for(int i = 0; i < 2; i++) {
+			PythonScript::Exec(cv_py_file);
+			bool victim = (bool)(*Bridge::get_data_value("victim"))[0];
+			bool left = (bool)(*Bridge::get_data_value("left"))[0];
+			int num_rescue = (int)(*Bridge::get_data_value("NRK"))[0];
+			if(victim)
+			{
+				drop_vic(num_rescue, left);
+				bot->map[bot->index].vic = true;
+			}
 		}
 	}
 
@@ -507,20 +510,31 @@ namespace driver
 		while((bool)(*Bridge::get_data_value("forward_status"))[0]) 
 		{ 
 			PythonScript::Exec(ser_py_file);
-			PythonScript::Exec(cv_py_file);
-			bool victim = (*Bridge::get_data_value("victim"))[0];
-			bool left = (*Bridge::get_data_value("left"))[0];
-			int nrk = (*Bridge::get_data_value("NRK"))[0];
-			if(victim && !bot->map[bot->index].vic)
+			if(!bot->map[bot->index].vic)
 			{
-				drop_vic(nrk, left);
-				bot->map[bot->index].vic = true;
+				for(int i = 0; i < 2; i++)
+				{
+					PythonScript::Exec(cv_py_file);
+					bool victim = (*Bridge::get_data_value("victim"))[0];
+					bool left = (*Bridge::get_data_value("left"))[0];
+					int nrk = (*Bridge::get_data_value("NRK"))[0];
+					if(victim)
+					{
+						drop_vic(nrk, left);
+						bot->map[bot->index].vic = true;
+					}
+				}
 			}
 			std::this_thread::sleep_for(std::chrono::milliseconds(20));
 		}
 
-		bool black_tile = !((bool)(*Bridge::get_data_value("forward_status"))[1]);
-		bool failed = (bool)(*Bridge::get_data_value("forward_status"))[2];
+		auto status = *Bridge::get_data_value("forward_status");
+		bool black_tile = !(bool)status[1];
+		bool failed = false;
+		if(status.size() > 2)
+		{
+			failed = (bool)status[2];
+		}
 
 		//black_tile = true when black tile (since we negated above)
 		//failed = true when failed
