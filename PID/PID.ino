@@ -681,7 +681,7 @@ void driveCM(float cm, int speed = 200, int tolerance = 10) {
 
   double horizontalError = abs((int)left - (int)right) / 2;
   double angle = abs(atan((cm * 10.0) / horizontalError) * (180.0/PI));
-  angle = min(angle, 7);
+  angle = min(angle, 12);
   oled.println(angle * mult_factor);
   bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
   if (horizontalError >= tolerance && left < 150 && right < 150 && abs(orientationData.orientation.z) < 7 && (left <= 180 || right <= 180)) {
