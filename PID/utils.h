@@ -63,6 +63,7 @@ void resetBoost()
 void kitDrop(int num) { 
   static int columnNum = 1; 
   static int numDropped = 0; 
+  const int offset_for_stack[3] = {10, 7, 10};
 
   analogWrite(5, 30);
 
@@ -77,7 +78,7 @@ void kitDrop(int num) {
       return;
     }
 
-    myservo.write(180 - (60*columnNum + 10)); 
+    myservo.write(180 - (60*columnNum + offset_for_stack[columnNum - 1])); 
     Serial.print("columnNum");
     Serial.println(columnNum);
     Serial.println("numDropped");

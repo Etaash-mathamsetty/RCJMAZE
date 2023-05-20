@@ -65,9 +65,9 @@ const double TOF_DISTANCE = 58.64;
 enum type { Color,
             Distance };
 enum direction { n = 0,
-                 e,
-                 s,
-                 w };
+                 e = 1,
+                 s = 2,
+                 w = 3 };
 volatile uint8_t cur_direction = n;
 double xPos = 0, yPos = 0;
 uint16_t BNO055_SAMPLERATE_DELAY_MS = 10;
