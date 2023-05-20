@@ -681,7 +681,7 @@ void driveCM(float cm, int speed = 200, int tolerance = 10) {
 
   double horizontalError = abs((int)left - (int)right) / 2;
   double angle = abs(atan((cm * 10.0) / horizontalError) * (180.0/PI));
-  // angle = min(angle, 12);
+  angle = max(angle, 90 - 12);
   oled.println(angle * mult_factor);
   bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
   if (horizontalError >= tolerance && abs(orientationData.orientation.z) < 7 && left <= wall_tresh && right <= wall_tresh) {
@@ -762,10 +762,8 @@ void driveCM(float cm, int speed = 200, int tolerance = 10) {
   //   drive((cm * CM_TO_ENCODERS), speed); 
   //   raw_right(angle, speed);
   // }
-  
-  /*
   else if (left <= wall_tresh && left - 60 != 0) {
-    double angle = atan(cm / (left - 60));
+    double angle = atan((cm * 10) / (left - 60));
     if(angle > 0)
       angle = min(angle, 10);
     else
@@ -804,7 +802,7 @@ void driveCM(float cm, int speed = 200, int tolerance = 10) {
       raw_left(angle * (180/PI), speed);
   }
   else if (right <= wall_tresh && right - 60 != 0) {
-    double angle = atan(cm / (right - 60));
+    double angle = atan((cm * 10) / (right - 60));
     if(angle > 0)
       angle = min(angle, 10);
     else
@@ -840,7 +838,7 @@ void driveCM(float cm, int speed = 200, int tolerance = 10) {
       raw_left(-angle * (180/PI), speed);
     else  
       raw_right(angle * (180/PI), speed);
-  } */
+  }
   else {
     drive((cm * CM_TO_ENCODERS), speed); 
   }
