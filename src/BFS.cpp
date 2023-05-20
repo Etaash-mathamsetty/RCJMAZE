@@ -50,7 +50,7 @@ Stack<int> BFS(robot& robot)
 			std::cout << "returning to starting..." << std::endl;
 			quitable = true;
 			robot::get_instance()->map[helper::get_index(default_index, default_index)].vis = false;
-			return BFS(robot);
+			return BFS(*robot::get_instance());
 		}
 
 		cur_index = worker[0].value;

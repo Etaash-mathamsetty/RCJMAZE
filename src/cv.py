@@ -24,6 +24,7 @@
 #import math
 
 rescue = 0
+camera_num = not camera_num
 
 Rb.SetDataValue("NRK", [0.0])
 Rb.SetDataValue("victim", [0.0])
@@ -54,18 +55,16 @@ def label_img(frame):
         return ()
 
 
-green_low_hsv = [50,80, 50]
+green_low_hsv = [50,80, 70]
 green_high_hsv = [90, 239, 231]
-red_low_hsv = [120, 150, 50]
+red_low_hsv = [120, 150, 70]
 red_high_hsv = [200, 239, 231]
 yellow_low_hsv = [7, 80, 100]
 yellow_high_hsv = [30, 239, 231]
 
 if True:
-    count = 0
     
     for i in range(1):
-        count += 1
         if camera_num:
             org = cv2.flip(video.read()[1], -1)
         else:
@@ -84,9 +83,9 @@ if True:
             mask = cv2.inRange(frame, lower[i], upper[i])
             _,color_contours,_ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
             if len(color_contours) > 0:
-                mask = cv2.drawContours(mask, color_contours, -1, (0,255,0), 3)
                 color_cont = max(color_contours, key=cv2.contourArea)
-                if cv2.contourArea(color_cont) >= 600:
+                org = cv2.drawContours(org, [color_cont], -1, (0,255,0), 3)
+                if cv2.contourArea(color_cont) >= 700:
                     bounding_rect.append(cv2.boundingRect(color_cont))
                 else:
                     bounding_rect.append([])
@@ -116,10 +115,9 @@ if True:
         
 #        cv2.imshow("contours", frame2)
         if(len(contours) > 0):
-            cont = sorted(contours, key=cv2.contourArea)
-            cont = cont[-1]
+            cont = max(contours, key=cv2.contourArea)
             frame3 = frame2.copy()
-            if(cv2.contourArea(cont) > 420):
+            if(cv2.contourArea(cont) >= 420):
                 x,y,w,h = cv2.boundingRect(cont)
                 cv2.rectangle(org, (x,y), (x+w, y+h), (255,0,255), 3)
                 cv2.drawContours(frame3, [cont], -1, 255, -1)
@@ -208,13 +206,9 @@ if True:
             cv2.imshow("org", org)
         else:
             cv2.imshow("org1", org)
-            
-        camera_num = not(camera_num)
 
         ui = cv2.waitKey(1) & 0xFF
-        if ui == ord('q'):
-            break
-        elif ui == ord(' '):
+        if ui == ord(' '):
             output = label_img(best_img)
             if(len(output) > 1):
                 label_txt = np.append(label_txt, output[0], axis = 0)

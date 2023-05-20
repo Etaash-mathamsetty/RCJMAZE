@@ -3,6 +3,7 @@ import Robot as Rb
 import serial
 import numpy as np
 import math
+import time
 
 print("Initializing Python subsystem")
 
@@ -40,8 +41,5 @@ def SendSerialCommand(command):
     except:
         return False
     return True
-
-def DataIsAva():
-    return ser.in_waiting >= 5
 
 print("py init done: simulation = " + str(simulation))
