@@ -353,7 +353,8 @@ namespace driver
 		CHECK(bot->map);
 		std::ofstream out;
 		out.open("save.txt");
-		out << helper::dir_to_char(bot->dir) << std::endl;
+		std::cout << "saving state" << std::endl;
+		//out << helper::dir_to_char(bot->dir) << std::endl;
 		for(int i = 0; i < horz_size * vert_size; i++)
 		{
 			node n = bot->map[i];
@@ -371,10 +372,10 @@ namespace driver
 		std::ifstream in;
 		in.open("save.txt");
 		bool n, e, s, w, vic, vis, ramp, checkpoint, bot_here;
-		char dir;
-		in >> dir;
+		//char dir;
+		//in >> dir;
 		//wtf happens with directions, I think we can only restart the raspberry pi
-		bot->dir = helper::char_to_dir(dir);
+		//bot->dir = helper::char_to_dir(dir);
 		for(int i = 0; i < horz_size * vert_size; i++)
 		{
 			in >> n >> e >> s >> w >> vic >> bot_here >> vis >> ramp >> checkpoint;
@@ -392,6 +393,7 @@ namespace driver
 			temp.checkpoint = checkpoint;
 			temp.bot = bot_here;
 		}
+		std::cout << "loading save file!" << std::endl;
 	}
 
 	CREATE_DRIVER(void, init_robot)
@@ -460,17 +462,22 @@ namespace driver
 				save_state();
 		}
 		//debug::print_node(bot->map[bot->index]);
+		
+		Bridge::remove_data_value("victim");
 	
 		if(!bot->map[bot->index].vic)
-			for(int i = 0; i < 2; i++) {
-			PythonScript::Exec(cv_py_file);
-			bool victim = (bool)(*Bridge::get_data_value("victim"))[0];
-			bool left = (bool)(*Bridge::get_data_value("left"))[0];
-			int num_rescue = (int)(*Bridge::get_data_value("NRK"))[0];
-			if(victim)
+		{
+			for(int i = 0; i < 2; i++) 
 			{
-				drop_vic(num_rescue, left);
-				bot->map[bot->index].vic = true;
+				PythonScript::Exec(cv_py_file);
+				bool victim = (bool)(*Bridge::get_data_value("victim"))[0];
+				bool left = (bool)(*Bridge::get_data_value("left"))[0];
+				int num_rescue = (int)(*Bridge::get_data_value("NRK"))[0];
+				if(victim)
+				{
+					drop_vic(num_rescue, left);
+					bot->map[bot->index].vic = true;
+				}
 			}
 		}
 	}
@@ -561,10 +568,14 @@ namespace driver
 			PythonScript::Exec(ser_py_file); 
 			std::this_thread::sleep_for(std::chrono::milliseconds(20));
 		}
+		
+		Bridge::remove_data_value("victim");
+		
 		//wait for it to finish running
 		while((bool)(*Bridge::get_data_value("forward_status"))[0]) 
 		{ 
 			PythonScript::Exec(ser_py_file);
+			PythonScript::Exec(cv_py_file);
 			if(!bot->map[bot->index].vic)
 			{
 				for(int i = 0; i < 2; i++)
@@ -627,12 +638,17 @@ namespace driver
 				std::cout << "driver::forward: WARN: Black tile detected, returning false" << std::endl;
 			}
 			else
-				std::cout << "drive::forward: WARN: Failed to move forward, returning true" << std::endl;
+			{
+				std::cout << "drive::forward: WARN: Failed to move forward, returning false" << std::endl;
+				bot->index = org_index;
+				bot->map[bot->index].vis = false;
+				get_sensor_data();
+			}
 
 			bot->index = org_index;
 
 			//don't read wall data only when black tile
-			return failed;
+			return false;
 		}
 
 		return true;

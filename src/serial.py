@@ -10,4 +10,5 @@ if not simulation:
         #print(data[1])
         split_data = [float (x) for x in data[1].split(',')]
         Rb.SetDataValue(data[0], split_data)
+        #time.sleep(0.05)
 
