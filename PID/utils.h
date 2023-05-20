@@ -63,7 +63,7 @@ void resetBoost()
 void kitDrop(int num) { 
   static int columnNum = 1; 
   static int numDropped = 0; 
-  const int offset_for_stack[3] = {10, 7, 10};
+  const int offset_for_stack[3] = {10, 7, 0};
 
   analogWrite(5, 30);
 
@@ -131,10 +131,11 @@ namespace logger{
 
 namespace math {
   int wrapAround(int num, int mod) {
-    num %= mod;
     if (num < 0) {
       num += mod;
     }
+    num %= mod;
+
     return num;
   }
 }
