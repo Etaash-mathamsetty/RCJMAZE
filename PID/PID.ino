@@ -234,6 +234,7 @@ void pi_read_data() {
 
   String data = "";
   char ch = 0;
+  int num = 0;
   while(PI_SERIAL.available() && ch != '\n') 
   {
     ch = PI_SERIAL.read();
@@ -255,7 +256,7 @@ void pi_read_data() {
   String cur_cmd = "";
   Serial.println(data);
   for (char c : data) {
-    if (c == 'g' || c == 'f' || c == 't' /* || c == 'd' */ || c == 'r') {
+    if (c == 'g' || c == 'f' || c == 't' || c == 'd' || c == 'r') {
       if (cur_cmd.length() > 0) {
         if (cur_cmd[0] == 'g' || cur_cmd[0] == 'f') {
           Serial.println("FORWARD");
@@ -268,21 +269,49 @@ void pi_read_data() {
       cur_cmd.remove(0);
       cur_cmd += c;
     }
-    // else if(c >= '0' && c <= '9')
-    // {
-    //   if(cur_cmd.length() > 0)
-    //   {
-    //     if(cur_cmd[0] == 'd')
-    //     {
-    //       utils::kitDrop(c - '0');
-    //     }
-    //     else
-    //     {
-    //       Serial.println("invalid command");
-    //     }
-    //     cur_cmd.remove(0);
-    //   }
-    // }
+    else if (c >= '0' && c <= '9') {
+      if(cur_cmd.length() > 0 && cur_cmd[0] == 'd')
+      {
+        num = c - '0';
+      }
+    }
+    else if (c == 'l') {
+      if(cur_cmd.length() > 0 && cur_cmd[0] == 'd') {
+        pi_send_tag("drop_status");
+        PI_SERIAL.println("1.0");
+
+        if(num > 0)
+          left(90, 100, false);
+        utils::kitDrop(num);
+        if(num > 0)
+          right(90, 100, false);
+        cur_cmd.remove(0);
+
+        if(num == 0)
+          delay(1000);
+
+        pi_send_tag("drop_status");
+        PI_SERIAL.println("0.0");
+      }
+    } else if (c == 'r') {
+      if(cur_cmd.length() > 0 && cur_cmd[0] == 'd') {
+        pi_send_tag("drop_status");
+        PI_SERIAL.println("1.0");
+
+        if(num > 0)
+          right(90, 100, false);
+        utils::kitDrop(num);
+        if(num > 0)
+          left(90, 100, false);
+        cur_cmd.remove(0);
+
+        if(num == 0)
+          delay(1000);
+
+        pi_send_tag("drop_status");
+        PI_SERIAL.println("0.0");
+      }
+    }
     else if (c == 'e' || c == 'w' || c == 's' || c == 'n') {
       if (cur_cmd.length() > 0) {
         if (cur_cmd[0] == 'f' || cur_cmd[0] == 'g') {
@@ -1004,7 +1033,7 @@ void drive(int encoders, int speed) {
     // Serial.println(speed * (double)(abs(encoders) - abs(motor1.getTicks()))/abs(encoders));
     bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
 
-    if (abs(orientationData.orientation.z) < 3.5) {
+    if (abs(orientationData.orientation.z) < 5) {
       while(PI_SERIAL.available()) {
         int right_ticks = motorR.getTicks();
         int left_ticks = motorL.getTicks();
