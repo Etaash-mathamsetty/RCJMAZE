@@ -339,8 +339,8 @@ void pi_read_data() {
           pi_send_data(walls);
 
           //checkpoint detection
-          pi_send_tag("CP");
-          PI_SERIAL.println(float(returnColor() == 2));
+          //pi_send_tag("CP");
+          //PI_SERIAL.println(float(returnColor() == 2));
 
           //Serial.println("sending wall data");
         }
