@@ -188,7 +188,7 @@ void pi_read_vision() {
         pi_send_tag("drop_status");
         PI_SERIAL.println("0.0");
       }
-    } else if (c == 'r') {
+    } else if (c == 'q') {
       if(cur_cmd.length() > 0 && cur_cmd[0] == 'd') {
         pi_send_tag("drop_status");
         PI_SERIAL.println("1.0");
@@ -293,7 +293,7 @@ void pi_read_data() {
         pi_send_tag("drop_status");
         PI_SERIAL.println("0.0");
       }
-    } else if (c == 'r') {
+    } else if (c == 'q') {
       if(cur_cmd.length() > 0 && cur_cmd[0] == 'd') {
         pi_send_tag("drop_status");
         PI_SERIAL.println("1.0");
@@ -391,7 +391,7 @@ int returnColor(bool only_black = false){
     tcaselect(6);
     tcs.getRawData(&r, &g, &b, &c);
     const int persistance_count = 14;
-#if 1
+#if 0
     Serial.print("red:");
     Serial.print(r);
     Serial.print(",");
