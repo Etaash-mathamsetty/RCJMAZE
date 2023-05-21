@@ -166,11 +166,11 @@ if True:
                 cv2.putText(org, letter[0].upper(), (100,100), cv2.FONT_HERSHEY_SIMPLEX, 4, (0,0,0), 10)
                 cv2.putText(org, str(letter[1]), (200,100), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,0), 5)
                 if(letter[0].upper() == 'H'):
-                    rescue += 2
+                    rescue += 3
                     Rb.SetDataValue("victim", [1.0])
                     print("H")
                 if(letter[0].upper() == 'S'):
-                    rescue += 1
+                    rescue += 2
                     Rb.SetDataValue("victim", [1.0])
                     print("S")
                 if(letter[0].upper() == 'U'):
@@ -188,7 +188,7 @@ if True:
                 h = bounding_rect[i][3]
                 if i % 3 == 0:
                     cv2.rectangle(org, (x,y), (x+w, y+h), (0,0,255), 3)
-                    rescue += 2
+                    rescue += 1
                     Rb.SetDataValue("victim", [1.0])
                     print("red")
                 elif i % 3 == 1:
