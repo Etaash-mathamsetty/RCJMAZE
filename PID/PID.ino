@@ -182,6 +182,9 @@ void pi_read_vision() {
           right(90, 100, false);
         cur_cmd.remove(0);
 
+        if(num == 0)
+          delay(1000);
+
         pi_send_tag("drop_status");
         PI_SERIAL.println("0.0");
       }
@@ -196,6 +199,9 @@ void pi_read_vision() {
         if(num > 0)
           left(90, 100, false);
         cur_cmd.remove(0);
+
+        if(num == 0)
+          delay(1000);
 
         pi_send_tag("drop_status");
         PI_SERIAL.println("0.0");
@@ -459,7 +465,7 @@ void right(int relative_angle, int speed, bool turn_status = true) {
 
   if(tofCalibrated(5) <= wall_tresh - 50)
   {
-    while(tofCalibrated(5) >= 60)
+    while(tofCalibrated(5) >= 70)
     {
       utils::forward(-speed);
     }
@@ -512,7 +518,7 @@ void left(int relative_angle, int speed, bool turn_status = true) {
 
   if(tofCalibrated(5) <= wall_tresh - 50)
   {
-    while(tofCalibrated(5) >= 60)
+    while(tofCalibrated(5) >= 70)
     {
       utils::forward(-speed);
     }
@@ -728,7 +734,7 @@ void driveCM(float cm, int speed = 200, int tolerance = 10) {
         oled.clearDisplay();
         oled.println("achievement unlocked!");
         oled.println("How did we get here?");
-        while(tofCalibrated(4) >= 60)
+        while(tofCalibrated(4) >= 70)
         {
           utils::forward(speed * 0.7);
 
@@ -758,7 +764,7 @@ void driveCM(float cm, int speed = 200, int tolerance = 10) {
         oled.clearDisplay();
         oled.println("achievement unlocked!");
         oled.println("How did we get here?");
-        while(tofCalibrated(4) >= 60)
+        while(tofCalibrated(4) >= 70)
         {
           utils::forward(speed * 0.7);
 
@@ -879,7 +885,7 @@ void driveCM(float cm, int speed = 200, int tolerance = 10) {
 
   if(tofCalibrated(4) <= wall_tresh - 50)
   {
-    while(tofCalibrated(4) >= 60)
+    while(tofCalibrated(4) >= 70)
     {
       utils::forward(speed * 0.7);
 
