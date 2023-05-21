@@ -415,7 +415,20 @@ namespace driver
 	{
 		//d [drop] N [number of kits, single digit only, can be 0 which will trigger the led] l/r [direction] \n
 		std::string direction = left ? "l" : "r";
+		Bridge::remove_data_value("drop_status");
 		PythonScript::CallPythonFunction<bool, std::string>("SendSerialCommand", com::drop_vic + std::to_string(num) + direction + "\n");
+		
+		while(!Bridge::get_data_value("drop_status").has_value())
+		{
+			PythonScript::Exec(ser_py_file);
+			std::this_thread::sleep_for(std::chrono::milliseconds(20));
+		}
+		
+		while((bool)(*Bridge::get_data_value("drop_status"))[0])
+		{
+			PythonScript::Exec(ser_py_file);
+			std::this_thread::sleep_for(std::chrono::milliseconds(20));
+		}
 	}
 
 	void notify_wall_read()
@@ -436,7 +449,7 @@ namespace driver
 		}
 		T data = (T)(*Bridge::get_data_value(tag))[0];
 		if(remove)
-		Bridge::remove_data_value(tag);
+			Bridge::remove_data_value(tag);
 		return data;
 	}
 
@@ -678,9 +691,10 @@ namespace driver
 		turn_cmd += helper::dir_to_char(dir);
 		turn_cmd += '\n';
 		//std::cout << int(dir) << " " << helper::dir_to_char(dir) << std::endl;
+		
+		Bridge::remove_data_value("turn_status");
 		PythonScript::CallPythonFunction<bool, std::string>("SendSerialCommand", turn_cmd);
 
-		Bridge::remove_data_value("turn_status");
 		while(!Bridge::get_data_value("turn_status").has_value())
 		{
 			PythonScript::Exec(ser_py_file);

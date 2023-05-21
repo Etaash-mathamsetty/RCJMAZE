@@ -19,15 +19,16 @@
 bool quitable = false;
 
 //returns shortest possible path to the nearest unvisited tile
-Stack<int> BFS(robot& robot)
+Stack<int> BFS()
 {
+	robot* bot = robot::get_instance();
 	//set everything to an obv invalid index
 	int parent[horz_size * vert_size];
 	for(int i = 0; i < horz_size * vert_size; i++)
 		parent[i] = -1;
 	LinkedList<int> worker;
 	Stack<int> path;
-	int cur_index = robot.index;
+	int cur_index = bot->index;
 	do
 	{
 		if(worker.size() > 0)
@@ -49,14 +50,14 @@ Stack<int> BFS(robot& robot)
 			std::cout << "finished with the maze!" << std::endl;
 			std::cout << "returning to starting..." << std::endl;
 			quitable = true;
-			robot::get_instance()->map[helper::get_index(default_index, default_index)].vis = false;
-			return BFS(*robot::get_instance());
+			bot->map[helper::get_index(default_index, default_index)].vis = false;
+			return BFS();
 		}
 
 		cur_index = worker[0].value;
 
 		// BFS is done
-		if(!robot.map[cur_index].vis)
+		if(!bot->map[cur_index].vis)
 			break;
 		
 	} while(worker.size() > 0);
@@ -67,7 +68,7 @@ Stack<int> BFS(robot& robot)
 	do
 	{
 		path.Push(parent[path[0]]);
-	} while(path[0] != robot.index);
+	} while(path[0] != bot->index);
 	path.Pop();
 
 	return path;
@@ -158,7 +159,7 @@ int main(int argc, char* argv[]){
 		//REAL CODE HERE
 		while(true)
 		{
-			Stack<int> path = BFS(*robot);
+			Stack<int> path = BFS();
 			debug::print_path(path);
 			for(size_t l = 0; l < path.Size(); l++)
 			{
