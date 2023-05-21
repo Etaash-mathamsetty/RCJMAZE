@@ -109,13 +109,13 @@ void pi_send_data(bool walls[4]) {
   PI_SERIAL.print(walls[utils::math::wrapAround((int)s - (int)cur_direction, 4)]);
   PI_SERIAL.print(",");
   PI_SERIAL.println(walls[utils::math::wrapAround((int)w - (int)cur_direction, 4)]);
-  oled.print(walls[utils::math::wrapAround((int)n - (int)cur_direction, 4)]);
-  oled.print(",");
-  oled.print(walls[utils::math::wrapAround((int)e - (int)cur_direction, 4)]);
-  oled.print(",");
-  oled.print(walls[utils::math::wrapAround((int)s - (int)cur_direction, 4)]);
-  oled.print(",");
-  oled.println(walls[utils::math::wrapAround((int)w - (int)cur_direction, 4)]);
+  // oled.print(walls[utils::math::wrapAround((int)n - (int)cur_direction, 4)]);
+  // oled.print(",");
+  // oled.print(walls[utils::math::wrapAround((int)e - (int)cur_direction, 4)]);
+  // oled.print(",");
+  // oled.print(walls[utils::math::wrapAround((int)s - (int)cur_direction, 4)]);
+  // oled.print(",");
+  // oled.println(walls[utils::math::wrapAround((int)w - (int)cur_direction, 4)]);
 }
 
 bool* get_tof_vals(double threshold) {
@@ -209,7 +209,7 @@ void pi_read_vision() {
     }
   }
 
-  get_tof_vals(wall_tresh);
+  //get_tof_vals(wall_tresh);
 }
 
 int returnColor(bool only_black = false);
@@ -699,8 +699,8 @@ void driveCM(float cm, int speed = 200, int tolerance = 10) {
 
   bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
   if (abs(orientationData.orientation.z) < 12) {
-    //pi_read_data();
-    alignAngle(90, false);
+    //pi_read_data();  
+    //alignAngle(90, false);
   }
   
   pi_send_data(true, true);
@@ -890,7 +890,7 @@ void driveCM(float cm, int speed = 200, int tolerance = 10) {
   bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
   if (abs(orientationData.orientation.z) < 12) {
     //pi_read_data();
-    alignAngle(90, false);
+    //alignAngle(90, false);
   }
 
   //pause for blue if detected
@@ -928,7 +928,7 @@ void drive(int encoders, int speed) {
   // encoders = orig_encoders / cos(-orientationData.orientation.z * (2 * PI / 360));
 
 
-  while (abs(motorR.getTicks()) < abs(encoders) && abs(motorL.getTicks()) < abs(encoders) && (tofCalibrated(4) >= 60)) {
+  while (abs(motorR.getTicks()) < abs(encoders) && abs(motorL.getTicks()) < abs(encoders) && (tofCalibrated(4) >= 75)) {
     bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
     // encoders = orig_encoders / cos(abs(orientationData.orientation.z * (2 * PI / 360)));
 
@@ -1088,14 +1088,14 @@ void alignAngle(int speed, bool reset, int tolerance = 5) {
   }
 
   if (tofR3 >= 160 || tofR4 >= 160 && tofR1 >= 160 || tofR2 >= 160) {
-    bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
-    int new_angle = closestToDirection((int) orientationData.orientation.x);
+    // bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
+    // int new_angle = closestToDirection((int) orientationData.orientation.x);
 
-    if ((int) orientationData.orientation.x  - new_angle < 0) {
-      raw_right(abs(orientationData.orientation.x - new_angle), speed);
-    } else {
-      raw_left(abs(orientationData.orientation.x - new_angle), speed);
-    }
+    // if ((int) orientationData.orientation.x  - new_angle < 0) {
+    //   raw_right(abs(orientationData.orientation.x - new_angle), speed);
+    // } else {
+    //   raw_left(abs(orientationData.orientation.x - new_angle), speed);
+    // }
     
     return;
   } else {
