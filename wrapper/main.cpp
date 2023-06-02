@@ -62,6 +62,7 @@ int main(int argc, char **argv)
     if(argc >= 2)
     {
         path_to_bfs = std::string(argv[1]);
+        path_to_bfs = fs::canonical(fs::absolute(path_to_bfs)).c_str();
         std::cout << "executing: " << path_to_bfs << std::endl;
     }
     else
@@ -86,10 +87,11 @@ int main(int argc, char **argv)
 
     std::string parent_path_str = parent_path.c_str();
 
+    pid_t child_pid = 0;
 
     while(true)
     {
-        pid_t child_pid = fork();
+        child_pid = fork();
         if(child_pid > 0)
         {
             std::cout << "parent process starting: " << getpid() << std::endl;
