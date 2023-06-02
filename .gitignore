@@ -6,4 +6,5 @@ BFS
 *.kdev4
 Makefile
 src/Makefile
+wrapper/build
 __pycache__
