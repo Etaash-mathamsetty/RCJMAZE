@@ -94,6 +94,8 @@ void run_parent_and_child(const fs::path& path_to_bfs, const fs::path& parent_pa
         std::cout << "child process starting: " << getpid() << std::endl;
         int ret = execl(path_to_bfs.c_str(), path_to_bfs.c_str(), NULL);
         std::cout << "child ret (failed to run): " << ret << std::endl;
+        //kill parent if we can't execute the inputted path
+        kill(getppid(), SIGKILL);
         exit(ret);
     }
 
