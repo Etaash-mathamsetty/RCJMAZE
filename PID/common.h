@@ -93,3 +93,12 @@ inline void tcaselect(uint8_t i) {
   Wire.write(1 << i);
   Wire.endTransmission();
 }
+
+char dir_to_char(uint8_t cur_dir)
+{
+  if(cur_dir > 3)
+    return 'n';
+
+  const char char_map[4] = {'n', 'e', 's', 'w'};
+  return char_map[cur_dir];
+}
