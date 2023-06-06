@@ -9,12 +9,14 @@
 //#define DEBUG_LOGIC
 #ifndef DEBUG_LOGIC
 #include <wiringPi.h>
+#include <wiringSerial.h>
 #endif
 
 namespace fs = std::filesystem;
 
 const int pin = 7;
-
+const char* serial_port = "/dev/ttyS0";
+int serial_fd = 0;
 
 bool button_pressed()
 {
@@ -87,7 +89,12 @@ void run_parent_and_child(const fs::path& path_to_bfs, const fs::path& parent_pa
         }
 #endif
         std::cout << "killing child process: " << child_pid << std::endl;
-        kill(child_pid, SIGKILL);
+        kill(child_pid, SIGTERM);
+        //send megapi signal to reset itself
+        usleep(300 /* ms */ * 1000 /* us per ms */);
+#ifndef DEBUG_LOGIC
+        serialPuts(serial_fd, "q\n");
+#endif
     }
     else
     {
@@ -96,7 +103,7 @@ void run_parent_and_child(const fs::path& path_to_bfs, const fs::path& parent_pa
         int ret = execl(path_to_bfs.c_str(), path_to_bfs.c_str(), NULL);
         std::cout << "child ret (failed to run): " << ret << std::endl;
         //kill parent if we can't execute the inputted path
-        kill(getppid(), SIGKILL);
+        kill(getppid(), SIGTERM);
         exit(ret);
     }
 
@@ -144,6 +151,12 @@ int main(int argc, char **argv)
 #ifndef DEBUG_LOGIC
     wiringPiSetup();
     pinMode(pin, INPUT);
+    serial_fd = serialOpen(serial_port, 115200);
+    if(serial_fd < 0)
+    {
+        std::cout << "failed to open serial port: " << serial_port << std::endl;
+        return -1;
+    }
 #endif
 
     if(!path_to_bfs.has_parent_path())
