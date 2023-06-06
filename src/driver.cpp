@@ -393,7 +393,7 @@ namespace driver
 			temp.checkpoint = checkpoint;
 			temp.bot = bot_here;
 		}
-		std::cout << "loading save file!" << std::endl;
+		std::cout << "loaded save file!" << std::endl;
 	}
 
 	CREATE_DRIVER(void, init_robot)
@@ -477,6 +477,8 @@ namespace driver
 		//debug::print_node(bot->map[bot->index]);
 		
 		Bridge::remove_data_value("victim");
+		Bridge::remove_data_value("NRK");
+		Bridge::remove_data_value("left");
 	
 		if(!bot->map[bot->index].vic)
 		{

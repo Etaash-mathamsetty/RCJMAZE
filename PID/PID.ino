@@ -219,7 +219,7 @@ void pi_read_vision() {
         pi_send_tag("drop_status");
         PI_SERIAL.println("0.0");
       }
-    } else if (c == 'q') {
+    } else if (c == 'r') {
       if(cur_cmd.length() > 0 && cur_cmd[0] == 'd') {
         pi_send_tag("drop_status");
         PI_SERIAL.println("1.0");
@@ -297,16 +297,19 @@ void pi_read_data() {
           Serial.println("ERR: Invalid Parameter");
         }
       }
-      cur_cmd.remove(0);
-      cur_cmd += c;
+      if(!(c == 'r' && cur_cmd[0] == 'd')) 
+      {
+        cur_cmd.remove(0);
+        cur_cmd += c;
+      }
     }
-    else if (c >= '0' && c <= '9') {
+    if (c >= '0' && c <= '9') {
       if(cur_cmd.length() > 0 && cur_cmd[0] == 'd')
       {
         num = c - '0';
       }
     }
-    else if (c == 'l') {
+    if (c == 'l') {
       if(cur_cmd.length() > 0 && cur_cmd[0] == 'd') {
         pi_send_tag("drop_status");
         PI_SERIAL.println("1.0");
@@ -368,7 +371,7 @@ void pi_read_data() {
         //Serial.println("sending wall data");
       }
     }
-    else if (c == 'e' || c == 'w' || c == 's' || c == 'n') {
+    if (c == 'e' || c == 'w' || c == 's' || c == 'n') {
       if (cur_cmd.length() > 0) {
         if (cur_cmd[0] == 'f' || cur_cmd[0] == 'g') {
           Serial.print("turn to ");
@@ -398,7 +401,7 @@ void pi_read_data() {
         continue;
       }
     }
-    else if (c == '\n' || c == '\0') {
+    if (c == '\n' || c == '\0') {
       if (cur_cmd.length() > 0) {
         if (cur_cmd[0] == 'g' || cur_cmd[0] == 'f') {
           Serial.println("FORWARD");
@@ -1609,7 +1612,8 @@ unsigned int _tofCalibrated(int select)
 unsigned int tofCalibrated(int select)
 {
   uint32_t dist = 0;
-  for(int n = 0; n < 2; n++)
+  const int samples = 2;
+  for(int n = 0; n < samples; n++)
   {
     dist += _tofCalibrated(select);
   }
@@ -1637,20 +1641,11 @@ void oled_display_walls(bool walls[4])
 
 char dir_to_char(uint8_t cur_dir)
 {
-  switch(cur_dir)
-  {
-    case n:
-      return 'n';
-    case e:
-      return 'e';
-    case s:
-      return 's';
-    case w:
-      return 'w';
-    default:
-      return 'n';
-  }
-  return 'n';
+  if(cur_dir > 3)
+    return 'n';
+
+  const char char_map[4] = {'n', 'e', 's', 'w'};
+  return char_map[cur_dir];
 }
 
 //#define TEST
