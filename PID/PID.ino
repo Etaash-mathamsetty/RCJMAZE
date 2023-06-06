@@ -14,9 +14,26 @@
 
 using namespace utils;
 
+bool restart = false;
 
 void setup() {
-//#ifndef FAKE_SERIAL
+  if(restart)
+  {
+    oled.clearDisplay();
+    oled.clear();
+    oled.setCursor(0,0);
+    oled.println("Reinit...");
+    delay(200);
+    //reinit all variables here:
+    utils::resetBoost();
+    utils::resetTicks();
+    utils::resetServo();
+    cur_direction = 0;
+    global_angle = 0.0;
+  }
+
+  restart = false;
+#ifndef FAKE_SERIAL
   PI_SERIAL.begin(115200);
   Serial.begin(9600);
   setMotors(&motorR, &motorL);
@@ -244,6 +261,17 @@ void pi_read_vision() {
         num = c - '0';
       }
     }
+    else if(c == 'q')
+    {
+      Serial.println("Restarting...");
+      oled.clear();
+      oled.clearDisplay();
+      oled.setCursor(0, 0);
+      oled.println("Restarting...");
+      delay(200);
+      restart = true;
+      return;
+    }
   }
 
   //get_tof_vals(wall_tresh);
@@ -287,7 +315,7 @@ void pi_read_data() {
   String cur_cmd = "";
   Serial.println(data);
   for (char c : data) {
-    if (c == 'g' || c == 'f' || c == 't' || c == 'd') {
+    if (c == 'g' || c == 'f' || c == 't' || c == 'd' || c == 'q') {
       if (cur_cmd.length() > 0) {
         if (cur_cmd[0] == 'g' || cur_cmd[0] == 'f') {
           Serial.println("FORWARD");
@@ -1364,6 +1392,8 @@ void drive(int encoders, int speed) {
         auto left_ticks = motorL.getTicks();
         stopMotors();
         pi_read_vision();
+        if(restart)
+          return;
         oled.println("detected");
         motorR.getTicks() = right_ticks;
         motorL.getTicks() = left_ticks;
@@ -1666,6 +1696,11 @@ void loop()
   {
     //pi_read_vision();
     pi_read_data();
+  }
+
+  if(restart)
+  {
+    setup();
   }
 
   oled.print("dir: ");
