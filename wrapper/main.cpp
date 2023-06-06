@@ -174,6 +174,12 @@ int main(int argc, char **argv)
 #ifndef DEBUG_LOGIC
     wiringPiSetup();
     pinMode(pin, INPUT);
+    serial_fd = serialOpen(serial_port, 115200);
+    if(serial_fd < 0)
+    {
+        std::cout << "failed to open serial port: " << serial_port << std::endl;
+        return -1;
+    }
 #endif
 
     if(!path_to_bfs.has_parent_path())
