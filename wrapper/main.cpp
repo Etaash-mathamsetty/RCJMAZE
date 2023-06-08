@@ -26,6 +26,7 @@ bool button_pressed()
     {
         if(!digitalRead(pin))
             return false;
+	usleep(1000);
     }
 #endif
     return true;
@@ -39,6 +40,7 @@ bool button_released()
     {
         if(digitalRead(pin))
             return false;
+	usleep(1000);
     }
 #endif
     return true;
@@ -64,7 +66,8 @@ void run_parent_and_child(const fs::path& path_to_bfs, const fs::path& parent_pa
     {
         std::cout << "parent process starting: " << getpid() << std::endl;
         //wait for child to start
-        sleep(2);
+        sleep(7);
+	std::cout << "delay over" << std::endl;
         while(!button_pressed())
         {
             if(has_child_exited(child_pid))

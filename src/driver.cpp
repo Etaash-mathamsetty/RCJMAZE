@@ -414,7 +414,7 @@ namespace driver
 	CREATE_DRIVER(void, drop_vic, int num, bool left)
 	{
 		//d [drop] N [number of kits, single digit only, can be 0 which will trigger the led] l/r [direction] \n
-		std::string direction = left ? "l" : "r";
+		std::string direction = left ? "l" : "q";
 		Bridge::remove_data_value("drop_status");
 		PythonScript::CallPythonFunction<bool, std::string>("SendSerialCommand", com::drop_vic + std::to_string(num) + direction + "\n");
 		
@@ -585,11 +585,12 @@ namespace driver
 		Bridge::remove_data_value("victim");
 		
 		//wait for it to finish running
+		auto time_step = std::chrono::high_resolution_clock::now();
 		while((bool)(*Bridge::get_data_value("forward_status"))[0]) 
 		{ 
 			PythonScript::Exec(ser_py_file);
 			PythonScript::Exec(cv_py_file);
-			if(!bot->map[bot->index].vic)
+			if(!bot->map[bot->index].vic && std::chrono::high_resolution_clock::now() - time_step >= std::chrono::milliseconds(600))
 			{
 				for(int i = 0; i < 2; i++)
 				{
