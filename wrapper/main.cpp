@@ -110,7 +110,7 @@ void run_parent_and_child(const fs::path& path_to_bfs, const fs::path& parent_pa
         if(serial_fd < 0)
         {
             std::cout << "failed to open serial port: " << serial_port << std::endl;
-            return -1;
+            exit(EXIT_FAILURE);
         }
         serialPuts(serial_fd, "q\n");
         usleep(100 /* ms */ * 1000 /* us per ms*/);
