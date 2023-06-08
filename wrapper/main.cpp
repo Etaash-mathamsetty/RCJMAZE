@@ -107,6 +107,8 @@ void run_parent_and_child(const fs::path& path_to_bfs, const fs::path& parent_pa
         usleep(300 /* ms */ * 1000 /* us per ms */);
 #ifndef DEBUG_LOGIC
         serialPuts(serial_fd, "q\n");
+        usleep(100 /* ms */ * 1000 /* us per ms*/);
+        serialClose(serial_fd);
 #endif
     }
     else
