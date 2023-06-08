@@ -104,13 +104,19 @@ void run_parent_and_child(const fs::path& path_to_bfs, const fs::path& parent_pa
         std::cout << "killing child process: " << child_pid << std::endl;
         kill(child_pid, SIGTERM);
         //send megapi signal to reset itself
-        usleep(300 /* ms */ * 1000 /* us per ms */);
+        usleep(500 /* ms */ * 1000 /* us per ms */);
 #ifndef DEBUG_LOGIC
+        serial_fd = serialOpen(serial_port, 115200);
+        if(serial_fd < 0)
+        {
+            std::cout << "failed to open serial port: " << serial_port << std::endl;
+            return -1;
+        }
         serialPuts(serial_fd, "q\n");
         usleep(100 /* ms */ * 1000 /* us per ms*/);
         serialClose(serial_fd);
-	//wait for megapi to finish restarting
-	sleep(5);
+        //wait for megapi to finish restarting
+        sleep(5);
 #endif
     }
     else
@@ -168,12 +174,6 @@ int main(int argc, char **argv)
 #ifndef DEBUG_LOGIC
     wiringPiSetup();
     pinMode(pin, INPUT);
-    serial_fd = serialOpen(serial_port, 115200);
-    if(serial_fd < 0)
-    {
-        std::cout << "failed to open serial port: " << serial_port << std::endl;
-        return -1;
-    }
 #endif
 
     if(!path_to_bfs.has_parent_path())
