@@ -47,7 +47,17 @@ bool button_released()
 bool has_child_exited(pid_t pid)
 {
     int status = 0;
-    waitpid(pid, &status, WNOHANG);
+    pid_t ret = waitpid(pid, &status, WNOHANG);
+    if(ret == -1)
+    {
+        std::cerr << "error with waitpid" << std::endl;
+        exit(EXIT_FAILURE);
+    }
+    if(ret == 0)
+    {
+        return false;
+    }
+    
 
     if(WIFEXITED(status) && WEXITSTATUS(status) == 0)
     {
