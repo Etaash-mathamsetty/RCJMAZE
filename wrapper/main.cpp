@@ -14,7 +14,7 @@
 
 namespace fs = std::filesystem;
 
-const int pin = 7;
+const int pin = 1;
 const char* serial_port = "/dev/ttyS0";
 int serial_fd = 0;
 
