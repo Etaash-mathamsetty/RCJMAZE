@@ -76,7 +76,7 @@ void run_parent_and_child(const fs::path& path_to_bfs, const fs::path& parent_pa
     {
         std::cout << "parent process starting: " << getpid() << std::endl;
         //wait for child to start
-        sleep(7);
+        sleep(5);
 	std::cout << "delay over" << std::endl;
         while(!button_pressed())
         {
@@ -109,6 +109,8 @@ void run_parent_and_child(const fs::path& path_to_bfs, const fs::path& parent_pa
         serialPuts(serial_fd, "q\n");
         usleep(100 /* ms */ * 1000 /* us per ms*/);
         serialClose(serial_fd);
+	//wait for megapi to finish restarting
+	sleep(5);
 #endif
     }
     else
