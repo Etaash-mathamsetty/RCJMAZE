@@ -26,6 +26,7 @@ void setup() {
     delay(200);
     //reinit all variables here:
     utils::resetBoost();
+    utils::stopMotors();
     utils::resetTicks();
     utils::resetServo();
     cur_direction = 0;
