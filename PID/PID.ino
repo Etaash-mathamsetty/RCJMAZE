@@ -326,11 +326,8 @@ void pi_read_data() {
           Serial.println("ERR: Invalid Parameter");
         }
       }
-      if(!(c == 'r' && cur_cmd[0] == 'd')) 
-      {
-        cur_cmd.remove(0);
-        cur_cmd += c;
-      }
+      cur_cmd.remove(0);
+      cur_cmd += c;
     }
     if (c >= '0' && c <= '9') {
       if(cur_cmd.length() > 0 && cur_cmd[0] == 'd')
@@ -438,6 +435,17 @@ void pi_read_data() {
           driveCM(30, 110, 1);
         } else {
           Serial.println("ERR: Invalid Parameter");
+        }
+        if(cur_cmd[0] == 'q')
+        {
+          Serial.println("restarting");
+          oled.clear();
+          oled.clearDisplay();
+          oled.setCursor(0,0);
+          oled.println("restarting");
+          delay(200);
+          restart = true;
+          return;
         }
       }
       cur_cmd = "";
