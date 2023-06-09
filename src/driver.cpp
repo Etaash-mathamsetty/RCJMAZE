@@ -414,7 +414,7 @@ namespace driver
 	CREATE_DRIVER(void, drop_vic, int num, bool left)
 	{
 		//d [drop] N [number of kits, single digit only, can be 0 which will trigger the led] l/r [direction] \n
-		std::string direction = left ? "l" : "q";
+		std::string direction = left ? "l" : "r";
 		Bridge::remove_data_value("drop_status");
 		PythonScript::CallPythonFunction<bool, std::string>("SendSerialCommand", com::drop_vic + std::to_string(num) + direction + "\n");
 		
