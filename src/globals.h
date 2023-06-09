@@ -4,8 +4,9 @@
 #include <inttypes.h>
 #include <assert.h>
 #include <sstream>
+#include <utility>
 
-//#define SIMULATION
+#define SIMULATION
 #define DEBUG
 //#define SIM_MOV_DELAY
 
@@ -20,7 +21,8 @@ struct simulation_node {
 		bool vic : 1;
 		bool bot : 1;
 		bool vis : 1;
-		bool ramp : 1;
+		//ramp up is first bit, ramp down is second bit
+		uint8_t ramp : 2;
 		bool checkpoint : 1;
 		bool black : 1;
 	private:
@@ -33,7 +35,7 @@ struct simulation_node {
 struct node {
 	public:
 #ifdef SIMULATION
-		node(simulation_node& node)
+		node(const simulation_node& node)
 		{
 			N = node.N;
 			S = node.S;
@@ -56,10 +58,17 @@ struct node {
 		bool vic : 1; //have we already seen a victim on this tile
 		bool bot : 1;
 		bool vis : 1;
-		bool ramp : 1;
+		uint8_t ramp : 2;
 		bool checkpoint : 1;
 	private:
 		uint8_t garbage : 7;
+};
+
+struct ramp_pair
+{
+	//pair: 1st element: floor, 2nd element: index of ramp in that floor
+	std::pair<int, int> ramp1;
+	std::pair<int, int> ramp2;
 };
 
 enum class DIR{
@@ -103,7 +112,7 @@ namespace com
 	const char drop_vic = 'd';
 };
 
-const std::string init_py_file = "vars.py";
+const std::string init_py_file = "init.py";
 const std::string cv_py_file = "cv.py";
 const std::string ser_py_file = "serial.py";
 const std::string cleanup_py_file = "cleanup.py";
@@ -111,10 +120,10 @@ const std::string cleanup_py_file = "cleanup.py";
 #ifdef SIMULATION
 //simulation field
 /* number of simulation_node* we need to allocate for second_floor */
-const int num_second_floors = 5;
+const int max_num_floors = 6;
 inline int num_floors = 1;
 inline int floor_num = 0;
-inline simulation_node** second_floor;
+inline simulation_node** floors;
 inline simulation_node* nodes;
 const static bool is_simulation = true;
 #else

@@ -19,7 +19,7 @@ class robot
 		DIR dir;
 		int index;
 		node* map;
-		node** second_floor;
+		node** floors;
 
 		//helper funcs
 		bool forward();

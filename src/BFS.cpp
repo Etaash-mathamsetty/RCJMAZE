@@ -83,10 +83,10 @@ int main(int argc, char* argv[]){
 	sigaction(SIGINT, &sigIntHandler, NULL);
 
 #ifdef SIMULATION
-	second_floor = new simulation_node*[num_second_floors];
+	floors = new simulation_node*[max_num_floors];
+	memset(floors, 0, sizeof(simulation_node*) * max_num_floors);
 
-
-	for(int i = 1; i < num_second_floors + 1; i++)
+	for(int i = 1; i < max_num_floors + 1; i++)
 	{
 		if(argc > i)
 			sim::read_map_from_file(argv[i]);
@@ -124,33 +124,29 @@ int main(int argc, char* argv[]){
 			//BFS code goes here
 			while(true)
 			{
-				Stack<int> path = BFS(*robot);
+				Stack<int> path = BFS();
 				debug::print_path(path);
 				for(size_t l = 0; l < path.Size(); l++)
 				{
-					if(path[l] == robot->index+1)
+					switch(path[l] - robot->index)
 					{
-						driver::turn_to(DIR::E);
-						robot->forward();
+						case 1:
+							driver::turn_to(DIR::E);
+							break;
+						case -1:
+							driver::turn_to(DIR::W);
+							break;
+						case -horz_size:
+							driver::turn_to(DIR::N);
+							break;
+						case horz_size:
+							driver::turn_to(DIR::S);
+							break;
 					}
-					else if(path[l] == robot->index-1)
-					{
-						driver::turn_to(DIR::W);
-						robot->forward();
-					}
-					else if(path[l] == robot->index + horz_size)
-					{
-						driver::turn_to(DIR::S);
-						robot->forward();
-					}
-					else if(path[l] == robot->index - horz_size)
-					{
-						driver::turn_to(DIR::N);
-						robot->forward();
-					}
+					robot->forward();
 					debug::print_map();
 				}
-				if(quitable && robot->index == helper::get_index(default_index, default_index))
+				if(quitable && robot->index == helper::get_index(default_index, default_index) && floor_num == 0)
 					break;
 			}
 		}

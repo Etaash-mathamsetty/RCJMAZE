@@ -1,6 +1,7 @@
 #include "simulation.h"
 #include "driver.h"
 #include <algorithm>
+#include <utility>
 #include <filesystem>
 
 namespace sim
@@ -8,12 +9,15 @@ namespace sim
 #ifdef SIMULATION
     inline void set_node_values(simulation_node& node, char c)
     {
-        node.bot |= (tolower(c) == 'x');
+        char _c = tolower(c);
+        node.bot |= (_c == 'x');
         node.vis |= node.bot;
-        node.vic |= (tolower(c) == 'v');
-        node.checkpoint |= (tolower(c) == 'c');
-        node.black |= (tolower(c) == 'b');
-        node.ramp |= (tolower(c) == 'r');
+        node.vic |= (_c == 'v');
+        node.checkpoint |= (_c == 'c');
+        node.black |= (_c == 'b');
+        //using & operator just in case
+        node.ramp |= (_c == 'u') & 0b1;
+        node.ramp |= ((_c == 'd') << 1) & 0b10;
     }
 
     int floor_number = 0;
@@ -32,24 +36,10 @@ namespace sim
         _horz_size++;
         in >> _vert_size;
 
-        //init with a random value
-        int xy = 0;
-        int& _second_floor_entrance = xy;
-
-        if(floor_number != 0)
-        {
-            _second_floor_entrance = second_floor_entrance[floor_number - 1];
-            second_floor[floor_number - 1] = new simulation_node[horz_size * vert_size];
-            memset(second_floor[floor_number - 1], 0 , sizeof(simulation_node) * horz_size * vert_size);
-            nodes = second_floor[floor_number - 1];
-        }
-        else
-        {
-            nodes = new simulation_node[horz_size * vert_size];
-            memset(nodes, 0, sizeof(simulation_node) * horz_size * vert_size);
-        }
-
-        floor_number++;
+        std::vector<int>* ramps_cur_floor_pos = (ramp_positions + floor_number); 
+        floors[floor_number] = new simulation_node[horz_size * vert_size];
+        memset(floors[floor_number], 0, sizeof(simulation_node) * horz_size * vert_size);
+        nodes = floors[floor_number];
 
         if(std::filesystem::exists("save.txt"))
             return;
@@ -84,8 +74,8 @@ namespace sim
                     if(node.bot)
                         sim_robot_index = helper::get_index(v,i);
                     
-                    if(node.ramp && floor_number != 0)
-                        _second_floor_entrance = helper::get_index(v,i);
+                    if(node.ramp)
+                        ramps_cur_floor_pos->push_back(helper::get_index(v,i));
                     //print_node(nodes[get_index(v,i)]);
                     //nodes[get_index(v,i)] = node;
                     //horz_size++;
@@ -116,8 +106,8 @@ namespace sim
                 if(node.bot)
                     sim_robot_index = helper::get_index(v,i);
 
-                if(node.ramp && floor_number != 0)
-                    _second_floor_entrance = helper::get_index(v,i);
+                if(node.ramp)
+                    ramps_cur_floor_pos->push_back(helper::get_index(v,i));
             }
             //printf("loop 3\n");
             for(float i = 0; i < _horz_size; i+=0.5)
@@ -136,13 +126,46 @@ namespace sim
                 if(node.bot)
                     sim_robot_index = helper::get_index(v,i);
                 
-                if(node.ramp && floor_number != 0)
-                    _second_floor_entrance = helper::get_index(v,i);
+                if(node.ramp)
+                    ramps_cur_floor_pos->push_back(helper::get_index(v,i));
             }
             //v++;
         }
+        //create ramp pairs here: (create pairs, not on the first floor)
+        if(floor_number >= 1)
+        {
+            std::string map_key = std::to_string(floor_number) + "," + std::to_string(floor_number-1);
+            ramp_pair pair;
+            for(int i = 0; i < ramps_cur_floor_pos->size(); i++)
+            {
+                //recheck this logic
+                if(floors[floor_number][ramp_positions[floor_num][i]].ramp & 0b1 && floors[floor_num - 1][ramp_positions[floor_num - 1][i]].ramp & 0b10)
+                {
+                    pair.ramp1 = std::make_pair(floor_num - 1, ramp_positions[floor_num - 1][i]);
+                    pair.ramp2 = std::make_pair(floor_num, ramp_positions[floor_num][i]);
+                    ramp_pairs[map_key].push_back(pair);
+                }
+            }
+        }
+        
+        floor_number++;
         num_floors = floor_number;
         return;
+    }
+
+    ramp_pair* get_ramp_pair(int floor_num, int index)
+    {
+        std::string map_key = std::to_string(floor_number) + "," + std::to_string(floor_number - 1);
+        ramp_pair pair;
+        for(int i = 0; i < ramp_pairs[map_key].size(); i++)
+        {
+            if(ramp_pairs[map_key][i].ramp1.second == index)
+            {
+                return &ramp_pairs[map_key][i];
+            }
+        }
+
+        return nullptr;
     }
 
     //vim style commands ig?

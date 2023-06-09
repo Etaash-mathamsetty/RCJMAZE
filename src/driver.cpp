@@ -19,8 +19,8 @@ namespace driver
 		std::ifstream in;
 		in.open("save.txt");
 		in >> num_floors;
-		if(num_floors > 1 && second_floor == nullptr)
-			second_floor = new simulation_node*[num_second_floors];
+		if(num_floors > 1 && floors == nullptr)
+			floors = new simulation_node*[max_num_floors];
 		bool n, s, e, w, vic, bot_here, vis, ramp, checkpoint, black;
 		for(int i = 0; i < horz_size * vert_size; i++)
 		{
@@ -54,27 +54,29 @@ namespace driver
 			for(int i = 0; i < horz_size * vert_size; i++)
 			{
 				in >> n >> s >> e >> w >> vic >> bot_here >> vis >> ramp >> checkpoint;
-				bot->second_floor[l][i].N = n;
-				bot->second_floor[l][i].S = s;
-				bot->second_floor[l][i].E = e;
-				bot->second_floor[l][i].W = w;
-				bot->second_floor[l][i].bot = bot_here;
-				bot->second_floor[l][i].vic = vic;
-				bot->second_floor[l][i].vis = vis;
-				bot->second_floor[l][i].ramp = ramp;
-				bot->second_floor[l][i].checkpoint = checkpoint;
+				bot->floors[l][i].N = n;
+				bot->floors[l][i].S = s;
+				bot->floors[l][i].E = e;
+				bot->floors[l][i].W = w;
+				bot->floors[l][i].bot = bot_here;
+				bot->floors[l][i].vic = vic;
+				bot->floors[l][i].vis = vis;
+				bot->floors[l][i].ramp = ramp;
+				bot->floors[l][i].checkpoint = checkpoint;
+				if(bot->floors[l][i].bot)
+					sim::sim_robot_index = i;
 
 				in >> n >> s >> e >> w >> vic >> bot_here >> vis >> ramp >> checkpoint >> black;
-				second_floor[l][i].N = n;
-				second_floor[l][i].S = s;
-				second_floor[l][i].E = e;
-				second_floor[l][i].W = w;
-				second_floor[l][i].vic = vic;
-				second_floor[l][i].vis = vis;
-				second_floor[l][i].ramp = ramp;
-				second_floor[l][i].black = black;
-				second_floor[l][i].bot = bot_here;
-				second_floor[l][i].checkpoint = checkpoint;
+				floors[l][i].N = n;
+				floors[l][i].S = s;
+				floors[l][i].E = e;
+				floors[l][i].W = w;
+				floors[l][i].vic = vic;
+				floors[l][i].vis = vis;
+				floors[l][i].ramp = ramp;
+				floors[l][i].black = black;
+				floors[l][i].bot = bot_here;
+				floors[l][i].checkpoint = checkpoint;
 			}
 		}
 	}
@@ -87,31 +89,19 @@ namespace driver
 		std::ofstream out;
 		out.open("save.txt");
 		out << num_floors << std::endl;
+		for(int l = 0; l < num_floors; l++)
 		for(int i = 0; i < horz_size * vert_size; i++)
 		{
-			out << bot->map[i].N << " " << bot->map[i].S << " " << bot->map[i].E << " " << bot->map[i].W
-			<< " " << bot->map[i].vic << " " << bot->map[i].bot << " " << bot->map[i].vis << " " << bot->map[i].ramp 
-			<< " " << bot->map[i].checkpoint << std::endl;
-			out << nodes[i].N << " " << nodes[i].S << " " << nodes[i].E << " " << nodes[i].W
-			<< " " << nodes[i].vic << " " << nodes[i].bot << " " << nodes[i].vis << " " << nodes[i].ramp
-			<< " " << nodes[i].checkpoint << " " << nodes[i].black << std::endl;
-		}
-		if(num_floors > 1)
-		{
-			for(int l = 0; l < num_floors; l++)
-			for(int i = 0; i < horz_size * vert_size; i++)
-			{
-				out << bot->second_floor[l][i].N << " " << bot->second_floor[l][i].S << " ";
-				out << bot->second_floor[l][i].E << " " << bot->second_floor[l][i].W << " ";
-				out << bot->second_floor[l][i].vic << " " << bot->second_floor[l][i].bot << " ";
-				out << bot->second_floor[l][i].vis << " " << bot->second_floor[l][i].ramp << " ";
-				out << bot->second_floor[l][i].checkpoint << std::endl;
+			out << bot->floors[l][i].N << " " << bot->floors[l][i].S << " ";
+			out << bot->floors[l][i].E << " " << bot->floors[l][i].W << " ";
+			out << bot->floors[l][i].vic << " " << bot->floors[l][i].bot << " ";
+			out << bot->floors[l][i].vis << " " << bot->floors[l][i].ramp << " ";
+			out << bot->floors[l][i].checkpoint << std::endl;
 
-				out << second_floor[l][i].N << " " << second_floor[l][i].S << " " << second_floor[l][i].E << " ";
-				out << second_floor[l][i].W << " " << second_floor[l][i].vic << " " << second_floor[l][i].bot << " ";
-				out << second_floor[l][i].vis << " " << second_floor[l][i].ramp << " " << second_floor[l][i].checkpoint << " ";
-				out << second_floor[l][i].black << std::endl;
-			}
+			out << floors[l][i].N << " " << floors[l][i].S << " " << floors[l][i].E << " ";
+			out << floors[l][i].W << " " << floors[l][i].vic << " " << floors[l][i].bot << " ";
+			out << floors[l][i].vis << " " << floors[l][i].ramp << " " << floors[l][i].checkpoint << " ";
+			out << floors[l][i].black << std::endl;
 		}
 	}
 
@@ -154,18 +144,21 @@ namespace driver
 			case DIR::N:
 			{
 				if(helper::is_valid_index(bot->index - horz_size) && helper::is_valid_index(sim::sim_robot_index - horz_size) && !bot->map[bot->index].N){
-					bot->map[bot->index].bot = false;
-					nodes[sim::sim_robot_index].bot = false;
-					bot->index -= horz_size;
-					sim::sim_robot_index -= horz_size;
-					bot->map[bot->index].bot = true;
-					nodes[sim::sim_robot_index].bot = true;
-
-					if(ramp)
+					if(!ramp)
+					{
+						bot->map[bot->index].bot = false;
+						nodes[sim::sim_robot_index].bot = false;
+						bot->index -= horz_size;
+						sim::sim_robot_index -= horz_size;
+						bot->map[bot->index].bot = true;
+						nodes[sim::sim_robot_index].bot = true;
+					}
+					else
 					{
 						floor_num++;
-						nodes = second_floor[floor_num - 1];
-						sim::sim_robot_index = sim::second_floor_entrance[floor_num - 1];
+						nodes = floors[floor_num];
+						std::cerr << "second floor no workie!" << std::endl;
+						exit(EXIT_FAILURE);
 					}
 				}
 				else{
@@ -179,18 +172,21 @@ namespace driver
 			{
 				if(helper::is_valid_index(bot->index + 1) && helper::is_valid_index(sim::sim_robot_index + 1) && !(bot->map[bot->index].E))
 				{
-					bot->map[bot->index].bot = false;
-					nodes[sim::sim_robot_index].bot = false;
-					(bot->index)++;
-					sim::sim_robot_index++;
-					bot->map[bot->index].bot = true;
-					nodes[sim::sim_robot_index].bot = true;
-
-					if(ramp) 
+					if(!ramp)
+					{
+						bot->map[bot->index].bot = false;
+						nodes[sim::sim_robot_index].bot = false;
+						(bot->index)++;
+						sim::sim_robot_index++;
+						bot->map[bot->index].bot = true;
+						nodes[sim::sim_robot_index].bot = true;
+					}
+					else
 					{
 						floor_num++;
-						nodes = second_floor[floor_num - 1];
-						sim::sim_robot_index = sim::second_floor_entrance[floor_num - 1];
+						nodes = floors[floor_num];
+						std::cerr << "second floor no workie!" << std::endl;
+						exit(EXIT_FAILURE);
 					}
 				}
 				else
@@ -204,18 +200,22 @@ namespace driver
 			case DIR::S:
 			{
 				if(helper::is_valid_index(bot->index + horz_size) && helper::is_valid_index(sim::sim_robot_index + horz_size) && !bot->map[bot->index].S){
-					bot->map[bot->index].bot = false;
-					nodes[sim::sim_robot_index].bot = false;
-					bot->index += horz_size;
-					sim::sim_robot_index += horz_size;
-					bot->map[bot->index].bot = true;
-					nodes[sim::sim_robot_index].bot = true;
-
-					if(ramp)
+					if(!ramp)
+					{
+						bot->map[bot->index].bot = false;
+						nodes[sim::sim_robot_index].bot = false;
+						bot->index += horz_size;
+						sim::sim_robot_index += horz_size;
+						bot->map[bot->index].bot = true;
+						nodes[sim::sim_robot_index].bot = true;
+					}
+					else
 					{
 						floor_num++;
-						nodes = second_floor[floor_num - 1];
-						sim::sim_robot_index = sim::second_floor_entrance[floor_num - 1];
+						nodes = floors[floor_num];
+						std::cerr << "second floor no workie!" << std::endl;
+						exit(EXIT_FAILURE);
+
 					}
 				}
 				else
@@ -229,18 +229,21 @@ namespace driver
 			case DIR::W:
 			{
 				if(helper::is_valid_index(bot->index - 1) && helper::is_valid_index(sim::sim_robot_index - 1) && !(bot->map[bot->index].W)){
-					bot->map[bot->index].bot = false;
-					nodes[sim::sim_robot_index].bot = false;
-					(bot->index)--;
-					sim::sim_robot_index--;
-					bot->map[bot->index].bot = true;
-					nodes[sim::sim_robot_index].bot = true;
-
-					if(ramp)
+					if(!ramp)
+					{
+						bot->map[bot->index].bot = false;
+						nodes[sim::sim_robot_index].bot = false;
+						(bot->index)--;
+						sim::sim_robot_index--;
+						bot->map[bot->index].bot = true;
+						nodes[sim::sim_robot_index].bot = true;
+					}
+					else
 					{
 						floor_num++;
-						nodes = second_floor[floor_num - 1];
-						sim::sim_robot_index = sim::second_floor_entrance[floor_num - 1];
+						nodes = floors[floor_num];
+						std::cerr << "second floor no workie!" << std::endl;
+						exit(EXIT_FAILURE);
 					}
 				}
 				else

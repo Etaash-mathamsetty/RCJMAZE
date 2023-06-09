@@ -31,6 +31,7 @@ if not simulation:
     if not video1.isOpened():
         print("failed to open video 1")
     ser = serial.Serial(port = serial_port, baudrate = 115200)
+    ser.flush()
 
 def SendSerialCommand(command):
     print("sending command: " + command)
