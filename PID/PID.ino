@@ -2,7 +2,7 @@
 //#define FAKE_SERIAL
 #define DEBUG_DISPLAY
 //#define MOTORSOFF
-// #define TEST
+#define TEST
 // #define NO_PI //basic auto when no raspberry pi (brain stem mode)
 
 #include "Motors.h"
@@ -591,7 +591,7 @@ void raw_right(int relative_angle, int speed) {
   while (abs(orientation - angle) > 1) {
 
     // Serial.print("Orientation Right: ");
-    // Serial.print(orientation);
+    // Serial.print(orientation);rightright
     // Serial.print("\t");
     // Serial.print(global_angle);
     // Serial.print("\t");
@@ -1108,7 +1108,7 @@ int closestToDirection(int num) {
   }
 }
 
-void alignAngle(int speed, bool reset, int tolerance = 5) {
+void alignAngle(bool reset, int tolerance = 5) {
   int tofR1, tofR2; 
   int tofR3, tofR4;
   bool tofAlign = false;
@@ -1117,15 +1117,24 @@ void alignAngle(int speed, bool reset, int tolerance = 5) {
   tofR1 = tofCalibrated(0); 
   tofR2 = tofCalibrated(1); 
   tofR3 = tofCalibrated(2); 
-  tofR4 = tofCalibrated(3); 
+  tofR4 = tofCalibrated(3);
+  Serial.print(tofR1);
+  Serial.print(" ");
+  Serial.print(tofR2);
+  Serial.print(" ");
+  Serial.print(tofR3);
+  Serial.print(" ");
+  Serial.println(tofR4);
+
+
 
          
-  if (tofR1 >= 160 || tofR2 >= 160) {
+  // if (tofR1 >= 160 || tofR2 >= 160) {
     lnum = 3;
     rnum = 2;
-  }
+  // }
 
-  if (tofR3 >= 160 || tofR4 >= 160 && tofR1 >= 160 || tofR2 >= 160) {
+  if ((tofR3 >= 160 || tofR4 >= 160) && (tofR1 >= 160 || tofR2 >= 160)) {
     // bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
     // int new_angle = closestToDirection((int) orientationData.orientation.x);
 
@@ -1134,33 +1143,45 @@ void alignAngle(int speed, bool reset, int tolerance = 5) {
     // } else {
     //   raw_left(abs(orientationData.orientation.x - new_angle), speed);
     // }
-    
+    Serial.println("too high values");
     return;
-  } else {
-    // tofAlign = true;
-  }
+  } 
 
   float len = abs((int)tofCalibrated(lnum) - (int)tofCalibrated(rnum));
+  Serial.print("Length: ");
+  Serial.println(len);
 
-  // oled.println((int) tofCalibrated(0) - (int)tofCalibrated(1));
-  // delay(2000);
-
-  if(len <= tolerance)
+  if(len <= tolerance) {
+    Serial.println("return");
     return;
+  }
 
   const int width = TOF_DISTANCE;
-  const int angle = atan(width/len) * (180/PI); 
+  const int angle = atan(width/len) * (180/PI);
+  const int kP = 4.5;
 
   if ( (int) tofCalibrated(lnum) - (int)tofCalibrated(rnum) < 0) {
-
     while(len >= tolerance) {
-      utils::forward(-speed, speed);
+      utils::forward(-len * kP, len * kP);
+      Serial.print("Speed: ");
+      Serial.println(-len * kP);
+      if (abs(-len * kP) < 20) {
+        return;
+      }
       len = abs((int)tofCalibrated(lnum) - (int)tofCalibrated(rnum));
     }
-  } else {
-    
+  } else {    
     while(len >= tolerance) {
-      utils::forward(speed, -speed);
+      // if (millis() - tstart < 1500) {
+        utils::forward(len * kP, -len * kP);
+        Serial.print("Speed: ");
+        Serial.println(len * kP);
+        if (abs(-len * kP) < 20) {
+          return;
+        }
+      // } else {
+        // utils::forward(-len*kP - TURN_BOOST, len * kP + TURN_BOOST);
+      // }
       len = abs((int)tofCalibrated(lnum) - (int)tofCalibrated(rnum));
     }
   }
@@ -1174,37 +1195,11 @@ void alignAngle(int speed, bool reset, int tolerance = 5) {
   }
 
   utils::stopMotors();
+}
 
-  //Serial.println(len);  
-  //Serial.println(atan(width/len) * (180/3.1415)  );
-  //Serial.println(angle);
-  // Serial.print("Length: ");
-  // Serial.print(len);
-  // if (angle > 0) {
-  //   // Serial.print(" Turn Right\t");
-  //   // Serial.println(angle);
-  //   raw_right(180 - angle, speed);
-  // } else {
-  //   // Serial.print(" Turn Left\t");
-  //   // Serial.println(angle);
-  //   raw_left(180 - angle, speed);
-  // }
-   
-  /*
-  while (abs(tofR1 - tofR2) > tolerance) {
-    Serial.println(abs(tofR1 - tofR2)); 
-    tcaselect(0);
-    tofR1 = tof.readRangeSingleMillimeters() - 50;
-    tcaselect(1);
-    tofR2 = tof.readRangeSingleMillimeters() - 15;
-
-    if (tofR1 - tofR2 > 10) {
-      left(10, SPEED);
-    }
-    else if (tofR2 - tofR1 > 10) {
-      right(10, SPEED);
-    }
-  }*/  
+unsigned int _tofRawValue(int select) {
+  tcaselect(select);
+  return tof.readRangeSingleMillimeters();
 }
 
 unsigned int _tofCalibrated(int select) 
@@ -1236,7 +1231,7 @@ unsigned int _tofCalibrated(int select)
     {
         tcaselect(2);
         dist = tof.readRangeSingleMillimeters();
-        cal = (1.03 * dist) - 9.91;
+        cal = (1.03 * dist) - 17.91;
         cal = min(cal, max_dist);
         return cal;
         //accrate (50, 150), passable < 50 but not that good
@@ -1245,7 +1240,7 @@ unsigned int _tofCalibrated(int select)
     { 
         tcaselect(3); 
         dist = tof.readRangeSingleMillimeters(); 
-        cal = dist - 40;
+        cal = dist - 3;
         cal = min(cal, max_dist);
         return cal; 
         //decent accuracy 
@@ -1420,14 +1415,13 @@ void loop()
   //Serial.println(returnColor());
   // utils::kitDrop(1);
   // delay(1000);
+  alignAngle(false);
 
-  for (int i = 0; i <= TOF_NUMBER; i++) {
-    Serial.print(" ");
-    Serial.print(i);
-    Serial.print(" ");
-    Serial.print(tofCalibrated(i));
-  }
-  Serial.println();
+  // for (int i = 0; i <= 3; i++) {
+  //   Serial.print(_tofCalibrated(i));
+  //   Serial.print(" ");
+  // }
+  // Serial.println();
 
   // static int dir = 0;
   // const char char_map[] = {'w', 'e', 'n', 's', 'n', 'w', 'e', 's', 'w', 'e'};
@@ -1465,7 +1459,7 @@ void loop()
 
   //oled.println(data.c_str());
 
-  delay(1000);
+  // delay(1000);
 
 
   
@@ -1502,38 +1496,38 @@ void loop()
   // delay(100);
 
   #else
-  bool* arr = get_tof_vals(wall_tresh);
+  // bool* arr = get_tof_vals(wall_tresh);
 
-  // //n e s w
-  bool walls[4] = {arr[4], arr[0] || arr[1], arr[5], arr[2] || arr[3]};
-  // not wrapped around and stuff 
-  oled_display_walls(walls);
+  // // //n e s w
+  // bool walls[4] = {arr[4], arr[0] || arr[1], arr[5], arr[2] || arr[3]};
+  // // not wrapped around and stuff 
+  // oled_display_walls(walls);
 
-  if(!walls[0])
-  {
-    driveCM(27, 110);
-  }
-  else if(!walls[1])
-  {
-    right(90, SPEED);
-  }
-  else if(!walls[3])
-  {
-    left(90, SPEED);
-  }
-  else if(!walls[2])
-  {
-    right(180, SPEED);
-  }
+  // if(!walls[0])
+  // {
+  //   driveCM(27, 110);
+  // }
+  // else if(!walls[1])
+  // {
+  //   right(90, SPEED);
+  // }
+  // else if(!walls[3])
+  // {
+  //   left(90, SPEED);
+  // }
+  // else if(!walls[2])
+  // {
+  //   right(180, SPEED);
+  // }
 
 
 
-  delay(1000);
+  // delay(1000);
 
   #endif
 
-  oled.clearDisplay();
-  oled.setCursor(0,0);
+  // oled.clearDisplay();
+  // oled.setCursor(0,0);
 
   //Serial.println(returnColor());
 }
