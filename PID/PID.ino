@@ -1415,13 +1415,44 @@ void loop()
   //Serial.println(returnColor());
   // utils::kitDrop(1);
   // delay(1000);
-  alignAngle(false);
+  // alignAngle(false);
+  int clear_oled_counter = 0;
 
-  // for (int i = 0; i <= 3; i++) {
-  //   Serial.print(_tofCalibrated(i));
-  //   Serial.print(" ");
-  // }
-  // Serial.println();
+  for (int i = 0; i <= 5; i++) {
+    Serial.print(_tofCalibrated(i));
+    Serial.print(" ");
+    oled.print(_tofCalibrated(i));
+    oled.print(" ");
+    if (i == 2) {
+      oled.println();
+    }
+  }
+  Serial.println();
+
+  int r,g,b,c;
+  tcaselect(6);
+  tcs.getRawData(&r, &g, &b, &c);
+  oled.println();
+  oled.print(r);
+  oled.print(" ");
+  oled.print(g);
+  oled.print(" ");
+  oled.print(b);
+  oled.println(" ");
+  oled.println(c);
+  bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
+  oled.println(orientationData.orientation.x);
+
+
+  oled.setCursor(0, 0);
+  clear_oled_counter++;
+  if(clear_oled_counter > 5)
+  {
+    oled.clearDisplay();
+    clear_oled_counter = 0;
+  }
+
+  delay(200);
 
   // static int dir = 0;
   // const char char_map[] = {'w', 'e', 'n', 's', 'n', 'w', 'e', 's', 'w', 'e'};
@@ -1496,33 +1527,33 @@ void loop()
   // delay(100);
 
   #else
-  // bool* arr = get_tof_vals(wall_tresh);
+  bool* arr = get_tof_vals(wall_tresh);
 
   // // //n e s w
-  // bool walls[4] = {arr[4], arr[0] || arr[1], arr[5], arr[2] || arr[3]};
+  bool walls[4] = {arr[4], arr[0] || arr[1], arr[5], arr[2] || arr[3]};
   // // not wrapped around and stuff 
-  // oled_display_walls(walls);
+  oled_display_walls(walls);
 
-  // if(!walls[0])
-  // {
-  //   driveCM(27, 110);
-  // }
-  // else if(!walls[1])
-  // {
-  //   right(90, SPEED);
-  // }
-  // else if(!walls[3])
-  // {
-  //   left(90, SPEED);
-  // }
-  // else if(!walls[2])
-  // {
-  //   right(180, SPEED);
-  // }
+  if(!walls[0])
+  {
+    driveCM(27, 110);
+  }
+  else if(!walls[1])
+  {
+    right(90, SPEED);
+  }
+  else if(!walls[3])
+  {
+    left(90, SPEED);
+  }
+  else if(!walls[2])
+  {
+    right(180, SPEED);
+  }
 
 
 
-  // delay(1000);
+  delay(1000);
 
   #endif
 
