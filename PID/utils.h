@@ -10,7 +10,9 @@ namespace utils{
 Motor* motor;
 Motor* motor2;
 Servo myservo; 
-int16_t servopin = A6;
+Servo myservo2; 
+int16_t servopin = A1; 
+int16_t servopin2 = A2;
 const int num_per_column = 4;
 const int num_columns = 3;
 const int total = num_per_column * num_columns;
@@ -60,13 +62,18 @@ void resetBoost()
   motor2->addBoost(0);
 }
 
-void kitDrop(int num) { 
+void kitDrop(int num, char side) { 
   static int columnNum = 1; 
   static int numDropped = 0; 
   const int offset_for_stack[3] = {10, 7, 0};
 
   analogWrite(5, 30);
-
+  if(side == 'r'){
+    myservo2.write(0); 
+  } 
+  else {
+    myservo2.write(50); 
+  }
   for (int i = 0; i < num; i++) {  
     if (numDropped && !(numDropped % num_per_column))
       columnNum++; 
@@ -95,6 +102,7 @@ void kitDrop(int num) {
 
 void resetServo() {
   myservo.write(180);
+  myservo2.write(0); 
 }
 
 namespace logger{

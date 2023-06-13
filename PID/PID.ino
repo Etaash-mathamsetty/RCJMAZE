@@ -35,7 +35,8 @@ void setup() {
     //tof.startContinuous();
   } 
   oled.println("TOF init done!");
-  utils::myservo.attach(utils::servopin); 
+  utils::myservo.attach(utils::servopin);  
+  utils::myservo2.attach(utils::servopin2); 
   utils::resetServo();
   utils::myservo.write(180);
   delay(100);
