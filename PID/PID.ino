@@ -1,7 +1,7 @@
 //#define FAKE_ROBOT
 //#define FAKE_SERIAL
 #define DEBUG_DISPLAY
-//#define MOTORSOFF
+// #define MOTORSOFF
 #define TEST
 #define NO_PI //basic auto when no raspberry pi (brain stem mode)
 
@@ -38,11 +38,11 @@ void setup() {
   utils::myservo.attach(utils::servopin);  
   utils::myservo2.attach(utils::servopin2); 
   utils::resetServo();
-  utils::myservo.write(180);
+  utils::myservo.write(175);
   delay(100);
   utils::myservo.write(170);
   delay(100);
-  utils::myservo.write(180);
+  utils::myservo.write(175);
   oled.println("Servo reset");
   tcaselect(6);
   if (!tcs.begin())
@@ -731,16 +731,16 @@ void turn(char char_end_direction) {
   cur_direction = end_direction;
 }
 
-void alignAngle(int, bool, int x = 5);
+void alignAngle(bool, int x = 5);
 
 void driveCM(float cm, int speed = 200, int tolerance = 10) {
   //utils::kitDrop(1);
 
   bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
-  if (abs(orientationData.orientation.z) < 12) {
+  // if (abs(orientationData.orientation.z) < 4) {
     //pi_read_data();  
-    alignAngle(90, false);
-  }
+    // alignAngle(false);
+  // }
   
   pi_send_data(true, true);
 #if 1
@@ -929,7 +929,7 @@ void driveCM(float cm, int speed = 200, int tolerance = 10) {
   bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
   if (abs(orientationData.orientation.z) < 12) {
     //pi_read_data();
-    alignAngle(90, false);
+    // alignAngle(false);
   }
 
   //pause for blue if detected
@@ -1113,7 +1113,7 @@ void alignAngle(bool reset, int tolerance = 5) {
   int tofR1, tofR2; 
   int tofR3, tofR4;
   bool tofAlign = false;
-  int lnum = 1, rnum = 2;
+  int lnum = 3, rnum = 2;
 
   tofR1 = tofCalibrated(0); 
   tofR2 = tofCalibrated(1); 
@@ -1131,8 +1131,8 @@ void alignAngle(bool reset, int tolerance = 5) {
 
          
   // if (tofR1 >= 160 || tofR2 >= 160) {
-    lnum = 0;
-    rnum = 3;
+    // lnum = 2;
+    // rnum = 3;
   // }
 
   if ((tofR3 >= 160 || tofR4 >= 160) && (tofR1 >= 160 || tofR2 >= 160)) {
@@ -1159,7 +1159,7 @@ void alignAngle(bool reset, int tolerance = 5) {
 
   const int width = TOF_DISTANCE;
   const int angle = atan(width/len) * (180/PI);
-  const int kP = 4.5;
+  const int kP = 2;
 
   if ( (int) tofCalibrated(lnum) - (int)tofCalibrated(rnum) < 0) {
     while(len >= tolerance) {
@@ -1378,14 +1378,11 @@ void loop()
 
   int clear_oled_counter = 0;
 
-  for (int i = 0; i <= 3; i++) {
+  for (int i = 0; i <= 5; i++) {
     Serial.print(_tofCalibrated(i));
     Serial.print(" ");
     oled.print(_tofCalibrated(i));
     oled.print(" ");
-    if (i == 2) {
-      oled.println();
-    }
   }
   Serial.println();
 
@@ -1411,6 +1408,7 @@ void loop()
     oled.clearDisplay();
     clear_oled_counter = 0;
   }
+  delay(200);
 
 
   // utils::kitDrop(2, 'r'); 
@@ -1422,11 +1420,14 @@ void loop()
   
 
   #else
+
+  int clear_oled_counter = 0;
+
   bool* arr = get_tof_vals(wall_tresh);
 
   // // //n e s w
-  bool walls[4] = {arr[4], arr[2] || arr[1], arr[5], arr[0] || arr[3]};
-  // // not wrapped around and stuff 
+  bool walls[4] = {arr[4],  /* arr[0] || */ arr[1], arr[5], arr[2] || arr[3]};
+   // not wrapped around and stuff 
   oled_display_walls(walls);
 
   if(!walls[0])
@@ -1445,10 +1446,6 @@ void loop()
   {
     right(180, SPEED);
   }
-
-
-
-  delay(1000);
 
   #endif
 
