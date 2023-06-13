@@ -3,16 +3,16 @@
 #define DEBUG_DISPLAY
 //#define MOTORSOFF
 #define TEST
-// #define NO_PI //basic auto when no raspberry pi (brain stem mode)
+#define NO_PI //basic auto when no raspberry pi (brain stem mode)
 
 #include "Motors.h"
 #include "utils.h"
 #include "common.h"
 
 void setup() {
-#ifndef FAKE_SERIAL
+//#ifndef FAKE_SERIAL
   PI_SERIAL.begin(115200);
-#endif
+
   Serial.begin(9600);
   utils::setMotors(&motorR, &motorL);
   Wire.begin();
@@ -55,7 +55,7 @@ void setup() {
   pinMode(2, OUTPUT);
   pinMode(5, OUTPUT);
   pinMode(4, OUTPUT);
-  analogWrite(2, 10);  
+  analogWrite(2, 50);  
   Serial.println("TOF INIT SUCCEED!");
   #ifdef DEBUG_DISPLAY
     oled.println("Startup Done!");
@@ -178,7 +178,7 @@ void pi_read_vision() {
 
         if(num > 0)
           left(90, 100, false);
-        utils::kitDrop(num);
+        utils::kitDrop(num, 'r');
         if(num > 0)
           right(90, 100, false);
         cur_cmd.remove(0);
@@ -196,7 +196,7 @@ void pi_read_vision() {
 
         if(num > 0)
           right(90, 100, false);
-        utils::kitDrop(num);
+        utils::kitDrop(num, 'r');
         if(num > 0)
           left(90, 100, false);
         cur_cmd.remove(0);
@@ -283,7 +283,7 @@ void pi_read_data() {
 
         if(num > 0)
           left(90, 100, false);
-        utils::kitDrop(num);
+        utils::kitDrop(num, 'r');
         if(num > 0)
           right(90, 100, false);
         cur_cmd.remove(0);
@@ -301,7 +301,7 @@ void pi_read_data() {
 
         if(num > 0)
           right(90, 100, false);
-        utils::kitDrop(num);
+        utils::kitDrop(num, 'r');
         if(num > 0)
           left(90, 100, false);
         cur_cmd.remove(0);
@@ -739,7 +739,7 @@ void driveCM(float cm, int speed = 200, int tolerance = 10) {
   bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
   if (abs(orientationData.orientation.z) < 12) {
     //pi_read_data();  
-    //alignAngle(90, false);
+    alignAngle(90, false);
   }
   
   pi_send_data(true, true);
@@ -929,7 +929,7 @@ void driveCM(float cm, int speed = 200, int tolerance = 10) {
   bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
   if (abs(orientationData.orientation.z) < 12) {
     //pi_read_data();
-    //alignAngle(90, false);
+    alignAngle(90, false);
   }
 
   //pause for blue if detected
@@ -1113,7 +1113,7 @@ void alignAngle(bool reset, int tolerance = 5) {
   int tofR1, tofR2; 
   int tofR3, tofR4;
   bool tofAlign = false;
-  int lnum = 0, rnum = 1;
+  int lnum = 1, rnum = 2;
 
   tofR1 = tofCalibrated(0); 
   tofR2 = tofCalibrated(1); 
@@ -1131,8 +1131,8 @@ void alignAngle(bool reset, int tolerance = 5) {
 
          
   // if (tofR1 >= 160 || tofR2 >= 160) {
-    lnum = 3;
-    rnum = 2;
+    lnum = 0;
+    rnum = 3;
   // }
 
   if ((tofR3 >= 160 || tofR4 >= 160) && (tofR1 >= 160 || tofR2 >= 160)) {
@@ -1232,7 +1232,12 @@ unsigned int _tofCalibrated(int select)
     {
         tcaselect(2);
         dist = tof.readRangeSingleMillimeters();
-        cal = (1.03 * dist) - 17.91;
+        if(dist <= 40){
+        cal = (0.579 * dist) + 14.9 + 0.00746*pow(dist, 2); 
+        } 
+        else{
+          cal = 10.1 + (1.03+dist) - 0.000329*(dist *dist); 
+        }        
         cal = min(cal, max_dist);
         return cal;
         //accrate (50, 150), passable < 50 but not that good
@@ -1333,35 +1338,12 @@ void loop()
   oled_display_walls(walls);
   //acceleration_position();
   //pi_read_data();
-  /*
-  bno.getEvent(&accelerometerData, Adafruit_BNO055::VECTOR_ACCELEROMETER);
-  bno.getEvent(&gyroData, Adafruit_BNO055::VECTOR_GYROSCOPE); */
-  /*
-  display_data(accelerometerData);
-  pi_send_data(accelerometerData);
-  display_data(gyroData);
-  pi_send_data(gyroData);
-  pi_read_data();
-  Serial.println();
-  */
-  /*
-  byte test = get_tof_vals(100);
-  Serial.print("Tof: ");
-  Serial.println(test, BIN);*/
-  //send_tof_vals(test);
+  
+ 
+  
+  
+  
 
-  //Serial.println("hi");
-  //Serial.println(get_tof_vals(100));
-  //Serial.println("hi");
-  //pi_read_data();
-
-  //oled.println("test");
-//   // alignAngle(100, 0, 1); 
-//   //delay(500);
-//   // driveCM(30, 200, 0);
-//   // delay(1000);
-//   pi_send_tag("dir");
-//   PI_SERIAL.println(cur_direction);
 
   while(PI_SERIAL.available())
   {
@@ -1390,36 +1372,13 @@ void loop()
 
 void loop()
 {
-  // right(90, 100);
-  // right(90, 100);
-  // delay(1000);  
-  // left(90, 100);
-  // left(90, 100);
-  // left(90, 100);
-  // delay(1000); 
-  //utils::forward(255);
-  //delay(1000);
 
-
-  // bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
-  // Serial.println(orientationData.orientation.z);
 
   #ifndef NO_PI
 
-  // driveCM(27, 110);
-  // delay(1000);
-  // alignAngle(110, false);
-  // utils::myservo.write(180);
-  // delay(100);
-  //turn('e');
-  //delay(100);
-  //Serial.println(returnColor());
-  // utils::kitDrop(1);
-  // delay(1000);
-  // alignAngle(false);
   int clear_oled_counter = 0;
 
-  for (int i = 0; i <= 5; i++) {
+  for (int i = 0; i <= 3; i++) {
     Serial.print(_tofCalibrated(i));
     Serial.print(" ");
     oled.print(_tofCalibrated(i));
@@ -1453,85 +1412,20 @@ void loop()
     clear_oled_counter = 0;
   }
 
-  delay(200);
 
-  // static int dir = 0;
-  // const char char_map[] = {'w', 'e', 'n', 's', 'n', 'w', 'e', 's', 'w', 'e'};
-
-  // dir++;
-  // dir %= ARRAY_SIZE(char_map);
-
-  // turn(char_map[dir]);
-  // bool* arr =  get_tof_vals(wall_tresh);
-  // bool walls[4] = {arr[4], arr[0] || arr[1], arr[5], arr[2] || arr[3]};
-
-
-  // pi_send_data(walls);
-  // //String data = "    ";
-
-
-  // oled.println("n, e, s, w");
-  // oled.print(walls[utils::math::wrapAround((int)n - (int)cur_direction, 4)]);
-  // oled.print(",");
-  // oled.print(walls[utils::math::wrapAround((int)e - (int)cur_direction, 4)]);
-  // oled.print(",");
-  // oled.print(walls[utils::math::wrapAround((int)s - (int)cur_direction, 4)]);
-  // oled.print(",");
-  // oled.println(walls[utils::math::wrapAround((int)w - (int)cur_direction, 4)]);
-  // oled.println(dir_to_char((int) cur_direction));
-  // for(int i = 0; i < 4; i++)
-  // {
-  //   {
-  //     if(walls[utils::math::wrapAround((int)i - (int)cur_direction, 4)])
-  //     {
-  //       data[i] = char_map[utils::mpi_rath::wrapAround((int)i - (int)cur_direction, 4)];
-  //     }
-  //   }
-  // }
-
-  //oled.println(data.c_str());
-
+  // utils::kitDrop(2, 'r'); 
+  // delay(1000);
+  // utils::kitDrop(2, 'l'); 
   // delay(1000);
 
-
   
-
-  //returnColor();
-
-
-  // bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
-
-  // Serial.print("return color: ");
-  // Serial.println(returnColor());
-
-  // utils::kitDrop(1);
-  // delay(200);
   
-  // Serial.println(returnColor());
-  // oled.print(returnColor());
-  // delay(100);
-  // oled.setCursor(0,0);
-  // Serial.print("Front:");
-  // Serial.print(tofCalibrated(4));
-  // Serial.print(",");
-  // Serial.print("Right:");
-  // Serial.print((tofCalibrated(0) + tofCalibrated(1)) / 2);
-  // Serial.print(",");
-  // Serial.print("Back:");
-  // Serial.print(tofCalibrated(5));
-  // Serial.print(",");
-  // Serial.print("Left:");
-  // Serial.println((tofCalibrated(2) + tofCalibrated(3)) / 2);
-  // delay(1000);
-
-  // utils::kitDrop(1);
-  // delay(100);
 
   #else
   bool* arr = get_tof_vals(wall_tresh);
 
   // // //n e s w
-  bool walls[4] = {arr[4], arr[0] || arr[1], arr[5], arr[2] || arr[3]};
+  bool walls[4] = {arr[4], arr[2] || arr[1], arr[5], arr[0] || arr[3]};
   // // not wrapped around and stuff 
   oled_display_walls(walls);
 
@@ -1558,10 +1452,7 @@ void loop()
 
   #endif
 
-  // oled.clearDisplay();
-  // oled.setCursor(0,0);
-
-  //Serial.println(returnColor());
+  
 }
 
 #endif
