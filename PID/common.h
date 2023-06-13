@@ -46,7 +46,7 @@ const int minspeed = 200;
 const double KP_TURN = 1.2;
 const double KI_TURN = 0.00003;
 const double KD_TURN = 0.243;
-const int DRIVE_BOOST = 40;
+const int DRIVE_BOOST = 20;
 const int TURN_BOOST = 80;
 
 
@@ -58,7 +58,7 @@ const double SAMPLERATE_DELAY_MS = 10.0;
 const double TIMES_PER_SECOND = 1000.0 / SAMPLERATE_DELAY_MS;
 volatile double global_angle = 0;
 
-const int SPEED = 100;
+const int SPEED = 80;
 
 const double TOF_DISTANCE = 58.64;
 
