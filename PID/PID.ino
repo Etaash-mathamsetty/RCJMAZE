@@ -1,9 +1,9 @@
 //#define FAKE_ROBOT
 //#define FAKE_SERIAL
 #define DEBUG_DISPLAY
-// #define MOTORSOFF
+#define MOTORSOFF
 #define TEST
-#define NO_PI //basic auto when no raspberry pi (brain stem mode)
+//#define NO_PI //basic auto when no raspberry pi (brain stem mode)
 
 #include "Motors.h"
 #include "utils.h"
@@ -1214,61 +1214,73 @@ unsigned int _tofCalibrated(int select)
     {
         tcaselect(0);
         dist = tof.readRangeSingleMillimeters();
-        cal = -89.7 + (dist * 1.9) - (0.0033 * (dist * dist));
+        if(dist <= 82){
+        cal = (1.34 * dist) - 58.3;  
+        } 
+        else{
+          cal = (0.962 * dist) - 26.4; 
+        }
         cal = min(cal, max_dist);
-        return cal;
-        //accurate (50, 150), horrible < 25
+        return cal; 
+        //wowzers very cool 
     }
     case 1: 
     {
         tcaselect(1);
         dist = tof.readRangeSingleMillimeters();
-        cal = (1.09 * dist);
+        if(dist <= 63) {
+        cal = (1.44 * dist) - 39.9;
+        }
+        else{
+          cal = (0.958 * dist) - 8.38; 
+        }
         cal = min(cal, max_dist);        
-        return cal;
-        //accurate (50, 150), still works < 25ish
+        return cal; 
+        //pretty good 6/14 
     }
     case 2: 
     {
         tcaselect(2);
         dist = tof.readRangeSingleMillimeters();
-        if(dist <= 40){
-        cal = (0.579 * dist) + 14.9 + 0.00746*pow(dist, 2); 
-        } 
-        else{
-          cal = 10.1 + (1.03+dist) - 0.000329*(dist *dist); 
-        }        
+        if(dist <= 80){
+        cal = (1.39 *dist) - 57.3; 
+        }
+        else {
+          cal = (0.925 * dist ) - 22.5; 
+        }
+        
         cal = min(cal, max_dist);
         return cal;
-        //accrate (50, 150), passable < 50 but not that good
+        //calibrated 6/14 
     } 
     case 3: 
     { 
         tcaselect(3); 
         dist = tof.readRangeSingleMillimeters(); 
-        cal = dist - 3;
-        cal = min(cal, max_dist);
-        return cal; 
-        //decent accuracy 
+        cal = dist;
+         cal = min(cal, max_dist);
+        return cal;
+        //not in need of calibration 6/14 
       
     } 
     case 4: 
     { 
         tcaselect(4); 
         dist = tof.readRangeSingleMillimeters(); 
-        cal = 3 + (0.657 * dist) + (0.00146 * dist * dist);
+        cal = dist;
         cal = min(cal, max_dist);
         return cal;   
-        //pretty accurate
+        //not in need of calibration 6/14 
     }
     case 5:
     {
-        //TODO: calibrate (low priority)
+        //TODO: calibrate (low priority) 
         tcaselect(5);
         dist = tof.readRangeSingleMillimeters();
         cal = dist;
         cal = min(cal, max_dist);
-        return cal;
+        return cal; 
+        //6/14 essentially fine... 
     } 
     default:
       return -1;
@@ -1378,9 +1390,9 @@ void loop()
 
   int clear_oled_counter = 0;
 
-  for (int i = 0; i <= 5; i++) {
+  for (int i = 5; i <= 5; i++) {
     Serial.print(_tofCalibrated(i));
-    Serial.print(" ");
+    Serial.print(", ");
     oled.print(_tofCalibrated(i));
     oled.print(" ");
   }
