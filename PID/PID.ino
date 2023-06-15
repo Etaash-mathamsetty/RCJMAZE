@@ -30,7 +30,14 @@ void setup() {
 
   for (int i = TOF_START; i <= TOF_NUMBER; i++) {
     tcaselect(i);
-    tof.init();
+    if(!tof.init()){
+      Serial.print("Bruh :( sensor "); 
+      Serial.print(i); 
+      Serial.print("is broken"); 
+    }
+    Serial.print("Yay! sensor "); 
+    Serial.print(i); 
+    Serial.print("is init"); 
     //tof.setTimeout(500);
     //tof.startContinuous();
   } 
