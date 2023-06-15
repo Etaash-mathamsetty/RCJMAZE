@@ -42,7 +42,8 @@ void setup() {
     }
  
     //tof.setTimeout(500);
-    //tof.startContinuous();
+    //tof.startContinuous(); 
+    }
   } 
   oled.println("TOF init done!");
   utils::myservo.attach(utils::servopin);  
