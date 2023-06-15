@@ -39,15 +39,15 @@ Motor motorR(MPORT1, true, true);
 
 sensors_event_t accelerometerData, gyroData, orientationData, linearAccelData;
 
-const float CM_TO_ENCODERS = 100.f/4.6f;
+const float CM_TO_ENCODERS = 360.f/(7.7f*PI);
 const float ENCODERS_TO_CM = 1.f/CM_TO_ENCODERS;
 
 const int minspeed = 200;
 const double KP_TURN = 1.2;
 const double KI_TURN = 0.00003;
 const double KD_TURN = 0.243;
-const int DRIVE_BOOST = 20;
-const int TURN_BOOST = 80;
+const int DRIVE_BOOST = 30;
+const int TURN_BOOST = 70;
 
 
 const double DRIVE_STRAIGHT_KP = 3.0;

@@ -56,10 +56,15 @@ void stopMotors(){
 	motor2->stop();
 }
 
+void addBoost(int boost)
+{
+  motor->addBoost(boost);
+  motor2->addBoost(boost);
+}
+
 void resetBoost()
 {
-  motor->addBoost(0);
-  motor2->addBoost(0);
+  addBoost(0);
 }
 
 void kitDrop(int num, char side) { 
@@ -102,7 +107,7 @@ void kitDrop(int num, char side) {
 
 void resetServo() {
   myservo.write(180);
-  myservo2.write(0); 
+  myservo2.write(25); 
 }
 
 namespace logger{
