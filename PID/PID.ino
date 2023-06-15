@@ -34,12 +34,16 @@ void setup() {
       Serial.print("Bruh :( sensor "); 
       Serial.print(i); 
       Serial.print("is broken"); 
+      Serial.println(" "); 
     }
+    else{
     Serial.print("Yay! sensor "); 
     Serial.print(i); 
-    Serial.print("is init"); 
+    Serial.print("is init");  
+    Serial.println(" "); 
     //tof.setTimeout(500);
-    //tof.startContinuous();
+    //tof.startContinuous(); 
+    }
   } 
   oled.println("TOF init done!");
   utils::myservo.attach(utils::servopin);  
