@@ -106,7 +106,7 @@ void kitDrop(int num, char side) {
 }
 
 void resetServo() {
-  myservo.write(180);
+  myservo.write(175);
   myservo2.write(25); 
 }
 

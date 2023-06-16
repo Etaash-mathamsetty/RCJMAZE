@@ -46,7 +46,7 @@ const int minspeed = 200;
 const double KP_TURN = 1.2;
 const double KI_TURN = 0.00003;
 const double KD_TURN = 0.243;
-const int DRIVE_BOOST = 30;
+const int DRIVE_BOOST = 40;
 const int TURN_BOOST = 70;
 
 
