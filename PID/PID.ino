@@ -1,7 +1,7 @@
 //#define FAKE_ROBOT
 //#define FAKE_SERIAL
 #define DEBUG_DISPLAY
-// #define MOTORSOFF
+#define MOTORSOFF
 #define TEST
 // #define ALIGN_ANGLE
 #define NO_PI //basic auto when no raspberry pi (brain stem mode)
@@ -43,8 +43,7 @@ void setup() {
  
     //tof.setTimeout(500);
     //tof.startContinuous(); 
-    }
-  } 
+  }
   oled.println("TOF init done!");
   utils::myservo.attach(utils::servopin);  
   utils::myservo2.attach(utils::servopin2); 
