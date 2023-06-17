@@ -484,6 +484,30 @@ int returnColor(bool only_black = false){
   return 0;  
 }
 
+
+void backup_align(int speed, int time) {
+
+  while (tofCalibrated(5) > 40) {
+    utils::forward(-speed);
+  }
+  utils::resetTicks();
+  utils::stopMotors();
+  delay(100);
+
+  const int tstart = millis();
+  while(millis() - tstart < time) {
+    utils::forward(-speed);
+  }
+  utils::stopMotors();
+
+  bno.begin(OPERATION_MODE_IMUPLUS);
+
+  // while(abs(motorR.getTicks() > 0) {
+  //   utils::forward(speed);
+  // }
+  // utils::stopMotors();
+}
+
 void right(int relative_angle, int speed, bool turn_status = true) {
   bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
 
@@ -511,12 +535,15 @@ void right(int relative_angle, int speed, bool turn_status = true) {
 
   raw_right(relative_angle, speed);
 
+
+ 
   if(tofCalibrated(5) <= wall_tresh - 30)
   {
-    while(tofCalibrated(5) >= 70)
-    {
-      forward(-speed);
-    }
+    backup_align(SPEED, 1200);
+    // while(tofCalibrated(5) >= 70)
+    // {
+    //   forward(-speed);
+    // }
     while(tofCalibrated(5) <= 40)
     {
       forward(speed);
@@ -570,10 +597,11 @@ void left(int relative_angle, int speed, bool turn_status = true) {
 
   if(tofCalibrated(5) <= wall_tresh - 30)
   {
-    while(tofCalibrated(5) >= 70)
-    {
-      forward(-speed);
-    }
+    backup_align(SPEED, 1200);
+    // while(tofCalibrated(5) >= 70)
+    // {
+    //   forward(-speed);
+    // }
     while(tofCalibrated(5) <= 40)
     {
       forward(speed);
@@ -587,7 +615,7 @@ void left(int relative_angle, int speed, bool turn_status = true) {
   }
 }
 
-void raw_right(int relative_angle, int speed) {
+void raw_right(double relative_angle, int speed) {
 
 #ifndef MOTORSOFF
   motorL.addBoost(TURN_BOOST);
@@ -662,7 +690,7 @@ void raw_right(int relative_angle, int speed) {
 #endif
 }
 
-void raw_left(int relative_angle, int speed) {
+void raw_left(double relative_angle, int speed) {
 #ifndef MOTORSOFF
   motorL.addBoost(TURN_BOOST);
   motorR.addBoost(TURN_BOOST);
@@ -1077,23 +1105,36 @@ void drive(int encoders, int speed) {
   double orig_encoders = encoders;
   bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
   double start_pitch = orientationData.orientation.z;
-  bool ramp_detect = true;
+  bool ramp_detect = false;
   bool down_ramp_detect = false;
   double start_ramp = INT_MAX;
-  double tstart = millis();
+  uint32_t tstart = millis();
+  uint32_t tramp = UINT32_MAX;
+  uint32_t tramp_up = UINT32_MAX;
+  const uint32_t ramp_up_elapsed = 800;
+  const uint32_t ramp_elapsed = 1200;
   // encoders = orig_encoders / cos(-orientationData.orientation.z * (2 * PI / 360));
 
 
-  while (abs(motorR.getTicks()) < abs(encoders) && abs(motorL.getTicks()) < abs(encoders) && (tofCalibrated(4) >= 75)) {
+  while ((abs(motorR.getTicks()) < abs(encoders) && abs(motorL.getTicks()) < abs(encoders) && (tofCalibrated(4) >= 75)) || ramp_detect || down_ramp_detect) {
     bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
     // encoders = orig_encoders / cos(abs(orientationData.orientation.z * (2 * PI / 360)));
 
+    if (abs(start_pitch) < 4 && orientationData.orientation.z - start_pitch < -12 && !ramp_detect) {
+      tramp_up = millis();
+      ramp_detect = true;
+    }
 
-    if (orientationData.orientation.z < -12) {
+    if ((int64_t) millis() - (int64_t) tramp_up > 150 && orientationData.orientation.z - start_pitch < -12) {
       // start_ramp = millis();
       oled.println("ramp detected!");
+      bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
+      while (orientationData.orientation.z - start_pitch < -3) {
+        utils::forward(-SPEED * 0.75);
+        bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
+      }
       utils::resetTicks();
-      while (abs(motorR.getTicks()) < 15* CM_TO_ENCODERS) {
+      while (abs(motorR.getTicks()) < 7 * CM_TO_ENCODERS) {
         utils::forward(-SPEED * 0.75);
       }
       utils::stopMotors();
@@ -1105,7 +1146,9 @@ void drive(int encoders, int speed) {
         bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
         utils::forward(SPEED);
       }
-      while(orientationData.orientation.z < -3.5) {
+      bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
+      const double angle_start = orientationData.orientation.z;
+      while(abs(orientationData.orientation.z - angle_start) < 4) {
         bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
         utils::forward(SPEED);
       }
@@ -1118,11 +1161,29 @@ void drive(int encoders, int speed) {
       return;
     }
 
-    if (orientationData.orientation.z > 12) {
-      oled.println("down ramp detected");
+    if (abs(start_pitch) < 4 && orientationData.orientation.z - start_pitch > 3.5 && !down_ramp_detect) {
+      tramp = millis();
+      down_ramp_detect = true;
+      oled.println("down ramp detected 1");
+    }
+
+    if ((int64_t) millis() - (int64_t) tramp > ramp_elapsed) {
+        
+      bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
+      while (abs(orientationData.orientation.z) < 5 && tofCalibrated(5) > 40) {
+        oled.println("backward 1");
+        bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
+        utils::forward(-SPEED * 0.75);
+      }
+      bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
+      while (orientationData.orientation.z > 0 && tofCalibrated(5) > 40) {
+        oled.println("backward 2");
+        bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
+        utils::forward(-SPEED * 0.75);
+      }
       utils::resetTicks();
-      while (abs(motorR.getTicks()) < 15 * CM_TO_ENCODERS) {
-        utils::forward(-SPEED * 0.65);
+      while(abs(motorR.getTicks()) < 10 * CM_TO_ENCODERS) {
+        utils::forward(-SPEED * 0.75);
       }
       utils::stopMotors();
       alignAngle(false);
@@ -1135,12 +1196,12 @@ void drive(int encoders, int speed) {
       }
       while(orientationData.orientation.z > 3.5) {
         bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
-        utils::forward(SPEED * 0.7);
+        utils::forward(SPEED * 0.65);
       }
       utils::stopMotors();
       utils::resetTicks();
       while (abs(motorR.getTicks()) < 10 * CM_TO_ENCODERS) {
-        utils::forward(SPEED * 0.7);
+        utils::forward(SPEED * 0.65);
       }
       utils::stopMotors();
       return;
@@ -1217,8 +1278,11 @@ void drive(int encoders, int speed) {
     }
 
 
-
-    forward((millis() - tstart  < 5000) ? PID : 210);
+    if (!down_ramp_detect) {
+      forward((millis() - tstart  < 5000) ? PID : 210);
+    } else {
+      forward(PID * 0.25 * ((ramp_elapsed - (millis() - tramp)) / ramp_elapsed));
+    }
     angle = orientation;
   } 
   //correct horizontal error when inside of hallway 
@@ -1271,7 +1335,7 @@ void drive(int encoders, int speed) {
   
 }
 
-int closestToDirection(int num) {
+int closestToDirection(double num) {
   for (int i = 0; i <= 360; i+=90) {
     if (abs(num - i) <= 45) {
       return i;
@@ -1307,9 +1371,9 @@ void alignAngle(bool reset, int tolerance = 5) {
   if ((tofR3 >= wall_tresh || tofR4 >= wall_tresh) && (tofR1 >= wall_tresh || tofR2 >= wall_tresh)) {
     Serial.println("too high values");
     bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
-    int new_angle = closestToDirection((int) orientationData.orientation.x);
+    double new_angle = closestToDirection(orientationData.orientation.x);
 
-    if ((int) orientationData.orientation.x  - new_angle < 0) {
+    if (orientationData.orientation.x  - new_angle < 0 /* && abs(orientationData.orientation.x) */) {
       raw_right(abs(orientationData.orientation.x - new_angle), SPEED - 20);
     } else {
       raw_left(abs(orientationData.orientation.x - new_angle), SPEED - 20);
@@ -1365,7 +1429,7 @@ unsigned int _tofCalibrated(int select)
     case 0: 
     {
         tcaselect(0);
-        cal = tof.readRangeSingleMillimeters();; 
+        cal = tof.readRangeSingleMillimeters();
         cal = min(cal, max_dist);
         return cal; 
         //wowzers very cool 
@@ -1373,15 +1437,7 @@ unsigned int _tofCalibrated(int select)
     case 1: 
     {
         tcaselect(1);
-        dist = tof.readRangeSingleMillimeters();
-        if(dist <= 63) 
-        {
-          cal = (1.44 * dist) - 39.9;
-        }
-        else
-        {
-          cal = (0.958 * dist) - 8.38; 
-        }
+        cal = tof.readRangeSingleMillimeters() - 40;
         cal = min(cal, max_dist);        
         return cal; 
         //pretty good 6/14 
@@ -1554,11 +1610,8 @@ void loop()
   oled.println(" ");
   oled.print(c);
   bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
-  // Serial.print("Orientation Z: ");
-  // Serial.println(orientationData.orientation.z);
   // Serial.print("Orientation X:");
   // Serial.println(orientationData.orientation.x);
-  oled.println(orientationData.orientation.x);
 
 
   oled.setCursor(0, 0);

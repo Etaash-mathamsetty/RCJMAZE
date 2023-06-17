@@ -107,6 +107,7 @@ void kitDrop(int num, char side) {
 
 void resetServo() {
   myservo.write(175);
+  delay(200);
   myservo2.write(25); 
 }
 
