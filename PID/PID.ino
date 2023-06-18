@@ -272,7 +272,7 @@ void pi_read_data() {
   String cur_cmd = "";
   Serial.println(data);
   for (char c : data) {
-    if (c == 'g' || c == 'f' || c == 't' || c == 'd' || c == 'r') {
+    if (c == 'g' || c == 'f' || c == 't' || c == 'd') {
       if (cur_cmd.length() > 0) {
         if (cur_cmd[0] == 'g' || cur_cmd[0] == 'f') {
           Serial.println("FORWARD");
@@ -309,7 +309,7 @@ void pi_read_data() {
         pi_send_tag("drop_status");
         PI_SERIAL.println("0.0");
       }
-    } else if (c == 'q') {
+    } else if (c == 'r') {
       if(cur_cmd.length() > 0 && cur_cmd[0] == 'd') {
         pi_send_tag("drop_status");
         PI_SERIAL.println("1.0");
@@ -326,6 +326,31 @@ void pi_read_data() {
 
         pi_send_tag("drop_status");
         PI_SERIAL.println("0.0");
+      }
+      else
+      {
+        bool* arr = get_tof_vals(wall_tresh);
+
+        //oled.println("test2");
+        
+        // Serial.print("Tof Vals: ");
+        // Serial.println(vals);
+
+        // //n e s w
+        bool walls[4] = { arr[4], arr[2] || arr[3], arr[5], arr[0] || arr[1] };
+        // not wrapped around and stuff 
+        //oled_display_walls(walls);
+        //  this is wrapped
+        pi_send_data(walls);
+
+        //checkpoint detection
+        //pi_send_tag("CP");
+        //PI_SERIAL.println(float(returnColor() == 2));
+
+        pi_send_tag("CP");
+        PI_SERIAL.println("0.0");
+
+        //Serial.println("sending wall data");
       }
     }
     else if (c == 'e' || c == 'w' || c == 's' || c == 'n') {
@@ -366,31 +391,6 @@ void pi_read_data() {
           driveCM(30, 110, 1);
         } else {
           Serial.println("ERR: Invalid Parameter");
-        }
-        if (cur_cmd[0] == 'r')
-        {
-          bool* arr = get_tof_vals(wall_tresh);
-
-          //oled.println("test2");
-          
-          // Serial.print("Tof Vals: ");
-          // Serial.println(vals);
-
-          // //n e s w
-          bool walls[4] = { arr[4], arr[2] || arr[3], arr[5], arr[0] || arr[1] };
-          // not wrapped around and stuff 
-          //oled_display_walls(walls);
-          //  this is wrapped
-          pi_send_data(walls);
-
-          //checkpoint detection
-          //pi_send_tag("CP");
-          //PI_SERIAL.println(float(returnColor() == 2));
-
-          pi_send_tag("CP");
-          PI_SERIAL.println("0.0");
-
-          //Serial.println("sending wall data");
         }
       }
       cur_cmd = "";
@@ -843,7 +843,6 @@ void driveCM(float cm, int speed = 200, int tolerance = 10) {
         while(tofCalibrated(4) >= 70)
         {
           forward(speed * 0.7);
-
         }
         
         stopMotors();
@@ -1074,15 +1073,89 @@ void driveCM(float cm, int speed = 200, int tolerance = 10) {
   pi_send_data(false, true);
 }
 
+bool handle_up_ramp(double start_pitch)
+{
+  int32_t ticks = 10 * CM_TO_ENCODERS;
+  auto old_ticks = motorR.getTicks();
+  resetTicks();
+  while(abs(motorR.getTicks()) < abs(ticks))
+  {
+    forward(100);
+  }
+
+  UPDATE_BNO();
+  if(abs(BNO_Z - start_pitch) <= 2 || BNO_Z - start_pitch >= 7)
+  {
+    //not a ramp
+    motorR.getTicks() = old_ticks + ticks;
+    motorL.getTicks() = -old_ticks - ticks;
+    return false;
+  }
+  else
+  {
+    const float wall_kp = 0.3f;
+    while(abs(BNO_Z - start_pitch) > 2)
+    {
+      UPDATE_BNO();
+      int32_t right = (_tofCalibrated(0) + _tofCalibrated(1))/2;
+      int32_t left = (_tofCalibrated(2) + _tofCalibrated(3))/2;
+
+      float err = (right - left) * wall_kp;
+      utils::forward(100.0 + err, 100.0 - err);
+    }
+    stopMotors();
+    pi_send_tag("ramp");
+    PI_SERIAL.println(1.0);
+    return true;
+  }
+
+}
+
+bool handle_down_ramp(double start_pitch)
+{
+  int32_t ticks = 10 * CM_TO_ENCODERS;
+  auto old_ticks = motorR.getTicks();
+  resetTicks();
+  while(abs(motorR.getTicks()) < abs(ticks))
+  {
+    forward(90);
+  }
+
+  UPDATE_BNO();
+  if(abs(BNO_Z - start_pitch) <= 2)
+  {
+    //not a ramp
+    motorR.getTicks() = old_ticks + ticks;
+    motorL.getTicks() = -old_ticks - ticks;
+    return false;
+  }
+  else
+  {
+    const float wall_kp = 0.3f;
+    while(abs(BNO_Z - start_pitch) > 2)
+    {
+      UPDATE_BNO();
+      int32_t right = (_tofCalibrated(0) + _tofCalibrated(1))/2;
+      int32_t left = (_tofCalibrated(2) + _tofCalibrated(3))/2;
+
+      float err = (right - left) * wall_kp;
+      utils::forward(90.0 + err, 90.0 - err);
+    }
+    stopMotors();
+    pi_send_tag("ramp");
+    PI_SERIAL.println(10.0);
+    return true;
+  }
+
+}
 
 void drive(int encoders, int speed) {
 #ifndef MOTORSOFF
   // bno.begin(OPERATION_MODE_IMUPLUS);
   double orientation_offset;
-  motorL.addBoost(DRIVE_BOOST);
-  motorR.addBoost(DRIVE_BOOST);
-  bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
-  orientation_offset = orientationData.orientation.x;
+  addBoost(DRIVE_BOOST);
+  UPDATE_BNO();
+  orientation_offset = BNO_X;
 
   int angle = 60, tofR1, tofR2; 
   resetTicks();
@@ -1093,110 +1166,35 @@ void drive(int encoders, int speed) {
   double startX = xPos;
   double orientation;
   double orig_encoders = encoders;
-  bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
-  double start_pitch = orientationData.orientation.z;
+  UPDATE_BNO();
+  double start_pitch = BNO_Z;
   bool ramp_detect = false;
   bool down_ramp_detect = false;
-  double start_ramp = INT_MAX;
   uint32_t tstart = millis();
-  uint32_t tramp = UINT32_MAX;
-  uint32_t tramp_up = UINT32_MAX;
-  const uint32_t ramp_up_elapsed = 800;
-  const uint32_t ramp_elapsed = 1200;
   // encoders = orig_encoders / cos(-orientationData.orientation.z * (2 * PI / 360));
 
 
   while ((abs(motorR.getTicks()) < abs(encoders) && abs(motorL.getTicks()) < abs(encoders) && (tofCalibrated(4) >= 75)) || ramp_detect || down_ramp_detect) {
-    bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
+    UPDATE_BNO();
     // encoders = orig_encoders / cos(abs(orientationData.orientation.z * (2 * PI / 360)));
 
-    if (abs(start_pitch) < 4 && orientationData.orientation.z - start_pitch < -12 && !ramp_detect) {
-      tramp_up = millis();
-      ramp_detect = true;
+    if(BNO_Z - start_pitch < -5.5)
+    {
+      stopMotors();
+      bool res = handle_up_ramp(start_pitch);
+
+      if(res)
+        return;
     }
 
-    if ((int64_t) millis() - (int64_t) tramp_up > 150 && orientationData.orientation.z - start_pitch < -12) {
-      // start_ramp = millis();
-      oled.println("ramp detected!");
-      bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
-      while (orientationData.orientation.z - start_pitch < -3) {
-        utils::forward(-SPEED * 0.75);
-        bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
-      }
-      utils::resetTicks();
-      while (abs(motorR.getTicks()) < 7 * CM_TO_ENCODERS) {
-        utils::forward(-SPEED * 0.75);
-      }
-      utils::stopMotors();
-      alignAngle(false);
-      alignAngle(false);
-      alignAngle(false);
-      bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
-      while(orientationData.orientation.z >= -3.5) {
-        bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
-        utils::forward(SPEED);
-      }
-      bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
-      const double angle_start = orientationData.orientation.z;
-      while(abs(orientationData.orientation.z - angle_start) < 4) {
-        bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
-        utils::forward(SPEED);
-      }
-      utils::stopMotors();
-      utils::resetTicks();
-      while (abs(motorR.getTicks()) < 10 * CM_TO_ENCODERS) {
-        utils::forward(SPEED * 0.7);
-      }
-      utils::stopMotors();
-      return;
-    }
+    if(BNO_Z - start_pitch > 5.5)
+    {
+      stopMotors();
+      bool res = handle_down_ramp(start_pitch);
 
-    if (abs(start_pitch) < 4 && orientationData.orientation.z - start_pitch > 3.5 && !down_ramp_detect) {
-      tramp = millis();
-      down_ramp_detect = true;
-      oled.println("down ramp detected 1");
+      if(res)
+        return;
     }
-
-    if ((int64_t) millis() - (int64_t) tramp > ramp_elapsed) {
-        
-      bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
-      while (abs(orientationData.orientation.z) < 5 && tofCalibrated(5) > 40) {
-        oled.println("backward 1");
-        bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
-        utils::forward(-SPEED * 0.75);
-      }
-      bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
-      while (orientationData.orientation.z > 0 && tofCalibrated(5) > 40) {
-        oled.println("backward 2");
-        bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
-        utils::forward(-SPEED * 0.75);
-      }
-      utils::resetTicks();
-      while(abs(motorR.getTicks()) < 10 * CM_TO_ENCODERS) {
-        utils::forward(-SPEED * 0.75);
-      }
-      utils::stopMotors();
-      alignAngle(false);
-      alignAngle(false);
-      alignAngle(false);
-      bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
-      while(orientationData.orientation.z <= 3.5) {
-        bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
-        utils::forward(SPEED);
-      }
-      while(orientationData.orientation.z > 3.5) {
-        bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
-        utils::forward(SPEED * 0.65);
-      }
-      utils::stopMotors();
-      utils::resetTicks();
-      while (abs(motorR.getTicks()) < 10 * CM_TO_ENCODERS) {
-        utils::forward(SPEED * 0.65);
-      }
-      utils::stopMotors();
-      return;
-    }
-
     // if (millis() - start_ramp > 75 && ramp_detect) {
     //   encoders = motorR.getTicks() + (30 * CM_TO_ENCODERS - motorR.getTicks()) / cos(abs(orientationData.orientation.z * (PI / 180))) + 5 * CM_TO_ENCODERS;
     //   speed *= 0.7;
@@ -1267,12 +1265,7 @@ void drive(int encoders, int speed) {
       }
     }
 
-
-    if (!down_ramp_detect) {
-      forward((millis() - tstart  < 5000) ? PID : 210);
-    } else {
-      forward(PID * 0.25 * ((ramp_elapsed - (millis() - tramp)) / ramp_elapsed));
-    }
+    forward((millis() - tstart  < 5000) ? PID : 210);
     angle = orientation;
   } 
   //correct horizontal error when inside of hallway 
@@ -1317,6 +1310,9 @@ void drive(int encoders, int speed) {
   
   stopMotors();
   resetBoost();
+
+  pi_send_tag("ramp");
+  PI_SERIAL.println(0.0);
 #else
   pi_send_data(true, true);
   delay(100);
@@ -1427,7 +1423,7 @@ unsigned int _tofCalibrated(int select)
     case 1: 
     {
         tcaselect(1);
-        cal = tof.readRangeSingleMillimeters();
+        cal = tof.readRangeSingleMillimeters() + 10;
         cal = min(cal, max_dist);        
         return cal; 
         //pretty good 6/14 
