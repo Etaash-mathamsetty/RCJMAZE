@@ -80,6 +80,8 @@ void setup() {
   #endif
   
   analogWrite(2, 0); 
+  setPitchCalibrated();
+
   // delay(500);
  
 }
@@ -1104,32 +1106,31 @@ void drive(int encoders, int speed) {
   double orientation;
   double orig_encoders = encoders;
   bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
-  double start_pitch = orientationData.orientation.z;
+  double start_pitch = pitchCalibrated();
   bool ramp_detect = false;
   bool down_ramp_detect = false;
   double start_ramp = INT_MAX;
   uint32_t tstart = millis();
   uint32_t tramp = UINT32_MAX;
   uint32_t tramp_up = UINT32_MAX;
-  const uint32_t ramp_up_elapsed = 800;
-  const uint32_t ramp_elapsed = 1200;
-  // encoders = orig_encoders / cos(-orientationData.orientation.z * (2 * PI / 360));
+  const uint32_t ramp_up_elapsed = 18 * CM_TO_ENCODERS;
+  const uint32_t ramp_elapsed = 24 * CM_TO_ENCODERS;
 
 
   while ((abs(motorR.getTicks()) < abs(encoders) && abs(motorL.getTicks()) < abs(encoders) && (tofCalibrated(4) >= 75)) || ramp_detect || down_ramp_detect) {
     bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
-    // encoders = orig_encoders / cos(abs(orientationData.orientation.z * (2 * PI / 360)));
 
     if (abs(start_pitch) < 4 && orientationData.orientation.z - start_pitch < -12 && !ramp_detect) {
-      tramp_up = millis();
+      // add delay to detect ramps
+      tramp_up = abs(motorR.getTicks());
       ramp_detect = true;
     }
 
-    if ((int64_t) millis() - (int64_t) tramp_up > 150 && orientationData.orientation.z - start_pitch < -12) {
+    if ((int64_t) abs(motorR.getTicks()) - (int64_t) tramp_up > encoders - ramp_up_elapsed && orientationData.orientation.z - start_pitch < -12) {
       // start_ramp = millis();
       oled.println("ramp detected!");
       bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
-      while (orientationData.orientation.z - start_pitch < -3) {
+      while (pitchCalibrated() - start_pitch < -3) {
         utils::forward(-SPEED * 0.75);
         bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
       }
@@ -1142,13 +1143,11 @@ void drive(int encoders, int speed) {
       alignAngle(false);
       alignAngle(false);
       bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
-      while(orientationData.orientation.z >= -3.5) {
+      while(pitchCalibrated() >= -3.5) {
         bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
         utils::forward(SPEED);
       }
-      bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
-      const double angle_start = orientationData.orientation.z;
-      while(abs(orientationData.orientation.z - angle_start) < 4) {
+      while(pitchCalibrated() - start_pitch < -1) {
         bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
         utils::forward(SPEED);
       }
@@ -1161,22 +1160,24 @@ void drive(int encoders, int speed) {
       return;
     }
 
-    if (abs(start_pitch) < 4 && orientationData.orientation.z - start_pitch > 3.5 && !down_ramp_detect) {
-      tramp = millis();
+    if (abs(start_pitch) < 4 && pitchCalibrated() - start_pitch > 5 && !down_ramp_detect) {
+      // add delay to ramps
+      tramp = abs(motorR.getTicks());
       down_ramp_detect = true;
       oled.println("down ramp detected 1");
     }
 
-    if ((int64_t) millis() - (int64_t) tramp > ramp_elapsed) {
+    if ((int64_t) abs(motorR.getTicks()) - (int64_t) tramp > encoders - ramp_elapsed) {
+      oled.println("down ramp detected 2");
         
       bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
-      while (abs(orientationData.orientation.z) < 5 && tofCalibrated(5) > 40) {
+      while (pitchCalibrated() - start_pitch < 3 && tofCalibrated(5) > 40) {
         oled.println("backward 1");
         bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
         utils::forward(-SPEED * 0.75);
       }
       bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
-      while (orientationData.orientation.z > 0 && tofCalibrated(5) > 40) {
+      while (pitchCalibrated() > 3 && tofCalibrated(5) > 40) {
         oled.println("backward 2");
         bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
         utils::forward(-SPEED * 0.75);
@@ -1190,18 +1191,17 @@ void drive(int encoders, int speed) {
       alignAngle(false);
       alignAngle(false);
       bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
-      while(orientationData.orientation.z <= 3.5) {
+      while(pitchCalibrated() - start_pitch <= 3.5) {
         bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
-        utils::forward(SPEED);
+        utils::forward(SPEED * 0.75);
       }
-      while(orientationData.orientation.z > 3.5) {
+      while(pitchCalibrated() - start_pitch > 1) {
         bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
-        utils::forward(SPEED * 0.65);
+        utils::forward(SPEED * 0.75);
       }
-      utils::stopMotors();
       utils::resetTicks();
       while (abs(motorR.getTicks()) < 10 * CM_TO_ENCODERS) {
-        utils::forward(SPEED * 0.65);
+        utils::forward(SPEED * 0.75);
       }
       utils::stopMotors();
       return;
@@ -1280,8 +1280,14 @@ void drive(int encoders, int speed) {
 
     if (!down_ramp_detect) {
       forward((millis() - tstart  < 5000) ? PID : 210);
-    } else {
-      forward(PID * 0.25 * ((ramp_elapsed - (millis() - tramp)) / ramp_elapsed));
+    } 
+    else {
+      double Kp_ramp = (30 - (abs(motorL.getTicks()) * ENCODERS_TO_CM)) / 30;
+      Serial.print("speed ");
+      Serial.println(PID * (Kp_ramp));
+      Serial.print("l ticks ");
+      Serial.println(motorL.getTicks());
+      forward(PID * (Kp_ramp));
     }
     angle = orientation;
   } 
@@ -1489,6 +1495,21 @@ unsigned int _tofCalibrated(int select)
   }
 }
 
+double pitchCalibrated() {
+  bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
+  Serial.print("offset: ");
+  Serial.println(pitch_offset);
+
+  return orientationData.orientation.z + pitch_offset;
+}
+
+void setPitchCalibrated() {
+  bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
+  Serial.print("offset calibrated: ");
+  pitch_offset = -orientationData.orientation.z;
+  Serial.println(pitch_offset);
+}
+
 unsigned int tofCalibrated(int select)
 {
   uint32_t dist = 0;
@@ -1583,19 +1604,19 @@ void loop()
 {
 
 
-  #ifndef NO_PI
-  #ifndef ALIGN_ANGLE
+#ifndef NO_PI
+#ifndef ALIGN_ANGLE
 
   int clear_oled_counter = 0;
 
-  for (int i = 0; i <= 1; i++) {
-    Serial.print(i);
-    Serial.print(": ");
-    Serial.print(_tofCalibrated(i));
-    Serial.print(", ");
+  // for (int i = 0; i <= 1; i++) {
+  //   Serial.print(i);
+  //   Serial.print(": ");
+  //   Serial.print(_tofCalibrated(i));
+  //   Serial.print(", ");
     
-  }
-  Serial.println();
+  // }
+  // Serial.println();
 
 
   int r,g,b,c;
@@ -1612,6 +1633,7 @@ void loop()
   bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
   // Serial.print("Orientation X:");
   // Serial.println(orientationData.orientation.x);
+  Serial.println(pitchCalibrated());
 
 
   oled.setCursor(0, 0);
