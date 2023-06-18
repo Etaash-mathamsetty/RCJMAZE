@@ -108,7 +108,7 @@ void addBoost(int speed){
   }
 #undef ATTACH_INT
 #undef ATTACH_INT2
-  int& getTicks(){
+  int32_t& getTicks(){
     return ticks[port];
   }
 
@@ -133,7 +133,7 @@ private:
 
   int port = 0;
   uint8_t boost;
-  static inline int ticks[4] = {0};
+  static inline int32_t ticks[4] = {0};
   static inline bool dir[4] = {true};
   int mult;
 };
