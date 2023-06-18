@@ -1140,8 +1140,7 @@ bool handle_down_ramp(double start_pitch)
       UPDATE_BNO();
       int32_t right = (_tofCalibrated(0) + _tofCalibrated(1))/2;
       int32_t left = (_tofCalibrated(2) + _tofCalibrated(3))/2;
-      float err = 0.0f
-
+      float err = 0.0f;
 
       if(left <= wall_tresh && right <= wall_tresh)
         err = (right - left) * wall_kp;
