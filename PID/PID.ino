@@ -1076,7 +1076,7 @@ void driveCM(float cm, int speed = 200, int tolerance = 10) {
 
 bool handle_up_ramp(double start_pitch)
 {
-  int32_t ticks = 10 * CM_TO_ENCODERS;
+  int32_t ticks = 15 * CM_TO_ENCODERS;
   auto old_ticks = motorR.getTicks();
   resetTicks();
   while(abs(motorR.getTicks()) < abs(ticks))
@@ -1088,8 +1088,8 @@ bool handle_up_ramp(double start_pitch)
   if(abs(BNO_Z - start_pitch) <= 2 || BNO_Z - start_pitch >= 7)
   {
     //not a ramp
-    motorR.getTicks() = old_ticks + ticks;
-    motorL.getTicks() = -old_ticks - ticks;
+    motorR.getTicks() = old_ticks - ticks;
+    motorL.getTicks() = -old_ticks + ticks;
     return false;
   }
   else
@@ -1116,7 +1116,7 @@ bool handle_up_ramp(double start_pitch)
 
 bool handle_down_ramp(double start_pitch)
 {
-  int32_t ticks = 10 * CM_TO_ENCODERS;
+  int32_t ticks = 15 * CM_TO_ENCODERS;
   auto old_ticks = motorR.getTicks();
   resetTicks();
   while(abs(motorR.getTicks()) < abs(ticks))
@@ -1128,8 +1128,8 @@ bool handle_down_ramp(double start_pitch)
   if(abs(BNO_Z - start_pitch) <= 2)
   {
     //not a ramp
-    motorR.getTicks() = old_ticks + ticks;
-    motorL.getTicks() = -old_ticks - ticks;
+    motorR.getTicks() = old_ticks - ticks;
+    motorL.getTicks() = -old_ticks + ticks;
     return false;
   }
   else
@@ -1366,9 +1366,9 @@ void alignAngle(bool reset, int tolerance = 5) {
     double new_angle = closestToDirection(orientationData.orientation.x);
 
     if (abs(orientationData.orientation.x)  - new_angle < 2.5 /* && abs(orientationData.orientation.x) */) {
-      raw_right(abs(orientationData.orientation.x - new_angle), SPEED - 20);
+      raw_right(abs(orientationData.orientation.x - new_angle), SPEED - 40);
     } else {
-      raw_left(abs(orientationData.orientation.x - new_angle), SPEED - 20);
+      raw_left(abs(orientationData.orientation.x - new_angle), SPEED - 40);
     } 
     return;
   } 
