@@ -22,6 +22,11 @@
 
 #define ARRAY_SIZE(arr) (sizeof(arr) / sizeof(arr[0]))
 
+#define BNO_X orientationData.orientation.x
+#define BNO_Y orientationData.orientation.y
+#define BNO_Z orientationData.orientation.z
+#define UPDATE_BNO() bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER)
+
 #ifdef DEBUG_DISPLAY
 U8X8_SSD1306_128X64_NONAME_SW_I2C oled(OLED_CLK, OLED_DATA);
 #endif
