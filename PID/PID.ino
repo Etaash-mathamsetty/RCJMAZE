@@ -1255,8 +1255,8 @@ void drive(int encoders, int speed) {
 
     if (abs(orientationData.orientation.z) < 5) {
       while(PI_SERIAL.available()) {
-        int right_ticks = motorR.getTicks();
-        int left_ticks = motorL.getTicks();
+        auto right_ticks = motorR.getTicks();
+        auto left_ticks = motorL.getTicks();
         stopMotors();
         pi_read_vision();
         oled.println("detected");
