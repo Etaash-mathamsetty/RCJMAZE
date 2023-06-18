@@ -1104,10 +1104,6 @@ bool handle_up_ramp(double start_pitch)
 
       if(left <= wall_tresh && right <= wall_tresh)
         err = (right - left) * wall_kp;
-      else if(left <= wall_tresh)
-        err = (left - 75) * wall_kp;
-      else if(right <= wall_tresh)
-        err = (right - 75) * wall_kp;
       utils::forward(100.0 + err, 100.0 - err);
     }
     stopMotors();
@@ -1144,8 +1140,11 @@ bool handle_down_ramp(double start_pitch)
       UPDATE_BNO();
       int32_t right = (_tofCalibrated(0) + _tofCalibrated(1))/2;
       int32_t left = (_tofCalibrated(2) + _tofCalibrated(3))/2;
+      float err = 0.0f
 
-      float err = (right - left) * wall_kp;
+
+      if(left <= wall_tresh && right <= wall_tresh)
+        err = (right - left) * wall_kp;
       utils::forward(90.0 + err, 90.0 - err);
     }
     stopMotors();
@@ -1367,7 +1366,7 @@ void alignAngle(bool reset, int tolerance = 5) {
     bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
     double new_angle = closestToDirection(orientationData.orientation.x);
 
-    if (orientationData.orientation.x  - new_angle < 0 /* && abs(orientationData.orientation.x) */) {
+    if (abs(orientationData.orientation.x)  - new_angle < 2.5 /* && abs(orientationData.orientation.x) */) {
       raw_right(abs(orientationData.orientation.x - new_angle), SPEED - 20);
     } else {
       raw_left(abs(orientationData.orientation.x - new_angle), SPEED - 20);
@@ -1580,45 +1579,48 @@ void loop()
   #ifndef NO_PI
   #ifndef ALIGN_ANGLE
 
-  int clear_oled_counter = 0;
+  drive(100 * CM_TO_ENCODERS, 110);
+  delay(1000);
 
-  for (int i = 0; i <= 1; i++) {
-    Serial.print(i);
-    Serial.print(": ");
-    Serial.print(_tofCalibrated(i));
-    Serial.print(", ");
+  // int clear_oled_counter = 0;
+
+  // for (int i = 0; i <= 1; i++) {
+  //   Serial.print(i);
+  //   Serial.print(": ");
+  //   Serial.print(_tofCalibrated(i));
+  //   Serial.print(", ");
     
-  }
-  Serial.println();
+  // }
+  // Serial.println();
 
 
-  int r,g,b,c;
-  tcaselect(6);
-  tcs.getRawData(&r, &g, &b, &c);
-  oled.println();
-  oled.print(r);
-  oled.print(" ");
-  oled.print(g);
-  oled.print(" ");
-  oled.print(b);
-  oled.println(" ");
-  oled.print(c);
-  bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
-  // Serial.print("Orientation X:");
-  // Serial.println(orientationData.orientation.x);
+  // int r,g,b,c;
+  // tcaselect(6);
+  // tcs.getRawData(&r, &g, &b, &c);
+  // oled.println();
+  // oled.print(r);
+  // oled.print(" ");
+  // oled.print(g);
+  // oled.print(" ");
+  // oled.print(b);
+  // oled.println(" ");
+  // oled.print(c);
+  // bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
+  // // Serial.print("Orientation X:");
+  // // Serial.println(orientationData.orientation.x);
 
 
-  oled.setCursor(0, 0);
-  clear_oled_counter++;
-  if(clear_oled_counter > 5)
-  {
-    oled.clearDisplay();
-    clear_oled_counter = 0;
-  }
-  delay(200);
+  // oled.setCursor(0, 0);
+  // clear_oled_counter++;
+  // if(clear_oled_counter > 5)
+  // {
+  //   oled.clearDisplay();
+  //   clear_oled_counter = 0;
+  // }
+  // delay(200);
   #else
-    alignAngle(true);
-    delay(1000);
+    // alignAngle(true);
+    // delay(1000);
   #endif
 
 
