@@ -487,25 +487,16 @@ int returnColor(bool only_black = false){
 
 void backup_align(int speed, int time) {
 
-  while (tofCalibrated(5) > 40) {
+  while (tofCalibrated(5) >= 50) {
     utils::forward(-speed);
   }
-  utils::resetTicks();
-  utils::stopMotors();
-  delay(100);
+  
+  delay(400);
 
-  const int tstart = millis();
-  while(millis() - tstart < time) {
-    utils::forward(-speed);
-  }
   utils::stopMotors();
 
   bno.begin(OPERATION_MODE_IMUPLUS);
-
-  // while(abs(motorR.getTicks() > 0) {
-  //   utils::forward(speed);
-  // }
-  // utils::stopMotors();
+  delay(200);
 }
 
 void right(int relative_angle, int speed, bool turn_status = true) {
@@ -1066,7 +1057,6 @@ void driveCM(float cm, int speed = 200, int tolerance = 10) {
     while(tofCalibrated(4) >= 70)
     {
       forward(speed * 0.7);
-
     }
     stopMotors();
   }
@@ -1437,7 +1427,7 @@ unsigned int _tofCalibrated(int select)
     case 1: 
     {
         tcaselect(1);
-        cal = tof.readRangeSingleMillimeters() - 40;
+        cal = tof.readRangeSingleMillimeters();
         cal = min(cal, max_dist);        
         return cal; 
         //pretty good 6/14 
