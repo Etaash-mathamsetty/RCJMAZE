@@ -5,6 +5,7 @@
 #define TEST
 // #define ALIGN_ANGLE
 #define NO_PI //basic auto when no raspberry pi (brain stem mode)
+// #define SMOOTH
 
 //define: debug display, motorsoff, test, comment out all others if you want to calibrate tofs 
 
@@ -1099,8 +1100,14 @@ bool handle_up_ramp(double start_pitch)
       UPDATE_BNO();
       int32_t right = (_tofCalibrated(0) + _tofCalibrated(1))/2;
       int32_t left = (_tofCalibrated(2) + _tofCalibrated(3))/2;
+      float err = 0.0f;
 
-      float err = (right - left) * wall_kp;
+      if(left <= wall_tresh && right <= wall_tresh)
+        err = (right - left) * wall_kp;
+      else if(left <= wall_tresh)
+        err = (left - 75) * wall_kp;
+      else if(right <= wall_tresh)
+        err = (right - 75) * wall_kp;
       utils::forward(100.0 + err, 100.0 - err);
     }
     stopMotors();
@@ -1177,20 +1184,21 @@ void drive(int encoders, int speed) {
   while ((abs(motorR.getTicks()) < abs(encoders) && abs(motorL.getTicks()) < abs(encoders) && (tofCalibrated(4) >= 75)) || ramp_detect || down_ramp_detect) {
     UPDATE_BNO();
     // encoders = orig_encoders / cos(abs(orientationData.orientation.z * (2 * PI / 360)));
-
-    if(BNO_Z - start_pitch < -5.5)
+    if(BNO_Z - start_pitch < -5.5 && !down_ramp_detect)
     {
       stopMotors();
       bool res = handle_up_ramp(start_pitch);
+      ramp_detect = res;
 
       if(res)
         return;
     }
 
-    if(BNO_Z - start_pitch > 5.5)
+    if(BNO_Z - start_pitch > 5.5 && !ramp_detect)
     {
       stopMotors();
       bool res = handle_down_ramp(start_pitch);
+      down_ramp_detect = res;
 
       if(res)
         return;
