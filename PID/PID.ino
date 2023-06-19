@@ -1076,14 +1076,14 @@ void driveCM(float cm, int speed = 200, int tolerance = 10) {
 
 bool handle_up_ramp(double start_pitch)
 {
-  int32_t ticks = 15 * CM_TO_ENCODERS;
+  int32_t ticks = 12 * CM_TO_ENCODERS;
   auto old_ticks = motorR.getTicks();
   resetTicks();
   while(abs(motorR.getTicks()) < abs(ticks))
   {
     forward(100);
   }
-
+  stopMotors();
   UPDATE_BNO();
   if(abs(BNO_Z - start_pitch) <= 2 || BNO_Z - start_pitch >= 7)
   {
@@ -1116,14 +1116,14 @@ bool handle_up_ramp(double start_pitch)
 
 bool handle_down_ramp(double start_pitch)
 {
-  int32_t ticks = 15 * CM_TO_ENCODERS;
+  int32_t ticks = 12 * CM_TO_ENCODERS;
   auto old_ticks = motorR.getTicks();
   resetTicks();
   while(abs(motorR.getTicks()) < abs(ticks))
   {
     forward(90);
   }
-
+  stopMotors();
   UPDATE_BNO();
   if(abs(BNO_Z - start_pitch) <= 2)
   {
