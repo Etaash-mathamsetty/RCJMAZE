@@ -5,6 +5,7 @@
 #include <sstream>
 #include <string.h>
 #include <future>
+#include <vector>
 #include "globals.h"
 #include "helpers.h"
 #include "scripting.h"
@@ -20,7 +21,10 @@ class robot
 		int index;
 		node* map;
 		node** floors;
-		ramp_info rampi;
+		bool floors_vis[max_num_floors];
+		LinkedList<ramp_info> rampi;
+		std::vector<int> up_ramp_index[max_num_floors];
+		std::vector<int> down_ramp_index[max_num_floors];
 
 		//helper funcs
 		bool forward();

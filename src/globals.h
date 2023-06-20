@@ -83,7 +83,6 @@ struct ramp_info
 {
 	int ramp_index[2];
 	int ramp_length;
-	bool is_set;
 };
 
 struct nearest_quad
