@@ -138,13 +138,17 @@ namespace driver
  #endif
 		auto org_index = bot->index;
 		auto org_sim_index = sim::sim_robot_index;
-		bool ramp = nodes[sim::sim_robot_index].ramp;
+		bool upramp = nodes[sim::sim_robot_index].ramp & 0b1;
+		bool downramp = nodes[sim::sim_robot_index].ramp & 0b10;
 		switch(bot->dir)
 		{
 			case DIR::N:
 			{
-				if(helper::is_valid_index(bot->index - horz_size) && helper::is_valid_index(sim::sim_robot_index - horz_size) && !bot->map[bot->index].N){
-					if(!ramp)
+				if(helper::is_valid_index(bot->index - horz_size) && helper::is_valid_index(sim::sim_robot_index - horz_size) && !bot->map[bot->index].N)
+				{
+					//this shouldn't happen
+					CHECK(upramp && downramp);
+					if(!upramp && !downramp)
 					{
 						bot->map[bot->index].bot = false;
 						nodes[sim::sim_robot_index].bot = false;
@@ -153,12 +157,30 @@ namespace driver
 						bot->map[bot->index].bot = true;
 						nodes[sim::sim_robot_index].bot = true;
 					}
-					else
+					else if(upramp)
 					{
+						int down_ramp_index = sim::get_down_ramp_index(sim::sim_robot_index);
+						if(down_ramp_index == -1)
+						{
+							std::cerr << "failed to go up ramp!" << std::endl;
+							return false;
+						}
+						nodes[sim::sim_robot_index].bot = false;
+						bot->map[bot->index].bot = false;
 						floor_num++;
 						nodes = floors[floor_num];
-						std::cerr << "second floor no workie!" << std::endl;
-						exit(EXIT_FAILURE);
+						sim::sim_robot_index = down_ramp_index;
+						bot->index = helper::get_index(default_index, default_index);
+						bot->map = bot->floors[floor_num];
+						bot->map[bot->index].ramp = 0b10;
+						bot->map[bot->index].bot = true;
+						nodes[sim::sim_robot_index].bot = true;
+					}
+					else if(downramp)
+					{
+						floor_num--;
+						nodes = floors[floor_num];
+
 					}
 				}
 				else{
@@ -172,7 +194,8 @@ namespace driver
 			{
 				if(helper::is_valid_index(bot->index + 1) && helper::is_valid_index(sim::sim_robot_index + 1) && !(bot->map[bot->index].E))
 				{
-					if(!ramp)
+					CHECK(upramp && downramp);
+					if(!upramp && !downramp)
 					{
 						bot->map[bot->index].bot = false;
 						nodes[sim::sim_robot_index].bot = false;
@@ -181,12 +204,48 @@ namespace driver
 						bot->map[bot->index].bot = true;
 						nodes[sim::sim_robot_index].bot = true;
 					}
-					else
+					else if(upramp)
 					{
+						int down_ramp_index = sim::get_down_ramp_index(sim::sim_robot_index);
+						if(down_ramp_index == -1)
+						{
+							std::cerr << "failed to go up ramp!" << std::endl;
+							return false;
+						}
+						nodes[sim::sim_robot_index].bot = false;
+						bot->map[bot->index].bot = false;
 						floor_num++;
 						nodes = floors[floor_num];
-						std::cerr << "second floor no workie!" << std::endl;
-						exit(EXIT_FAILURE);
+						sim::sim_robot_index = down_ramp_index;
+						//FIXME: check if the the floor is unvisited first! if it is visitied, then we need to track delta position
+						bot->index = helper::get_index(default_index, default_index);
+						bot->map = bot->floors[floor_num];
+						bot->map[bot->index].ramp = 0b10;
+						bot->map[bot->index].bot = true;
+						nodes[sim::sim_robot_index].bot = true;
+						
+					}
+					else if(downramp)
+					{
+						int up_ramp_index = sim::get_up_ramp_index(sim::sim_robot_index);
+						if(up_ramp_index == -1)
+						{
+							std::cerr << "failed to go down ramp!" << std::endl;
+							return false;
+						}
+						nodes[sim::sim_robot_index].bot = false;
+						bot->map[bot->index].bot = false;
+						floor_num--;
+						nodes = floors[floor_num];
+						sim::sim_robot_index = up_ramp_index;
+						//also wrong
+						bot->index = helper::get_index(default_index, default_index);
+						bot->map = bot->floors[floor_num];
+						bot->map[bot->index].ramp = 0b1;
+						bot->map[bot->index].bot = true;
+						nodes[sim::sim_robot_index].bot = true;
+						
+
 					}
 				}
 				else
@@ -200,7 +259,8 @@ namespace driver
 			case DIR::S:
 			{
 				if(helper::is_valid_index(bot->index + horz_size) && helper::is_valid_index(sim::sim_robot_index + horz_size) && !bot->map[bot->index].S){
-					if(!ramp)
+					CHECK(upramp && downramp);
+					if(!upramp && !downramp)
 					{
 						bot->map[bot->index].bot = false;
 						nodes[sim::sim_robot_index].bot = false;
@@ -209,13 +269,24 @@ namespace driver
 						bot->map[bot->index].bot = true;
 						nodes[sim::sim_robot_index].bot = true;
 					}
-					else
+					else if(upramp)
 					{
+						int down_ramp_index = sim::get_down_ramp_index(sim::sim_robot_index);
+						if(down_ramp_index == -1)
+						{
+							std::cerr << "failed to go up ramp!" << std::endl;
+							return false;
+						}
+						nodes[sim::sim_robot_index].bot = false;
+						bot->map[bot->index].bot = false;
 						floor_num++;
 						nodes = floors[floor_num];
-						std::cerr << "second floor no workie!" << std::endl;
-						exit(EXIT_FAILURE);
-
+						sim::sim_robot_index = down_ramp_index;
+						bot->index = helper::get_index(default_index, default_index);
+						bot->map = bot->floors[floor_num];
+						bot->map[bot->index].ramp = 0b10;
+						bot->map[bot->index].bot = true;
+						nodes[sim::sim_robot_index].bot = true;
 					}
 				}
 				else
@@ -229,7 +300,8 @@ namespace driver
 			case DIR::W:
 			{
 				if(helper::is_valid_index(bot->index - 1) && helper::is_valid_index(sim::sim_robot_index - 1) && !(bot->map[bot->index].W)){
-					if(!ramp)
+					CHECK(upramp && downramp);
+					if(!upramp && !downramp)
 					{
 						bot->map[bot->index].bot = false;
 						nodes[sim::sim_robot_index].bot = false;
@@ -238,12 +310,24 @@ namespace driver
 						bot->map[bot->index].bot = true;
 						nodes[sim::sim_robot_index].bot = true;
 					}
-					else
+					else if(upramp)
 					{
+						int down_ramp_index = sim::get_down_ramp_index(sim::sim_robot_index);
+						if(down_ramp_index == -1)
+						{
+							std::cerr << "failed to go up ramp!" << std::endl;
+							return false;
+						}
+						nodes[sim::sim_robot_index].bot = false;
+						bot->map[bot->index].bot = false;
 						floor_num++;
 						nodes = floors[floor_num];
-						std::cerr << "second floor no workie!" << std::endl;
-						exit(EXIT_FAILURE);
+						sim::sim_robot_index = down_ramp_index;
+						bot->index = helper::get_index(default_index, default_index);
+						bot->map = bot->floors[floor_num];
+						bot->map[bot->index].ramp = 0b10;
+						bot->map[bot->index].bot = true;
+						nodes[sim::sim_robot_index].bot = true;
 					}
 				}
 				else

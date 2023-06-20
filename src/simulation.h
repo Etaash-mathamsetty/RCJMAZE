@@ -15,14 +15,14 @@ namespace sim
     inline int _horz_size;
     inline int _vert_size;
     inline int sim_robot_index;
-    inline std::vector<int> ramp_positions[max_num_floors];
-    //std::string = "1,0","2,1","3,2","4,3" so on
-    //ramp_pair stores the pair 
-    inline std::map<std::string, std::vector<ramp_pair>> ramp_pairs;
+    inline std::vector<int> up_ramp_positions[max_num_floors];
+    inline std::vector<int> down_ramp_positions[max_num_floors];
 
     void read_map_from_file(std::string name);
 
-    ramp_pair* get_ramp_pair(int floor_num, int index);
+    int get_down_ramp_index(int cur_index);
+
+    int get_up_ramp_index(int cur_index);
 
     bool run_command();
 

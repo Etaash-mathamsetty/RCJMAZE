@@ -16,6 +16,7 @@ robot::robot(){
 		memset(floors, 0, sizeof(node*) * max_num_floors);
 		floors[0] = new node[horz_size * vert_size];
 		memset(floors[0], 0, horz_size * vert_size * sizeof(node));
+		memset(&rampi, 0, sizeof(rampi));
 		map = floors[0];
 
 #ifdef DEBUG

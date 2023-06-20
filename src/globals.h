@@ -71,11 +71,19 @@ struct ramp_pair
 	std::pair<int, int> ramp2;
 };
 
-enum class DIR{
+enum class DIR
+{
 		N,
 		E,
 		S,
 		W
+};
+
+struct ramp_info 
+{
+	int ramp_index[2];
+	int ramp_length;
+	bool is_set;
 };
 
 struct nearest_quad

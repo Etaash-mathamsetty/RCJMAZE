@@ -20,6 +20,7 @@ class robot
 		int index;
 		node* map;
 		node** floors;
+		ramp_info rampi;
 
 		//helper funcs
 		bool forward();

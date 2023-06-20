@@ -15,7 +15,7 @@ namespace sim
         node.vic |= (_c == 'v');
         node.checkpoint |= (_c == 'c');
         node.black |= (_c == 'b');
-        //using & operator just in case
+        //using & operator just in case (up ramp is first bit and down ramp is second bit)
         node.ramp |= (_c == 'u') & 0b1;
         node.ramp |= ((_c == 'd') << 1) & 0b10;
     }
@@ -36,7 +36,8 @@ namespace sim
         _horz_size++;
         in >> _vert_size;
 
-        std::vector<int>* ramps_cur_floor_pos = (ramp_positions + floor_number); 
+        std::vector<int>* up_ramps_cur_floor_pos = (up_ramp_positions + floor_number); 
+        std::vector<int>* down_ramp_cur_floor_pos = (down_ramp_positions + floor_number);
         floors[floor_number] = new simulation_node[horz_size * vert_size];
         memset(floors[floor_number], 0, sizeof(simulation_node) * horz_size * vert_size);
         nodes = floors[floor_number];
@@ -74,8 +75,10 @@ namespace sim
                     if(node.bot)
                         sim_robot_index = helper::get_index(v,i);
                     
-                    if(node.ramp)
-                        ramps_cur_floor_pos->push_back(helper::get_index(v,i));
+                    if(node.ramp & 0b1)
+                        up_ramps_cur_floor_pos->push_back(helper::get_index(v,i));
+                    if(node.ramp & 0b10)
+                        down_ramp_cur_floor_pos->push_back(helper::get_index(v,i));
                     //print_node(nodes[get_index(v,i)]);
                     //nodes[get_index(v,i)] = node;
                     //horz_size++;
@@ -106,8 +109,10 @@ namespace sim
                 if(node.bot)
                     sim_robot_index = helper::get_index(v,i);
 
-                if(node.ramp)
-                    ramps_cur_floor_pos->push_back(helper::get_index(v,i));
+                if(node.ramp & 0b1)
+                    up_ramps_cur_floor_pos->push_back(helper::get_index(v,i));
+                if(node.ramp & 0b10)
+                    down_ramp_cur_floor_pos->push_back(helper::get_index(v,i));
             }
             //printf("loop 3\n");
             for(float i = 0; i < _horz_size; i+=0.5)
@@ -126,26 +131,12 @@ namespace sim
                 if(node.bot)
                     sim_robot_index = helper::get_index(v,i);
                 
-                if(node.ramp)
-                    ramps_cur_floor_pos->push_back(helper::get_index(v,i));
+                if(node.ramp & 0b1)
+                    up_ramps_cur_floor_pos->push_back(helper::get_index(v,i));
+                if(node.ramp & 0b10)
+                    down_ramp_cur_floor_pos->push_back(helper::get_index(v,i));
             }
             //v++;
-        }
-        //create ramp pairs here: (create pairs, not on the first floor)
-        if(floor_number >= 1)
-        {
-            std::string map_key = std::to_string(floor_number) + "," + std::to_string(floor_number-1);
-            ramp_pair pair;
-            for(int i = 0; i < ramps_cur_floor_pos->size(); i++)
-            {
-                //recheck this logic
-                if(floors[floor_number][ramp_positions[floor_num][i]].ramp & 0b1 && floors[floor_num - 1][ramp_positions[floor_num - 1][i]].ramp & 0b10)
-                {
-                    pair.ramp1 = std::make_pair(floor_num - 1, ramp_positions[floor_num - 1][i]);
-                    pair.ramp2 = std::make_pair(floor_num, ramp_positions[floor_num][i]);
-                    ramp_pairs[map_key].push_back(pair);
-                }
-            }
         }
         
         floor_number++;
@@ -153,19 +144,30 @@ namespace sim
         return;
     }
 
-    ramp_pair* get_ramp_pair(int floor_num, int index)
+    int get_down_ramp_index(int cur_index)
     {
-        std::string map_key = std::to_string(floor_number) + "," + std::to_string(floor_number - 1);
-        ramp_pair pair;
-        for(int i = 0; i < ramp_pairs[map_key].size(); i++)
-        {
-            if(ramp_pairs[map_key][i].ramp1.second == index)
-            {
-                return &ramp_pairs[map_key][i];
-            }
-        }
+        auto iter = std::find(up_ramp_positions[floor_num].begin(), up_ramp_positions[floor_num].end(), cur_index);
+        if(iter == up_ramp_positions[floor_num].end())
+            return -1;
+        
+        size_t index = iter - up_ramp_positions[floor_num].begin();
+        if(floor_num + 1 > max_num_floors)
+            return -1;
+        index %= down_ramp_positions[floor_num + 1].size();
+        return down_ramp_positions[floor_num + 1][index];
+    }
 
-        return nullptr;
+    int get_up_ramp_index(int cur_index)
+    {
+        auto iter = std::find(down_ramp_positions[floor_num].begin(), down_ramp_positions[floor_num].end(), cur_index);
+        if(iter == down_ramp_positions[floor_num].end())
+            return -1;
+        
+        size_t index = iter - down_ramp_positions[floor_num].begin();
+        if(floor_num - 1 < 0)
+            return -1;
+        index %= up_ramp_positions[floor_num - 1].size();
+        return up_ramp_positions[floor_num - 1][index];
     }
 
     //vim style commands ig?
