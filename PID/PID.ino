@@ -1532,11 +1532,14 @@ void alignAngle(bool reset, int tolerance = 5) {
     }
     
 
-    if (abs(orientationData.orientation.x)  - new_angle < 2.5 /* && abs(orientationData.orientation.x) */) {
-      raw_right(abs(orientationData.orientation.x - new_angle), SPEED - 40);
-    } else {
-      raw_left(abs(orientationData.orientation.x - new_angle), SPEED - 40);
-    } 
+    if(abs(BNO_X - new_angle) < 2.5)
+    {
+      if (BNO_X  - new_angle < 0) {
+        raw_right(abs(BNO_X - new_angle), SPEED - 40);
+      } else {
+        raw_left(abs(BNO_X - new_angle), SPEED - 40);
+      } 
+    }
     return;
   } 
 
