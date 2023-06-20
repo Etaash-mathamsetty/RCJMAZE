@@ -115,6 +115,10 @@ void addBoost(int speed){
   void resetTicks(){
   	getTicks() = 0;
   }
+
+  void setTicks(int32_t val) {
+    getTicks() = val;
+  }
   
 private: 
 #define CREATE_INTERUPT2(x) static void interupt##x(){ \

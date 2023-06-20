@@ -1,11 +1,10 @@
 //#define FAKE_ROBOT
 //#define FAKE_SERIAL
 #define DEBUG_DISPLAY
-#define MOTORSOFF
+// #define MOTORSOFF
 #define TEST
 // #define ALIGN_ANGLE
-// #define NO_PI //basic auto when no raspberry pi (brain stem mode)
-// #define SMOOTH
+#define NO_PI //basic auto when no raspberry pi (brain stem mode)
 
 //define: debug display, motorsoff, test, comment out all others if you want to calibrate tofs 
 
@@ -34,6 +33,18 @@ void setup() {
 
   bno.begin(OPERATION_MODE_IMUPLUS);
   oled.println("BNO init done!");
+  pinMode(A15, INPUT_PULLUP);
+  pinMode(A13, INPUT_PULLUP);
+  if (digitalRead(A13)) {
+    Serial.println("left limit disconnected");
+    oled.println("left disconnect");
+  } else if (digitalRead(A15)) {
+    Serial.println("right limit disconnected");
+    oled.println("right disconnect");
+  } else {
+    Serial.println("limit init successful");
+    oled.println("limit successful");
+  }
 
   for (int i = TOF_START; i <= TOF_NUMBER; i++) {
     tcaselect(i);
@@ -784,7 +795,6 @@ void alignAngle(bool, int x = 5);
 
 void driveCM(float cm, int speed = 200, int tolerance = 10) {
   //kitDrop(1);
-
   bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
   if (abs(orientationData.orientation.z) < 12) {
     //pi_read_data();  
@@ -1100,7 +1110,7 @@ bool handle_up_ramp(double start_pitch)
   }
   else
   {
-    const float wall_kp = 0.3f;
+    const float wall_kp = 0.05f;
     while(abs(BNO_Z - start_pitch) > 2)
     {
       UPDATE_BNO();
@@ -1140,7 +1150,7 @@ bool handle_down_ramp(double start_pitch)
   }
   else
   {
-    const float wall_kp = 0.3f;
+    const float wall_kp = 0.05f;
     while(abs(BNO_Z - start_pitch) > 2)
     {
       UPDATE_BNO();
@@ -1157,6 +1167,71 @@ bool handle_down_ramp(double start_pitch)
     PI_SERIAL.println(10.0);
     return true;
   }
+
+}
+
+int left_obstacle() {
+  oled.println("Left");
+
+  stopMotors();
+  delay(100);
+
+  bool forward_obstacle = true;
+  int forward_ticks = 15 * CM_TO_ENCODERS;
+
+  resetTicks();
+  forward_obstacle = false;
+
+  while(abs(motorR.getTicks()) < forward_ticks) {
+    forward(-SPEED * 0.7);
+
+    if (tofCalibrated(5) < 80) {
+      forward_ticks = motorR.getTicks();
+      break;
+    }
+  }
+
+  stopMotors();
+  delay(100);
+
+  right(15, SPEED * 0.7);
+
+  stopMotors();
+  delay(100);
+
+  return abs(forward_ticks);
+}
+
+int right_obstacle() {
+  oled.println("Right");
+
+  stopMotors();
+  delay(100);
+
+  bool forward_obstacle = true;
+  int forward_ticks = 15 * CM_TO_ENCODERS;
+
+  resetTicks();
+  forward_obstacle = false;
+
+  while(abs(motorR.getTicks()) < forward_ticks) {
+    forward(-SPEED * 0.7);
+
+    if (tofCalibrated(5) < 80) {
+      forward_ticks = motorR.getTicks();
+      break;
+    }
+  }
+
+  stopMotors();
+  delay(100);
+
+  left(15, SPEED * 0.7);
+
+  stopMotors();
+  delay(100);
+
+  return abs(forward_ticks);
 
 }
 
@@ -1182,6 +1257,7 @@ void drive(int encoders, int speed) {
   bool ramp_detect = false;
   bool down_ramp_detect = false;
   uint32_t tstart = millis();
+  int32_t ticks_before = 0;
   // encoders = orig_encoders / cos(-orientationData.orientation.z * (2 * PI / 360));
 
 
@@ -1206,6 +1282,22 @@ void drive(int encoders, int speed) {
 
       if(res)
         return;
+    }
+
+
+    if (digitalRead(A13) == HIGH && abs(BNO_Z) < 3) {
+      tstart = millis();
+      ticks_before = abs(motorR.getTicks());
+      int dist = left_obstacle();
+      motorR.setTicks(ticks_before - dist);
+    }
+
+    if (digitalRead(A15) == HIGH && abs(BNO_Z) < 3) {
+      tstart = millis();
+      ticks_before = abs(motorR.getTicks());
+      int dist = right_obstacle();
+      motorR.setTicks(ticks_before - dist);
+
     }
     // if (millis() - start_ramp > 75 && ramp_detect) {
     //   encoders = motorR.getTicks() + (30 * CM_TO_ENCODERS - motorR.getTicks()) / cos(abs(orientationData.orientation.z * (PI / 180))) + 5 * CM_TO_ENCODERS;
@@ -1277,7 +1369,7 @@ void drive(int encoders, int speed) {
       }
     }
 
-    forward((millis() - tstart  < 5000) ? PID : 210);
+    forward((millis() - tstart  < 6000) ? PID : 210);
     angle = orientation;
   } 
   //correct horizontal error when inside of hallway 
@@ -1346,6 +1438,7 @@ void alignAngle(bool reset, int tolerance = 5) {
   int tofR3, tofR4;
   int lnum = 1, rnum = 0;
   const float kP = 0.7;
+  const float BNO_KP = 1.4;
   addBoost(TURN_BOOST - 5);
 
 
@@ -1367,9 +1460,38 @@ void alignAngle(bool reset, int tolerance = 5) {
   }
 
   if ((tofR3 >= wall_tresh || tofR4 >= wall_tresh) && (tofR1 >= wall_tresh || tofR2 >= wall_tresh)) {
+
+
     Serial.println("too high values");
-    bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
-    double new_angle = closestToDirection(orientationData.orientation.x);
+    UPDATE_BNO();
+    double new_angle = closestToDirection(BNO_X);
+
+    if (abs(BNO_X - new_angle) > 180) {
+      double reading = 0;
+      do {
+        UPDATE_BNO();
+        reading = BNO_X - 360;
+        double error = reading - new_angle;
+        forward(error * BNO_KP, -error * BNO_KP);
+
+        if (abs(error * BNO_KP) < 30) {
+          break;
+        }
+
+      } while(abs(BNO_X - new_angle) > 2);  
+    } else {
+      do {
+        UPDATE_BNO();
+        double error = BNO_X - new_angle;
+        forward(error * BNO_KP, -error * BNO_KP);
+
+        if (abs(error * BNO_KP) < 30) {
+          break;
+        }
+        
+      } while(abs(BNO_X - new_angle) > 2); 
+    }
+    
 
     if (abs(orientationData.orientation.x)  - new_angle < 2.5 /* && abs(orientationData.orientation.x) */) {
       raw_right(abs(orientationData.orientation.x - new_angle), SPEED - 40);
@@ -1597,7 +1719,12 @@ void loop()
     
   // }
   // Serial.println();
-  returnColor(false); 
+  // returnColor(false); 
+  Serial.print("Left: ");
+  Serial.print(digitalRead(A13));
+  Serial.print(" Right: ");
+  Serial.println(digitalRead(A15));
+  // Serial.println(motorR.getTicks());
 
   // int r,g,b,c;
   // tcaselect(6);
@@ -1649,7 +1776,7 @@ void loop()
   oled_display_walls(walls);
 
   if(!walls[0])
-  {
+  { 
     driveCM(32, 110);
   }
   else if(!walls[1])
