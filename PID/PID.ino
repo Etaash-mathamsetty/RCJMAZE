@@ -1,10 +1,10 @@
 //#define FAKE_ROBOT
 //#define FAKE_SERIAL
 #define DEBUG_DISPLAY
-// #define MOTORSOFF
+#define MOTORSOFF
 #define TEST
 // #define ALIGN_ANGLE
-#define NO_PI //basic auto when no raspberry pi (brain stem mode)
+// #define NO_PI //basic auto when no raspberry pi (brain stem mode)
 // #define SMOOTH
 
 //define: debug display, motorsoff, test, comment out all others if you want to calibrate tofs 
@@ -409,29 +409,32 @@ int returnColor(bool only_black = false){
     tcs.getRawData(&r, &g, &b, &c);
     const int persistance_count = 14;
 #if 0
-    Serial.print("red:");
-    Serial.print(r);
-    Serial.print(",");
-    Serial.print("green:");
-    Serial.print(g);
-    Serial.print(",");
-    Serial.print("blue:");
-    Serial.print(b);
-    Serial.print(",");
+//    Serial.print("red:");
+//    Serial.print(r);
+//    Serial.print(",");
+//    Serial.print("green:");
+//    Serial.print(g);
+//    Serial.print(",");
+//    Serial.print("blue:");
+//    Serial.print(b);
+//    Serial.print(",");
     Serial.print("clear:");
     Serial.print(c); 
-    Serial.print(",");
-    Serial.print("r/c:");
-    Serial.print((float)r/c * 100.0);
-    Serial.print(",");
-    Serial.print("g/c:");
-    Serial.print((float)g/c * 100.0);
+//    Serial.print(",");
+//    Serial.print("r/c:");
+//    Serial.print((float)r/c * 100.0);
+//    Serial.print(",");
+//    Serial.print("g/c:");
+//    Serial.print((float)g/c * 100.0);
     Serial.print(",");
     Serial.print("r/g:");
     Serial.print((float)r/g * 100.0);
     Serial.print(",");
     Serial.print("b/r:");
-    Serial.println((double)b/r * 100.0);
+    Serial.print((double)b/r * 100.0);
+    Serial.print(',');
+    Serial.print("sub:");
+    Serial.println((double)r/g * 100.0 - (double)b/r * 100.0);
 #endif
     // oled.println(r);
     // delay(50);
@@ -442,9 +445,9 @@ int returnColor(bool only_black = false){
     // oled.println(c);
     // delay(2000);
 
-    bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
+    UPDATE_BNO();
     for (int i = 0; i <= persistance_count; i++) {
-      if (c < 320  && c >= 180 && (r / (double)g) * 100.0 >= 116) {
+      if (c >= 180 && (r / (double)g) * 100.0 - ((double)b/r) * 100.0 >= 40) {
    //   silver_persistance++;
       // Serial.println("silver detected"); 
       // oled.println("silver");
@@ -452,24 +455,27 @@ int returnColor(bool only_black = false){
       //PI_SERIAL.println("silver");
         silver_detect++; //change later
       }
-      if(c < 110 && (double) b/r < 1 && abs(orientationData.orientation.z) < 3.5){ 
+      if(c < 100 && (double) b/r < 1 && abs(orientationData.orientation.z) < 3.5){ 
       // Serial.println("black detected"); 
       //oled.println("black");
       //pi_send_tag("color");
       //PI_SERIAL.println("black");  
         black_detect++;  
       }
-      if((double) b/r >= 1.5) {
+      if(c <= 150 && (double) b/r >= 1.5) {
         blue_detect++;
       }
     }
     if (blue_detect >= persistance_count && !only_black) {
+      Serial.println("blue detected");
       stopMotors();
       delay(5000);
       return 3;
     } else if (black_detect >= persistance_count) {
+      Serial.println("black detected");
       return 1;
     } else if (silver_detect >= persistance_count && !only_black) {
+      Serial.println("silver detected");
       return 2;
     } else {
       return 0;
@@ -1578,8 +1584,8 @@ void loop()
   #ifndef NO_PI
   #ifndef ALIGN_ANGLE
 
-  drive(100 * CM_TO_ENCODERS, 110);
-  delay(1000);
+//  drive(100 * CM_TO_ENCODERS, 110);
+//  delay(1000);
 
   // int clear_oled_counter = 0;
 
@@ -1591,7 +1597,7 @@ void loop()
     
   // }
   // Serial.println();
-
+  returnColor(false); 
 
   // int r,g,b,c;
   // tcaselect(6);
