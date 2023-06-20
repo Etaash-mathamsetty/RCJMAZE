@@ -25,6 +25,10 @@
 #define BNO_X orientationData.orientation.x
 #define BNO_Y orientationData.orientation.y
 #define BNO_Z orientationData.orientation.z
+#define FRONT_RIGHT A15
+#define FRONT_LEFT A13
+#define BACK_RIGHT A10
+#define BACK_LEFT A11
 #define UPDATE_BNO() bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER)
 
 #ifdef DEBUG_DISPLAY

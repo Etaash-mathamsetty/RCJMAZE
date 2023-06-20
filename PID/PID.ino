@@ -18,7 +18,6 @@ using namespace utils;
 void setup() {
 //#ifndef FAKE_SERIAL
   PI_SERIAL.begin(115200);
-
   Serial.begin(9600);
   setMotors(&motorR, &motorL);
   Wire.begin();
@@ -33,8 +32,12 @@ void setup() {
 
   bno.begin(OPERATION_MODE_IMUPLUS);
   oled.println("BNO init done!");
-  pinMode(A15, INPUT_PULLUP);
-  pinMode(A13, INPUT_PULLUP);
+
+  pinMode(FRONT_RIGHT, INPUT_PULLUP);
+  pinMode(FRONT_LEFT, INPUT_PULLUP);
+  pinMode(BACK_RIGHT, INPUT_PULLUP);
+  pinMode(BACK_LEFT, INPUT_PULLUP);
+
   if (digitalRead(A13)) {
     Serial.println("left limit disconnected");
     oled.println("left disconnect");
@@ -511,10 +514,26 @@ void backup_align(int speed, int time) {
   
   delay(400);
 
+  int32_t tstart = millis();
+
+  while(millis() - tstart > time) {
+    if (!digitalRead(BACK_LEFT)) {
+      motorL.run(-SPEED * 0.7);
+    } else {
+      motorL.stop();
+    }
+
+    if (!digitalRead(BACK_RIGHT)) {
+      motorR.run(-SPEED * 0.7);
+    } else {
+      motorR.stop();
+    }
+  }
+
   utils::stopMotors();
 
   bno.begin(OPERATION_MODE_IMUPLUS);
-  delay(200);
+  delay(80);
 }
 
 void right(int relative_angle, int speed, bool turn_status = true) {
@@ -548,7 +567,7 @@ void right(int relative_angle, int speed, bool turn_status = true) {
  
   if(tofCalibrated(5) <= wall_tresh - 30)
   {
-    backup_align(SPEED, 1200);
+    backup_align(SPEED, 600);
     // while(tofCalibrated(5) >= 70)
     // {
     //   forward(-speed);
@@ -606,7 +625,7 @@ void left(int relative_angle, int speed, bool turn_status = true) {
 
   if(tofCalibrated(5) <= wall_tresh - 30)
   {
-    backup_align(SPEED, 1200);
+    backup_align(SPEED, 600);
     // while(tofCalibrated(5) >= 70)
     // {
     //   forward(-speed);
@@ -1139,9 +1158,9 @@ bool handle_down_ramp(double start_pitch)
   {
     forward(90);
   }
-  stopMotors();
+  //stopMotors();
   UPDATE_BNO();
-  if(abs(BNO_Z - start_pitch) <= 2)
+  if(abs(BNO_Z - start_pitch) <= 2 || BNO_Z - start_pitch <= -7)
   {
     //not a ramp
     motorR.getTicks() = old_ticks - ticks;
@@ -1151,7 +1170,7 @@ bool handle_down_ramp(double start_pitch)
   else
   {
     const float wall_kp = 0.05f;
-    while(abs(BNO_Z - start_pitch) > 2)
+    while(abs(BNO_Z - start_pitch) >= 3)
     {
       UPDATE_BNO();
       int32_t right = (_tofCalibrated(0) + _tofCalibrated(1))/2;
@@ -1185,7 +1204,7 @@ int left_obstacle() {
   while(abs(motorR.getTicks()) < forward_ticks) {
     forward(-SPEED * 0.7);
 
-    if (tofCalibrated(5) < 80) {
+    if (tofCalibrated(5) < 80 || digitalRead(BACK_LEFT) || digitalRead(BACK_RIGHT)) {
       forward_ticks = motorR.getTicks();
       break;
     }
@@ -1217,7 +1236,7 @@ int right_obstacle() {
   while(abs(motorR.getTicks()) < forward_ticks) {
     forward(-SPEED * 0.7);
 
-    if (tofCalibrated(5) < 80) {
+    if (tofCalibrated(5) < 80 || digitalRead(BACK_LEFT) || digitalRead(BACK_RIGHT)) {
       forward_ticks = motorR.getTicks();
       break;
     }
@@ -1286,41 +1305,20 @@ void drive(int encoders, int speed) {
 
 
     if (digitalRead(A13) == HIGH && abs(BNO_Z) < 3) {
-      tstart = millis();
       ticks_before = abs(motorR.getTicks());
       int dist = left_obstacle();
       motorR.setTicks(ticks_before - dist);
+      encoders /= cos(15 * (PI/180));
+      tstart = millis();
     }
 
     if (digitalRead(A15) == HIGH && abs(BNO_Z) < 3) {
-      tstart = millis();
       ticks_before = abs(motorR.getTicks());
       int dist = right_obstacle();
       motorR.setTicks(ticks_before - dist);
-
+      encoders /= cos(15 * (PI/180));
+      tstart = millis();
     }
-    // if (millis() - start_ramp > 75 && ramp_detect) {
-    //   encoders = motorR.getTicks() + (30 * CM_TO_ENCODERS - motorR.getTicks()) / cos(abs(orientationData.orientation.z * (PI / 180))) + 5 * CM_TO_ENCODERS;
-    //   speed *= 0.7;
-    //   ramp_detect = false;
-    // }
-
-    // if (orientationData.orientation.z > 12 && abs(start_pitch) > -3) {
-    //   speed *= 0.7;
-    //   down_ramp_detect = true;
-    // }
-
-    // if (orientationData.orientation.z <= 12 && down_ramp_detect) {
-    //   speed *= (1.0/0.7);
-    // }
-
-    // if (orientationData.orientation.z <= 7 && !ramp_detect) {
-    //   encoders = orig_encoders;
-    // }
-
-    // oled.print("encoders: ");
-    // oled.println(encoders);
-    // oled.clearDisplay();
 
     p = speed * (double) (abs(encoders) - abs(motorR.getTicks())) / abs(encoders);
     //i = i + p;
@@ -1461,12 +1459,11 @@ void alignAngle(bool reset, int tolerance = 5) {
 
   if ((tofR3 >= wall_tresh || tofR4 >= wall_tresh) && (tofR1 >= wall_tresh || tofR2 >= wall_tresh)) {
 
-
     Serial.println("too high values");
     UPDATE_BNO();
     double new_angle = closestToDirection(BNO_X);
 
-    if (abs(BNO_X - new_angle) > 180) {
+    if (abs(BNO_X - new_angle) >= 180) {
       double reading = 0;
       do {
         UPDATE_BNO();
@@ -1720,10 +1717,14 @@ void loop()
   // }
   // Serial.println();
   // returnColor(false); 
-  Serial.print("Left: ");
+  Serial.print("Front Left: ");
   Serial.print(digitalRead(A13));
-  Serial.print(" Right: ");
-  Serial.println(digitalRead(A15));
+  Serial.print(" Front Right: ");
+  Serial.print(digitalRead(A15));
+  Serial.print(" Back Left: ");
+  Serial.print(digitalRead(BACK_LEFT));
+  Serial.print(" Back Right: ");
+  Serial.println(digitalRead(BACK_RIGHT));
   // Serial.println(motorR.getTicks());
 
   // int r,g,b,c;
