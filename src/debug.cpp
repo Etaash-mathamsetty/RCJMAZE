@@ -53,7 +53,7 @@ namespace debug
                 if(nodes[helper::get_index(i, l)].ramp)
                     putchar('r');
                 if(!nodes[helper::get_index(i,l)].bot && !nodes[helper::get_index(i,l)].vic && !nodes[helper::get_index(i,l)].checkpoint &&
-                    !nodes[helper::get_index(i,l)].black)
+                    !nodes[helper::get_index(i,l)].black && !nodes[helper::get_index(i, l)].ramp)
                     putchar(' ');
             }
             putchar('\n');
