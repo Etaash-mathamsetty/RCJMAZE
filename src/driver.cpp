@@ -170,7 +170,9 @@ namespace driver
 						floor_num++;
 						nodes = floors[floor_num];
 						sim::sim_robot_index = down_ramp_index;
-						bot->index = helper::get_index(default_index, default_index);
+						bot->index -= horz_size;
+						//ramp length
+						bot->index -= horz_size * 1;
 						bot->map = bot->floors[floor_num];
 						bot->map[bot->index].ramp = 0b10;
 						bot->map[bot->index].bot = true;
@@ -178,9 +180,23 @@ namespace driver
 					}
 					else if(downramp)
 					{
+						int up_ramp_index = sim::get_up_ramp_index(sim::sim_robot_index);
+						if(up_ramp_index == -1)
+						{
+							std::cerr << "failed to go up ramp!" << std::endl;
+							return false;
+						}
+						nodes[sim::sim_robot_index].bot = false;
+						bot->map[bot->index].bot = false;
 						floor_num--;
 						nodes = floors[floor_num];
-
+						sim::sim_robot_index = up_ramp_index;
+						bot->index -= horz_size;
+						//ramp length
+						bot->index -= horz_size * 1;
+						bot->map[bot->index].ramp = 0b1;
+						bot->map[bot->index].bot = true;
+						nodes[sim::sim_robot_index].bot = true;
 					}
 				}
 				else{
@@ -217,39 +233,14 @@ namespace driver
 						floor_num++;
 						nodes = floors[floor_num];
 						sim::sim_robot_index = down_ramp_index;
-						//FIXME: check if the the floor is unvisited first! if it is visitied, then we need to track delta position
-						if(!bot->floors_vis[floor_num])
-						{
-							ramp_info info;
-							info.ramp_index[0] = bot->index;
-							bot->index = helper::get_index(default_index, default_index);
-							info.ramp_index[1] = bot->index;
-							//assume everything has 1 length
-							info.ramp_length = 1;
-							bot->rampi.push_back(info);
-						}
-						else
-						{
-							auto iter = 
-							std::find(bot->up_ramp_index[floor_num-1].begin(), bot->up_ramp_index[floor_num-1].end(), bot->index);
-							if(iter == bot->up_ramp_index[floor_num-1].end())
-							{
-								bot->up_ramp_index[floor_num-1].push_back(bot->index);
-								//do the math to find the delta position
-								int calc_index = 0; //FIXME
-
-								bot->down_ramp_index[floor_num].push_back(calc_index);
-								bot->index = calc_index;
-							}
-							size_t index = iter - bot->up_ramp_index[floor_num-1].begin();
-							bot->index = bot->down_ramp_index[floor_num][index];
-						}
+						bot->index++;
+						//ramp length
+						bot->index += 1;
 						
 						bot->map = bot->floors[floor_num];
 						bot->map[bot->index].ramp = 0b10;
 						bot->map[bot->index].bot = true;
 						nodes[sim::sim_robot_index].bot = true;
-						bot->floors_vis[floor_num] = true;
 						
 					}
 					else if(downramp)
@@ -266,20 +257,13 @@ namespace driver
 						nodes = floors[floor_num];
 						sim::sim_robot_index = up_ramp_index;
 						bot->map = bot->floors[floor_num];
-						if(!bot->floors_vis[floor_num])
-						{
-							bot->index = helper::get_index(default_index, default_index);
-						}
-						else
-						{
-
-						}
+						bot->index++;
+						//ramp length
+						bot->index += 1;
 
 						bot->map[bot->index].ramp = 0b1;
 						bot->map[bot->index].bot = true;
 						nodes[sim::sim_robot_index].bot = true;
-						bot->floors_vis[floor_num] = true;
-
 					}
 				}
 				else
@@ -316,11 +300,37 @@ namespace driver
 						floor_num++;
 						nodes = floors[floor_num];
 						sim::sim_robot_index = down_ramp_index;
-						bot->index = helper::get_index(default_index, default_index);
+						bot->index += horz_size;
+						//ramp length
+						bot->index += horz_size * 1;
+
 						bot->map = bot->floors[floor_num];
 						bot->map[bot->index].ramp = 0b10;
 						bot->map[bot->index].bot = true;
 						nodes[sim::sim_robot_index].bot = true;
+					}
+					else if(downramp)
+					{
+						int up_ramp_index = sim::get_down_ramp_index(sim::sim_robot_index);
+						if(up_ramp_index == -1)
+						{
+							std::cerr << "failed to go up ramp!" << std::endl;
+							return false;
+						}
+						nodes[sim::sim_robot_index].bot = false;
+						bot->map[bot->index].bot = false;
+						floor_num--;
+						nodes = floors[floor_num];
+						sim::sim_robot_index = up_ramp_index;
+						bot->index += horz_size;
+
+						//ramp length
+						bot->index += horz_size * 1;
+
+						bot->map = bot->floors[floor_num];
+						bot->map[bot->index].ramp = 0b1;
+						nodes[sim::sim_robot_index].bot = true;
+
 					}
 				}
 				else
@@ -357,7 +367,9 @@ namespace driver
 						floor_num++;
 						nodes = floors[floor_num];
 						sim::sim_robot_index = down_ramp_index;
-						bot->index = helper::get_index(default_index, default_index);
+						bot->index--;
+						//ramp length
+						bot->index -= 1;
 						bot->map = bot->floors[floor_num];
 						bot->map[bot->index].ramp = 0b10;
 						bot->map[bot->index].bot = true;

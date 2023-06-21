@@ -21,10 +21,6 @@ class robot
 		int index;
 		node* map;
 		node** floors;
-		bool floors_vis[max_num_floors];
-		LinkedList<ramp_info> rampi;
-		std::vector<int> up_ramp_index[max_num_floors];
-		std::vector<int> down_ramp_index[max_num_floors];
 
 		//helper funcs
 		bool forward();

@@ -79,12 +79,6 @@ enum class DIR
 		W
 };
 
-struct ramp_info 
-{
-	int ramp_index[2];
-	int ramp_length;
-};
-
 struct nearest_quad
 {
 	int nearest[4];
@@ -102,9 +96,9 @@ struct nearest_quad
 	}
 };
 
-const int default_index = 19;
 const int horz_size = 40;
-const int vert_size = 40;
+const int vert_size = horz_size;
+const int default_index = (horz_size/2) - 1;
 
 namespace com
 {
