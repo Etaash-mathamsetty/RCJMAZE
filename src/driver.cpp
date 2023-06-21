@@ -537,6 +537,7 @@ namespace driver
 		else if(up_ramp)
 		{
 			bot->map[bot->index].bot = false;
+   bot->map[bot->index].ramp = 0b01;
 			floor_num++;
 			bot->map = bot->floors[floor_num];
 
@@ -551,6 +552,7 @@ namespace driver
 		else if(down_ramp)
 		{
 			bot->map[bot->index].bot = false;
+   bot->map[bot->index].ramp = 0b10;
 			floor_num--;
 			bot->map = bot->floors[floor_num];
 
