@@ -127,6 +127,7 @@ int main(int argc, char* argv[]){
 			{
 				Stack<int> path = BFS();
 				debug::print_path(path);
+				int old_floor = floor_num;
 				for(size_t l = 0; l < path.Size(); l++)
 				{
 					switch(path[l] - robot->index)
@@ -146,6 +147,9 @@ int main(int argc, char* argv[]){
 					}
 					robot->forward();
 					debug::print_map();
+					//entered different floor
+					if(old_floor != floor_num)
+						break;
 				}
 				if(quitable && robot->index == helper::get_index(default_index, default_index) && floor_num == 0)
 					break;
@@ -158,6 +162,7 @@ int main(int argc, char* argv[]){
 		{
 			Stack<int> path = BFS();
 			debug::print_path(path);
+			int old_floor = floor_num;
 			for(size_t l = 0; l < path.Size(); l++)
 			{
 				switch(path[l] - robot->index)
@@ -177,6 +182,8 @@ int main(int argc, char* argv[]){
 				}
 				robot->forward();
 				debug::print_map();
+				if(old_floor != floor_num)
+					break;
 			}
 			//debug::print_node(robot->map[robot->index]);
 			if(quitable && robot->index == helper::get_index(default_index, default_index))
