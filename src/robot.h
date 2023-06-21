@@ -5,6 +5,7 @@
 #include <sstream>
 #include <string.h>
 #include <future>
+#include <vector>
 #include "globals.h"
 #include "helpers.h"
 #include "scripting.h"
@@ -19,7 +20,9 @@ class robot
 		DIR dir;
 		int index;
 		node* map;
-		node** second_floor;
+		node** floors;
+		bool floors_vis[max_num_floors] = {false};
+		int start_tile_floor[max_num_floors] = {0};
 
 		//helper funcs
 		bool forward();

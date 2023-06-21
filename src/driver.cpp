@@ -7,6 +7,37 @@
 #include <filesystem>
 #include <fstream>
 
+void set_ramp_wall()
+{
+	robot* bot = robot::get_instance();
+	CHECK(bot);
+	CHECK(bot->map);
+
+	switch(bot->dir)
+	{
+		case DIR::N:
+			bot->map[bot->index].N = true;
+			bot->map[bot->index].E = true;
+			bot->map[bot->index].W = true;
+			return;
+		case DIR::E:
+			bot->map[bot->index].E = true;
+			bot->map[bot->index].N = true;
+			bot->map[bot->index].S = true;
+			return;
+		case DIR::W:
+			bot->map[bot->index].W = true;
+			bot->map[bot->index].N = true;
+			bot->map[bot->index].S = true;
+			return;
+		case DIR::S:
+			bot->map[bot->index].S = true;
+			bot->map[bot->index].E = true;
+			bot->map[bot->index].W = true;
+			return;
+	}
+}
+
 namespace driver
 {
     #ifdef SIMULATION
@@ -19,8 +50,8 @@ namespace driver
 		std::ifstream in;
 		in.open("save.txt");
 		in >> num_floors;
-		if(num_floors > 1 && second_floor == nullptr)
-			second_floor = new simulation_node*[num_second_floors];
+		if(num_floors > 1 && floors == nullptr)
+			floors = new simulation_node*[max_num_floors];
 		bool n, s, e, w, vic, bot_here, vis, ramp, checkpoint, black;
 		for(int i = 0; i < horz_size * vert_size; i++)
 		{
@@ -54,27 +85,29 @@ namespace driver
 			for(int i = 0; i < horz_size * vert_size; i++)
 			{
 				in >> n >> s >> e >> w >> vic >> bot_here >> vis >> ramp >> checkpoint;
-				bot->second_floor[l][i].N = n;
-				bot->second_floor[l][i].S = s;
-				bot->second_floor[l][i].E = e;
-				bot->second_floor[l][i].W = w;
-				bot->second_floor[l][i].bot = bot_here;
-				bot->second_floor[l][i].vic = vic;
-				bot->second_floor[l][i].vis = vis;
-				bot->second_floor[l][i].ramp = ramp;
-				bot->second_floor[l][i].checkpoint = checkpoint;
+				bot->floors[l][i].N = n;
+				bot->floors[l][i].S = s;
+				bot->floors[l][i].E = e;
+				bot->floors[l][i].W = w;
+				bot->floors[l][i].bot = bot_here;
+				bot->floors[l][i].vic = vic;
+				bot->floors[l][i].vis = vis;
+				bot->floors[l][i].ramp = ramp;
+				bot->floors[l][i].checkpoint = checkpoint;
+				if(bot->floors[l][i].bot)
+					sim::sim_robot_index = i;
 
 				in >> n >> s >> e >> w >> vic >> bot_here >> vis >> ramp >> checkpoint >> black;
-				second_floor[l][i].N = n;
-				second_floor[l][i].S = s;
-				second_floor[l][i].E = e;
-				second_floor[l][i].W = w;
-				second_floor[l][i].vic = vic;
-				second_floor[l][i].vis = vis;
-				second_floor[l][i].ramp = ramp;
-				second_floor[l][i].black = black;
-				second_floor[l][i].bot = bot_here;
-				second_floor[l][i].checkpoint = checkpoint;
+				floors[l][i].N = n;
+				floors[l][i].S = s;
+				floors[l][i].E = e;
+				floors[l][i].W = w;
+				floors[l][i].vic = vic;
+				floors[l][i].vis = vis;
+				floors[l][i].ramp = ramp;
+				floors[l][i].black = black;
+				floors[l][i].bot = bot_here;
+				floors[l][i].checkpoint = checkpoint;
 			}
 		}
 	}
@@ -87,31 +120,19 @@ namespace driver
 		std::ofstream out;
 		out.open("save.txt");
 		out << num_floors << std::endl;
+		for(int l = 0; l < num_floors; l++)
 		for(int i = 0; i < horz_size * vert_size; i++)
 		{
-			out << bot->map[i].N << " " << bot->map[i].S << " " << bot->map[i].E << " " << bot->map[i].W
-			<< " " << bot->map[i].vic << " " << bot->map[i].bot << " " << bot->map[i].vis << " " << bot->map[i].ramp 
-			<< " " << bot->map[i].checkpoint << std::endl;
-			out << nodes[i].N << " " << nodes[i].S << " " << nodes[i].E << " " << nodes[i].W
-			<< " " << nodes[i].vic << " " << nodes[i].bot << " " << nodes[i].vis << " " << nodes[i].ramp
-			<< " " << nodes[i].checkpoint << " " << nodes[i].black << std::endl;
-		}
-		if(num_floors > 1)
-		{
-			for(int l = 0; l < num_floors; l++)
-			for(int i = 0; i < horz_size * vert_size; i++)
-			{
-				out << bot->second_floor[l][i].N << " " << bot->second_floor[l][i].S << " ";
-				out << bot->second_floor[l][i].E << " " << bot->second_floor[l][i].W << " ";
-				out << bot->second_floor[l][i].vic << " " << bot->second_floor[l][i].bot << " ";
-				out << bot->second_floor[l][i].vis << " " << bot->second_floor[l][i].ramp << " ";
-				out << bot->second_floor[l][i].checkpoint << std::endl;
+			out << bot->floors[l][i].N << " " << bot->floors[l][i].S << " ";
+			out << bot->floors[l][i].E << " " << bot->floors[l][i].W << " ";
+			out << bot->floors[l][i].vic << " " << bot->floors[l][i].bot << " ";
+			out << bot->floors[l][i].vis << " " << bot->floors[l][i].ramp << " ";
+			out << bot->floors[l][i].checkpoint << std::endl;
 
-				out << second_floor[l][i].N << " " << second_floor[l][i].S << " " << second_floor[l][i].E << " ";
-				out << second_floor[l][i].W << " " << second_floor[l][i].vic << " " << second_floor[l][i].bot << " ";
-				out << second_floor[l][i].vis << " " << second_floor[l][i].ramp << " " << second_floor[l][i].checkpoint << " ";
-				out << second_floor[l][i].black << std::endl;
-			}
+			out << floors[l][i].N << " " << floors[l][i].S << " " << floors[l][i].E << " ";
+			out << floors[l][i].W << " " << floors[l][i].vic << " " << floors[l][i].bot << " ";
+			out << floors[l][i].vis << " " << floors[l][i].ramp << " " << floors[l][i].checkpoint << " ";
+			out << floors[l][i].black << std::endl;
 		}
 	}
 
@@ -133,7 +154,82 @@ namespace driver
 		PythonScript::Exec(cleanup_py_file);
 		if(std::filesystem::exists("save.txt"))
 			std::filesystem::remove("save.txt");
-	}    
+	}
+
+	bool set_mov_indexes(int delta, int ramp_len = 1)
+	{
+		robot* bot = robot::get_instance();
+		CHECK(bot);
+		CHECK(bot->map);
+		CHECK(nodes);
+		
+		bot->map[bot->index].bot = false;
+		nodes[sim::sim_robot_index].bot = false;
+		bot->index += delta;
+		sim::sim_robot_index += delta;
+		bot->map[bot->index].bot = true;
+		nodes[sim::sim_robot_index].bot = true;
+
+		bool up_ramp = nodes[sim::sim_robot_index].ramp & 0b01;
+		bool down_ramp = nodes[sim::sim_robot_index].ramp & 0b10;
+		CHECK(up_ramp && down_ramp);
+		if(up_ramp)
+		{
+			set_ramp_wall();
+			int down_ramp_index = sim::get_down_ramp_index(sim::sim_robot_index);
+			if(down_ramp_index == -1)
+			{
+				std::cerr << "ERR: no upramp found!" << std::endl;
+				return false;
+			}
+			bot->map[bot->index].bot = false;
+			nodes[sim::sim_robot_index].bot = false;
+			bot->map[bot->index].ramp = 0b01;
+			floor_num++;
+			bot->map = bot->floors[floor_num];
+			nodes = floors[floor_num];
+			bot->index += ramp_len * delta;
+			sim::sim_robot_index = down_ramp_index;
+			bot->map[bot->index].bot = true;
+			nodes[sim::sim_robot_index].bot = true;
+			bot->map[bot->index - delta].ramp = 0b10;
+			
+			if(!bot->floors_vis[floor_num])
+			{
+				bot->start_tile_floor[floor_num] = bot->index;
+				bot->floors_vis[floor_num] = true;
+			}
+		}			
+		else if(down_ramp)
+		{
+			set_ramp_wall();
+			int up_ramp_index = sim::get_up_ramp_index(sim::sim_robot_index);
+			if(up_ramp_index == -1)
+			{
+				std::cerr << "ERR: no downramp found!" << std::endl;
+				return false;
+			}
+			bot->map[bot->index].bot = false;
+			nodes[sim::sim_robot_index].bot = false;
+			bot->map[bot->index].ramp = 0b10;
+			floor_num--;
+			bot->map = bot->floors[floor_num];
+			nodes = floors[floor_num];
+			bot->index += ramp_len * delta;
+			sim::sim_robot_index = up_ramp_index;
+			bot->map[bot->index].bot = true;
+			nodes[sim::sim_robot_index].bot = true;
+			bot->map[bot->index - delta].ramp = 0b01;
+
+			if(!bot->floors_vis[floor_num])
+			{
+				bot->start_tile_floor[floor_num] = bot->index;
+				bot->floors_vis[floor_num] = true;
+			}
+		}
+		
+		return true;
+	}
 
     CREATE_DRIVER(bool, forward)
 	{
@@ -148,24 +244,15 @@ namespace driver
  #endif
 		auto org_index = bot->index;
 		auto org_sim_index = sim::sim_robot_index;
-		bool ramp = nodes[sim::sim_robot_index].ramp;
 		switch(bot->dir)
 		{
 			case DIR::N:
 			{
-				if(helper::is_valid_index(bot->index - horz_size) && helper::is_valid_index(sim::sim_robot_index - horz_size) && !bot->map[bot->index].N){
-					bot->map[bot->index].bot = false;
-					nodes[sim::sim_robot_index].bot = false;
-					bot->index -= horz_size;
-					sim::sim_robot_index -= horz_size;
-					bot->map[bot->index].bot = true;
-					nodes[sim::sim_robot_index].bot = true;
-
-					if(ramp)
+				if(helper::is_valid_index(bot->index - horz_size) && helper::is_valid_index(sim::sim_robot_index - horz_size) && !bot->map[bot->index].N)
+				{
+					if(!set_mov_indexes(-horz_size))
 					{
-						floor_num++;
-						nodes = second_floor[floor_num - 1];
-						sim::sim_robot_index = sim::second_floor_entrance[floor_num - 1];
+						return false;
 					}
 				}
 				else{
@@ -179,18 +266,9 @@ namespace driver
 			{
 				if(helper::is_valid_index(bot->index + 1) && helper::is_valid_index(sim::sim_robot_index + 1) && !(bot->map[bot->index].E))
 				{
-					bot->map[bot->index].bot = false;
-					nodes[sim::sim_robot_index].bot = false;
-					(bot->index)++;
-					sim::sim_robot_index++;
-					bot->map[bot->index].bot = true;
-					nodes[sim::sim_robot_index].bot = true;
-
-					if(ramp) 
+					if(!set_mov_indexes(1))
 					{
-						floor_num++;
-						nodes = second_floor[floor_num - 1];
-						sim::sim_robot_index = sim::second_floor_entrance[floor_num - 1];
+						return false;
 					}
 				}
 				else
@@ -204,18 +282,9 @@ namespace driver
 			case DIR::S:
 			{
 				if(helper::is_valid_index(bot->index + horz_size) && helper::is_valid_index(sim::sim_robot_index + horz_size) && !bot->map[bot->index].S){
-					bot->map[bot->index].bot = false;
-					nodes[sim::sim_robot_index].bot = false;
-					bot->index += horz_size;
-					sim::sim_robot_index += horz_size;
-					bot->map[bot->index].bot = true;
-					nodes[sim::sim_robot_index].bot = true;
-
-					if(ramp)
+					if(!set_mov_indexes(horz_size))
 					{
-						floor_num++;
-						nodes = second_floor[floor_num - 1];
-						sim::sim_robot_index = sim::second_floor_entrance[floor_num - 1];
+						return false;
 					}
 				}
 				else
@@ -229,18 +298,9 @@ namespace driver
 			case DIR::W:
 			{
 				if(helper::is_valid_index(bot->index - 1) && helper::is_valid_index(sim::sim_robot_index - 1) && !(bot->map[bot->index].W)){
-					bot->map[bot->index].bot = false;
-					nodes[sim::sim_robot_index].bot = false;
-					(bot->index)--;
-					sim::sim_robot_index--;
-					bot->map[bot->index].bot = true;
-					nodes[sim::sim_robot_index].bot = true;
-
-					if(ramp)
+					if(!set_mov_indexes(-1))
 					{
-						floor_num++;
-						nodes = second_floor[floor_num - 1];
-						sim::sim_robot_index = sim::second_floor_entrance[floor_num - 1];
+						return false;
 					}
 				}
 				else
@@ -355,9 +415,10 @@ namespace driver
 		out.open("save.txt");
 		std::cout << "saving state" << std::endl;
 		//out << helper::dir_to_char(bot->dir) << std::endl;
+		for(int l = 0; l < max_num_floors; l++)
 		for(int i = 0; i < horz_size * vert_size; i++)
 		{
-			node n = bot->map[i];
+			node n = bot->floors[l][i];
 			out << n.N << " " << n.E << " " << n.S << " " << n.W << " ";
 			out << n.vic << " " << n.bot << " " << n.vis << " " << n.ramp << " ";
 			out << n.checkpoint << std::endl;
@@ -371,18 +432,23 @@ namespace driver
 		CHECK(bot->map);
 		std::ifstream in;
 		in.open("save.txt");
-		bool n, e, s, w, vic, vis, ramp, checkpoint, bot_here;
+		bool n, e, s, w, vic, vis, checkpoint, bot_here;
+		uint8_t ramp;
 		//char dir;
 		//in >> dir;
 		//wtf happens with directions, I think we can only restart the raspberry pi
 		//bot->dir = helper::char_to_dir(dir);
+		for(int l = 0; l < max_num_floors; l++)
 		for(int i = 0; i < horz_size * vert_size; i++)
 		{
 			in >> n >> e >> s >> w >> vic >> bot_here >> vis >> ramp >> checkpoint;
 			if(bot_here)
+			{
 				bot->index = i;
+				bot->map = bot->floors[l];
+			}
 			
-			node& temp = bot->map[i];
+			node& temp = bot->floors[l][i];
 			temp.N = n;
 			temp.E = e;
 			temp.S = s;
@@ -393,7 +459,7 @@ namespace driver
 			temp.checkpoint = checkpoint;
 			temp.bot = bot_here;
 		}
-		std::cout << "loading save file!" << std::endl;
+		std::cout << "loaded save file!" << std::endl;
 	}
 
 	CREATE_DRIVER(void, init_robot)
@@ -414,7 +480,7 @@ namespace driver
 	CREATE_DRIVER(void, drop_vic, int num, bool left)
 	{
 		//d [drop] N [number of kits, single digit only, can be 0 which will trigger the led] l/r [direction] \n
-		std::string direction = left ? "l" : "q";
+		std::string direction = left ? "l" : "r";
 		Bridge::remove_data_value("drop_status");
 		PythonScript::CallPythonFunction<bool, std::string>("SendSerialCommand", com::drop_vic + std::to_string(num) + direction + "\n");
 		
@@ -477,6 +543,8 @@ namespace driver
 		//debug::print_node(bot->map[bot->index]);
 		
 		Bridge::remove_data_value("victim");
+		Bridge::remove_data_value("NRK");
+		Bridge::remove_data_value("left");
 	
 		if(!bot->map[bot->index].vic)
 		{
@@ -495,71 +563,65 @@ namespace driver
 		}
 	}
 
+	void set_mov_indexes(int delta, bool up_ramp, bool down_ramp, int ramp_len)
+	{
+		robot* bot = robot::get_instance();
+		CHECK(bot);
+		CHECK(bot->map);
+		bot->map[bot->index].bot = false;
+		bot->index += delta;
+		bot->map[bot->index].bot = true;
+
+		if(up_ramp)
+		{
+			set_ramp_wall();
+			bot->map[bot->index].bot = false;
+            bot->map[bot->index].ramp = 0b01;
+			floor_num++;
+			bot->map = bot->floors[floor_num];
+
+			bot->index += delta * ramp_len;
+
+			bot->map[bot->index - delta].ramp = 0b10;
+			bot->map[bot->index].bot = true;
+
+			if(!bot->floors_vis[floor_num])
+			{
+				bot->start_tile_floor[floor_num] = bot->index;
+				bot->floors_vis[floor_num] = true;
+			}
+
+			std::cout << "on a higher floor: " << floor_num << ',' << bot->index << std::endl;
+		}
+		else if(down_ramp)
+		{
+			set_ramp_wall();
+			bot->map[bot->index].bot = false;
+            bot->map[bot->index].ramp = 0b10;
+			floor_num--;
+			bot->map = bot->floors[floor_num];
+
+			bot->index += delta * ramp_len;
+
+			bot->map[bot->index - delta].ramp = 0b01;
+			bot->map[bot->index].bot = true;
+
+			if(!bot->floors_vis[floor_num])
+			{
+				bot->start_tile_floor[floor_num] = bot->index;
+				bot->floors_vis[floor_num] = true;
+			}
+
+			std::cout << "on a lower floor: " << floor_num << ',' << bot->index << std::endl;
+		}
+	}
+
 	CREATE_DRIVER(bool, forward)
 	{
 		robot* bot = robot::get_instance();
 		CHECK(bot);
 		CHECK(bot->map);
 		auto org_index = bot->index;
-		switch(bot->dir)
-		{
-			case DIR::N:
-			{
-				if(helper::is_valid_index(bot->index - horz_size) && !bot->map[bot->index].N){
-					bot->map[bot->index].bot = false;
-					(bot->index) -= horz_size;
-					bot->map[bot->index].bot = true;
-				}
-				else{
-					std::cerr << "ERROR: Cannot move forward!" << std::endl;
-					debug::print_robot_info(bot);
-					return false;
-				}
-				break;
-			}
-			case DIR::E:
-			{
-				if(helper::is_valid_index(bot->index + 1) && !bot->map[bot->index].E){
-					bot->map[bot->index].bot = false;
-					(bot->index)++;
-					bot->map[bot->index].bot = true;
-				}
-				else{
-					std::cerr << "ERROR: Cannot move forward!" << std::endl;
-					debug::print_robot_info(bot);
-					return false;
-				}
-				break;
-			}
-			case DIR::S:
-			{
-				if(helper::is_valid_index(bot->index + horz_size) && !bot->map[bot->index].S){
-					bot->map[bot->index].bot = false;
-					(bot->index) += horz_size;
-					bot->map[bot->index].bot = true;
-				}
-				else{
-					std::cerr << "ERROR: Cannot move forward!" << std::endl;
-					debug::print_robot_info(bot);
-					return false;
-				}
-				break;
-			}
-			case DIR::W:
-			{
-				if(helper::is_valid_index(bot->index - 1) && !bot->map[bot->index].W){
-					bot->map[bot->index].bot = false;
-					(bot->index)--;
-					bot->map[bot->index].bot = true;
-				}
-				else{
-					std::cerr << "ERROR: Cannot move forward!" << std::endl;
-					debug::print_robot_info(bot);
-					return false;
-				}
-				break;
-			}
-		}
 		/*
 		 *
 		 * aysnc call using serial: PythonScript::CallPythonFunction("SendSerialCommand", "f\n");
@@ -606,6 +668,63 @@ namespace driver
 				}
 			}
 			std::this_thread::sleep_for(std::chrono::milliseconds(20));
+		}
+
+		int ramp = (int)(*Bridge::get_data_value("ramp"))[0];
+		int ramp_len = (int)(*Bridge::get_data_value("ramp"))[1];
+		//works since it can't be both :)
+		bool up_ramp = ramp == 1;
+		bool down_ramp = ramp == 10;
+		switch(bot->dir)
+		{
+			case DIR::N:
+			{
+				if(helper::is_valid_index(bot->index - horz_size) && !bot->map[bot->index].N){
+					set_mov_indexes(-horz_size, up_ramp, down_ramp, ramp_len);
+				}
+				else{
+					std::cerr << "ERROR: Cannot move forward!" << std::endl;
+					debug::print_robot_info(bot);
+					return false;
+				}
+				break;
+			}
+			case DIR::E:
+			{
+				if(helper::is_valid_index(bot->index + 1) && !bot->map[bot->index].E){
+					set_mov_indexes(1, up_ramp, down_ramp, ramp_len);
+				}
+				else{
+					std::cerr << "ERROR: Cannot move forward!" << std::endl;
+					debug::print_robot_info(bot);
+					return false;
+				}
+				break;
+			}
+			case DIR::S:
+			{
+				if(helper::is_valid_index(bot->index + horz_size) && !bot->map[bot->index].S){
+					set_mov_indexes(horz_size, up_ramp, down_ramp, ramp_len);
+				}
+				else{
+					std::cerr << "ERROR: Cannot move forward!" << std::endl;
+					debug::print_robot_info(bot);
+					return false;
+				}
+				break;
+			}
+			case DIR::W:
+			{
+				if(helper::is_valid_index(bot->index - 1) && !bot->map[bot->index].W){
+					set_mov_indexes(-1, up_ramp, down_ramp, ramp_len);
+				}
+				else{
+					std::cerr << "ERROR: Cannot move forward!" << std::endl;
+					debug::print_robot_info(bot);
+					return false;
+				}
+				break;
+			}
 		}
 
 		auto status = *Bridge::get_data_value("forward_status");

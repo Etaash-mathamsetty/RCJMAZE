@@ -14,9 +14,27 @@
 
 using namespace utils;
 
+bool restart = false;
 
 void setup() {
-//#ifndef FAKE_SERIAL
+  if(restart)
+  {
+    oled.clearDisplay();
+    oled.clear();
+    oled.setCursor(0,0);
+    oled.println("Reinit...");
+    delay(200);
+    //reinit all variables here:
+    utils::resetBoost();
+    utils::stopMotors();
+    utils::resetTicks();
+    utils::resetServo();
+    cur_direction = 0;
+    global_angle = 0.0;
+  }
+
+  restart = false;
+#ifndef FAKE_SERIAL
   PI_SERIAL.begin(115200);
   Serial.begin(9600);
   setMotors(&motorR, &motorL);
@@ -219,7 +237,7 @@ void pi_read_vision() {
         pi_send_tag("drop_status");
         PI_SERIAL.println("0.0");
       }
-    } else if (c == 'q') {
+    } else if (c == 'r') {
       if(cur_cmd.length() > 0 && cur_cmd[0] == 'd') {
         pi_send_tag("drop_status");
         PI_SERIAL.println("1.0");
@@ -243,6 +261,17 @@ void pi_read_vision() {
       {
         num = c - '0';
       }
+    }
+    else if(c == 'q')
+    {
+      Serial.println("Restarting...");
+      oled.clear();
+      oled.clearDisplay();
+      oled.setCursor(0, 0);
+      oled.println("Restarting...");
+      delay(200);
+      restart = true;
+      return;
     }
   }
 
@@ -287,7 +316,7 @@ void pi_read_data() {
   String cur_cmd = "";
   Serial.println(data);
   for (char c : data) {
-    if (c == 'g' || c == 'f' || c == 't' || c == 'd') {
+    if (c == 'g' || c == 'f' || c == 't' || c == 'd' || c == 'q') {
       if (cur_cmd.length() > 0) {
         if (cur_cmd[0] == 'g' || cur_cmd[0] == 'f') {
           Serial.println("FORWARD");
@@ -300,13 +329,13 @@ void pi_read_data() {
       cur_cmd.remove(0);
       cur_cmd += c;
     }
-    else if (c >= '0' && c <= '9') {
+    if (c >= '0' && c <= '9') {
       if(cur_cmd.length() > 0 && cur_cmd[0] == 'd')
       {
         num = c - '0';
       }
     }
-    else if (c == 'l') {
+    if (c == 'l') {
       if(cur_cmd.length() > 0 && cur_cmd[0] == 'd') {
         pi_send_tag("drop_status");
         PI_SERIAL.println("1.0");
@@ -368,7 +397,7 @@ void pi_read_data() {
         //Serial.println("sending wall data");
       }
     }
-    else if (c == 'e' || c == 'w' || c == 's' || c == 'n') {
+    if (c == 'e' || c == 'w' || c == 's' || c == 'n') {
       if (cur_cmd.length() > 0) {
         if (cur_cmd[0] == 'f' || cur_cmd[0] == 'g') {
           Serial.print("turn to ");
@@ -398,7 +427,7 @@ void pi_read_data() {
         continue;
       }
     }
-    else if (c == '\n' || c == '\0') {
+    if (c == '\n' || c == '\0') {
       if (cur_cmd.length() > 0) {
         if (cur_cmd[0] == 'g' || cur_cmd[0] == 'f') {
           Serial.println("FORWARD");
@@ -406,6 +435,17 @@ void pi_read_data() {
           driveCM(30, 110, 1);
         } else {
           Serial.println("ERR: Invalid Parameter");
+        }
+        if(cur_cmd[0] == 'q')
+        {
+          Serial.println("restarting");
+          oled.clear();
+          oled.clearDisplay();
+          oled.setCursor(0,0);
+          oled.println("restarting");
+          delay(200);
+          restart = true;
+          return;
         }
       }
       cur_cmd = "";
@@ -1361,6 +1401,8 @@ void drive(int encoders, int speed) {
         auto left_ticks = motorL.getTicks();
         stopMotors();
         pi_read_vision();
+        if(restart)
+          return;
         oled.println("detected");
         motorR.getTicks() = right_ticks;
         motorL.getTicks() = left_ticks;
@@ -1490,11 +1532,14 @@ void alignAngle(bool reset, int tolerance = 5) {
     }
     
 
-    if (abs(orientationData.orientation.x)  - new_angle < 2.5 /* && abs(orientationData.orientation.x) */) {
-      raw_right(abs(orientationData.orientation.x - new_angle), SPEED - 40);
-    } else {
-      raw_left(abs(orientationData.orientation.x - new_angle), SPEED - 40);
-    } 
+    if(abs(BNO_X - new_angle) < 2.5)
+    {
+      if (BNO_X  - new_angle < 0) {
+        raw_right(abs(BNO_X - new_angle), SPEED - 40);
+      } else {
+        raw_left(abs(BNO_X - new_angle), SPEED - 40);
+      } 
+    }
     return;
   } 
 
@@ -1602,14 +1647,21 @@ unsigned int _tofCalibrated(int select)
         //6/14 essentially fine... 
     } 
     default:
+    {
+      Serial.println("Invalid TOF sensor");
+#ifdef DEBUG_DISPLAY
+      oled.println("Invalid TOF sensor");
+#endif
       return -1;
+    }
   }
 }
 
 unsigned int tofCalibrated(int select)
 {
   uint32_t dist = 0;
-  for(int n = 0; n < 2; n++)
+  const int samples = 2;
+  for(int n = 0; n < samples; n++)
   {
     dist += _tofCalibrated(select);
   }
@@ -1635,24 +1687,6 @@ void oled_display_walls(bool walls[4])
 #endif
 }
 
-char dir_to_char(uint8_t cur_dir)
-{
-  switch(cur_dir)
-  {
-    case n:
-      return 'n';
-    case e:
-      return 'e';
-    case s:
-      return 's';
-    case w:
-      return 'w';
-    default:
-      return 'n';
-  }
-  return 'n';
-}
-
 //#define TEST
 #ifndef TEST
 
@@ -1674,6 +1708,11 @@ void loop()
   {
     //pi_read_vision();
     pi_read_data();
+  }
+
+  if(restart)
+  {
+    setup();
   }
 
   oled.print("dir: ");

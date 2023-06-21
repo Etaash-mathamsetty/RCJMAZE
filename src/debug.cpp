@@ -23,11 +23,11 @@ namespace debug
 
     void print_map()
 	{
-		#ifdef DEBUG
-        #ifdef SIMULATION
-        for(int i = 0; i < sim::_vert_size; i++)
+#ifdef DEBUG
+#ifdef SIMULATION
+        for(int i = 0; i < sim::_vert_size[floor_num]; i++)
 		{
-            for(int l = 0; l < sim::_horz_size; l++)
+            for(int l = 0; l < sim::_horz_size[floor_num]; l++)
 			{
                 putchar('+');
                 if(nodes[helper::get_index(i,l)].N)
@@ -36,7 +36,7 @@ namespace debug
                     putchar(' ');
             }
             putchar('\n');
-            for(int l = 0; l < sim::_horz_size; l++)
+            for(int l = 0; l < sim::_horz_size[floor_num]; l++)
 			{
                 if(nodes[helper::get_index(i,l)].W)
                     putchar('|');
@@ -53,24 +53,47 @@ namespace debug
                 if(nodes[helper::get_index(i, l)].ramp)
                     putchar('r');
                 if(!nodes[helper::get_index(i,l)].bot && !nodes[helper::get_index(i,l)].vic && !nodes[helper::get_index(i,l)].checkpoint &&
-                    !nodes[helper::get_index(i,l)].black)
+                    !nodes[helper::get_index(i,l)].black && !nodes[helper::get_index(i, l)].ramp)
                     putchar(' ');
             }
             putchar('\n');
         }
-        for(int l = 0; l < sim::_horz_size; l++)
+        for(int l = 0; l < sim::_horz_size[floor_num]; l++)
 		{
             putchar('+');
-            if(nodes[helper::get_index(sim::_vert_size-1,l)].S)
+            if(nodes[helper::get_index(sim::_vert_size[floor_num]-1,l)].S)
                 putchar('-');
             else
                 putchar(' ');
         }
         putchar('\n');
-        #else
-        std::cout << "FIXME: unimplemented print_map()" << std::endl;
-        #endif
-		#endif
+#else
+    robot* bot = robot::get_instance();
+    CHECK(bot);
+    std::cout << "TODO: Print more than current tile!\n" << std::endl;
+    putchar('+');
+    putchar(bot->map[bot->index].N ? '-' : ' ');
+    puts("+\n");
+    putchar(bot->map[bot->index].W ? '|' : ' ');
+    putchar('x');
+    if(nodes[helper::get_index(i,l)].vic)
+        putchar('v');
+    if(nodes[helper::get_index(i,l)].checkpoint)
+        putchar('c');
+    if(nodes[helper::get_index(i,l)].black)
+        putchar('b');
+    if(nodes[helper::get_index(i, l)].ramp)
+        putchar('r');
+    if(!nodes[helper::get_index(i,l)].bot && !nodes[helper::get_index(i,l)].vic && !nodes[helper::get_index(i,l)].checkpoint &&
+        !nodes[helper::get_index(i,l)].black)
+        putchar(' ');
+    putchar(bot->map[bot->index].E ? '|' : ' ');
+    putchar('\n');
+    putchar('+');
+    putchar(bot->map[bot->index].S ? '-' : ' ');
+    puts("+\n");
+#endif
+#endif
     }
 
     void print_path(Stack<int>& path)

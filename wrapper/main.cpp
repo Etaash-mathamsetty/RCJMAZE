@@ -16,7 +16,6 @@ namespace fs = std::filesystem;
 
 const int pin = 1;
 const char* serial_port = "/dev/ttyS0";
-int serial_fd = 0;
 
 bool button_pressed()
 {
@@ -26,7 +25,7 @@ bool button_pressed()
     {
         if(!digitalRead(pin))
             return false;
-	usleep(1000);
+	    usleep(1000);
     }
 #endif
     return true;
@@ -40,7 +39,7 @@ bool button_released()
     {
         if(digitalRead(pin))
             return false;
-	usleep(1000);
+	    usleep(1000);
     }
 #endif
     return true;
@@ -67,6 +66,19 @@ bool has_child_exited(pid_t pid)
     }
 
     return false;
+}
+
+void send_restart_command()
+{
+    int serial_fd = serialOpen(serial_port, 115200);
+    if(serial_fd < 0)
+    {
+        std::cout << "failed to open serial port: " << serial_port << std::endl;
+        exit(EXIT_FAILURE);
+    }
+    serialPuts(serial_fd, "q\n");
+    usleep(100 /* ms */ * 1000 /* us per ms*/);
+    serialClose(serial_fd);
 }
 
 void run_parent_and_child(const fs::path& path_to_bfs, const fs::path& parent_path)
@@ -106,15 +118,7 @@ void run_parent_and_child(const fs::path& path_to_bfs, const fs::path& parent_pa
         //send megapi signal to reset itself
         usleep(500 /* ms */ * 1000 /* us per ms */);
 #ifndef DEBUG_LOGIC
-        serial_fd = serialOpen(serial_port, 115200);
-        if(serial_fd < 0)
-        {
-            std::cout << "failed to open serial port: " << serial_port << std::endl;
-            exit(EXIT_FAILURE);
-        }
-        serialPuts(serial_fd, "q\n");
-        usleep(100 /* ms */ * 1000 /* us per ms*/);
-        serialClose(serial_fd);
+        send_restart_command();
         //wait for megapi to finish restarting
         sleep(5);
 #endif
@@ -184,6 +188,11 @@ int main(int argc, char **argv)
     fs::path parent_path = path_to_bfs.parent_path();
     std::cout << "parent path: " << parent_path << std::endl;
 
+    while(!button_pressed());
+    while(!button_released());
+
+    send_restart_command();
+    sleep(6);
 
     while(true)
     {

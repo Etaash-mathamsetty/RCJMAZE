@@ -72,13 +72,14 @@ void kitDrop(int num, char side) {
   static int numDropped = 0; 
   const int offset_for_stack[3] = {10, 7, 0};
 
-  analogWrite(5, 30);
+  analogWrite(5, 50);
   if(side == 'r'){
     myservo2.write(0); 
   } 
   else {
     myservo2.write(50); 
   }
+  
   for (int i = 0; i < num; i++) {  
     if (numDropped && !(numDropped % num_per_column))
       columnNum++; 

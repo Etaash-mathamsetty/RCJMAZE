@@ -113,7 +113,6 @@ public:
 		return {};
 	}
 
-
 	Node<T>& operator[](size_t index){
 		assert(!(index >= size()));
 		Node<T>* Temp = basenode;
@@ -145,6 +144,12 @@ public:
 		return *basenode;
 	}
 
+	Node<T>& get_tail()
+	{
+		//tail should always be defined
+		assert(tail);
+		return *tail;
+	}
 
 	Node<T>* basenode;
 	Node<T>* tail;

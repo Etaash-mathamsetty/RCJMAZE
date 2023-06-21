@@ -9,13 +9,19 @@
 static robot* instance = NULL;
 
 robot::robot(){
-		//simply becomes too complicated if we pretended we were at default_index, default_index in the simulation, am open to ideas tho
-		//nvm, im just really freaking dumb, I know how to do it
-		index = helper::get_index(default_index,default_index);
+		index = helper::get_index(default_index, default_index);
 		//default direction
 		dir = DIR::N;
-		map = new node[horz_size * vert_size];
-		memset(map, 0, horz_size * vert_size * sizeof(node));
+		floors = new node*[max_num_floors];
+		memset(floors, 0, sizeof(node*) * max_num_floors);
+		for(int i = 0; i < max_num_floors; i++)
+		{
+			floors[i] = new node[horz_size * vert_size];
+			memset(floors[i], 0, horz_size * vert_size * sizeof(node));
+		}
+		map = floors[0];
+		floors_vis[0] = true;
+		start_tile_floor[0] = helper::get_index(default_index, default_index);
 
 #ifdef DEBUG
 	std::cout << "INFO: Debug info is ENABLED" << std::endl;
@@ -26,7 +32,13 @@ robot::robot(){
 
 robot::~robot()
 {
-	delete[] map;
+	for(int i = 0; i < max_num_floors; i++)
+	{
+		if(floors[i])
+			delete[] floors[i];
+	}
+	delete[] floors;
+	//delete[] map;
 }
 
 //returns singleton instance

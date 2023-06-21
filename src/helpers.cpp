@@ -29,19 +29,14 @@ namespace helper
 
     char dir_to_char(const DIR& dir)
     {
-        switch(dir)
+        const char char_map[4] = { com::north, com::east, com::south, com::west };
+        if((int)dir > 3)
         {
-            case DIR::N:
-                return com::north;
-            case DIR::E:
-                return com::east;
-            case DIR::S:
-                return com::south;
-            case DIR::W:
-                return com::west;
-            default:
-                return com::north;
+            std::cerr << "invalid direction in dir_to_char: " << (int)dir << std::endl;
+            return com::north;
         }
+
+        return char_map[(int)dir];
     }
 
     DIR char_to_dir(const char& c)
@@ -63,20 +58,19 @@ namespace helper
 
     DIR prev_dir(const DIR& dir)
     {
-        if(dir == DIR::N)
-			return DIR::W;
-		else
-			//can't do dir-- so...
-			return DIR(int(dir)-1);
+        int _dir = (int)dir;
+        _dir--;
+        if(_dir < 0)
+            _dir += 4; /* therefore dir is -1 or lower (-1 + 4 = 3)*/
+        return DIR(_dir);
     }
 
     DIR next_dir(const DIR& dir)
     {
-        if(dir == DIR::W)
-			return DIR::N;
-		else
-			//can't do dir++ so...
-			return DIR(int(dir)+1);
+        int _dir = (int)dir;
+        _dir++;
+        _dir %= 4;
+        return DIR(_dir);
     }
 
     //returns adjacent node indexes

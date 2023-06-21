@@ -50,7 +50,7 @@ Stack<int> BFS()
 			std::cout << "finished with the maze!" << std::endl;
 			std::cout << "returning to starting..." << std::endl;
 			quitable = true;
-			bot->map[helper::get_index(default_index, default_index)].vis = false;
+			bot->map[bot->start_tile_floor[floor_num]].vis = false;
 			return BFS();
 		}
 
@@ -77,16 +77,16 @@ Stack<int> BFS()
 int main(int argc, char* argv[]){
 	//setup signal handler
 	struct sigaction sigIntHandler;
-	sigIntHandler.sa_handler = [](int s){ driver::cleanup(); /* should clean everything up anyway */ exit(1);};
+	sigIntHandler.sa_handler = [](int s){ driver::cleanup(); /* exit() should clean everything else anyway */ exit(1);};
 	sigemptyset(&sigIntHandler.sa_mask);
 	sigIntHandler.sa_flags = 0;
 	sigaction(SIGINT, &sigIntHandler, NULL);
 
 #ifdef SIMULATION
-	second_floor = new simulation_node*[num_second_floors];
+	floors = new simulation_node*[max_num_floors];
+	memset(floors, 0, sizeof(simulation_node*) * max_num_floors);
 
-
-	for(int i = 1; i < num_second_floors + 1; i++)
+	for(int i = 1; i < max_num_floors + 1; i++)
 	{
 		if(argc > i)
 			sim::read_map_from_file(argv[i]);
@@ -98,6 +98,7 @@ int main(int argc, char* argv[]){
 				sim::read_map_from_file("field.txt");
 		}
 	}
+	nodes = floors[0];
 #endif
 
 	driver::init_robot();
@@ -124,33 +125,33 @@ int main(int argc, char* argv[]){
 			//BFS code goes here
 			while(true)
 			{
-				Stack<int> path = BFS(*robot);
+				Stack<int> path = BFS();
 				debug::print_path(path);
+				int old_floor = floor_num;
 				for(size_t l = 0; l < path.Size(); l++)
 				{
-					if(path[l] == robot->index+1)
+					switch(path[l] - robot->index)
 					{
-						driver::turn_to(DIR::E);
-						robot->forward();
+						case 1:
+							driver::turn_to(DIR::E);
+							break;
+						case -1:
+							driver::turn_to(DIR::W);
+							break;
+						case -horz_size:
+							driver::turn_to(DIR::N);
+							break;
+						case horz_size:
+							driver::turn_to(DIR::S);
+							break;
 					}
-					else if(path[l] == robot->index-1)
-					{
-						driver::turn_to(DIR::W);
-						robot->forward();
-					}
-					else if(path[l] == robot->index + horz_size)
-					{
-						driver::turn_to(DIR::S);
-						robot->forward();
-					}
-					else if(path[l] == robot->index - horz_size)
-					{
-						driver::turn_to(DIR::N);
-						robot->forward();
-					}
+					robot->forward();
 					debug::print_map();
+					//entered different floor
+					if(old_floor != floor_num)
+						break;
 				}
-				if(quitable && robot->index == helper::get_index(default_index, default_index))
+				if(quitable && robot->index == helper::get_index(default_index, default_index) && floor_num == 0)
 					break;
 			}
 		}
@@ -161,29 +162,30 @@ int main(int argc, char* argv[]){
 		{
 			Stack<int> path = BFS();
 			debug::print_path(path);
+			int old_floor = floor_num;
 			for(size_t l = 0; l < path.Size(); l++)
 			{
 				switch(path[l] - robot->index)
 				{
 					case 1:
 						driver::turn_to(DIR::E);
-						robot->forward();
 						break;
 					case -1:
 						driver::turn_to(DIR::W);
-						robot->forward();
 						break;
 					case -horz_size:
 						driver::turn_to(DIR::N);
-						robot->forward();
 						break;
 					case horz_size:
 						driver::turn_to(DIR::S);
-						robot->forward();
 						break;
 				}
+				robot->forward();
+				debug::print_map();
+				if(old_floor != floor_num)
+					break;
 			}
-			debug::print_node(robot->map[robot->index]);
+			//debug::print_node(robot->map[robot->index]);
 			if(quitable && robot->index == helper::get_index(default_index, default_index))
 				break;
 			#ifdef TEST_MODE
