@@ -488,9 +488,10 @@ namespace driver
 		out.open("save.txt");
 		std::cout << "saving state" << std::endl;
 		//out << helper::dir_to_char(bot->dir) << std::endl;
+		for(int l = 0; l < max_num_floors; l++)
 		for(int i = 0; i < horz_size * vert_size; i++)
 		{
-			node n = bot->map[i];
+			node n = bot->floors[l][i];
 			out << n.N << " " << n.E << " " << n.S << " " << n.W << " ";
 			out << n.vic << " " << n.bot << " " << n.vis << " " << n.ramp << " ";
 			out << n.checkpoint << std::endl;
@@ -504,18 +505,23 @@ namespace driver
 		CHECK(bot->map);
 		std::ifstream in;
 		in.open("save.txt");
-		bool n, e, s, w, vic, vis, ramp, checkpoint, bot_here;
+		bool n, e, s, w, vic, vis, checkpoint, bot_here;
+		uint8_t ramp;
 		//char dir;
 		//in >> dir;
 		//wtf happens with directions, I think we can only restart the raspberry pi
 		//bot->dir = helper::char_to_dir(dir);
+		for(int l = 0; l < max_num_floors; l++)
 		for(int i = 0; i < horz_size * vert_size; i++)
 		{
 			in >> n >> e >> s >> w >> vic >> bot_here >> vis >> ramp >> checkpoint;
 			if(bot_here)
+			{
 				bot->index = i;
+				bot->map = bot->floors[l];
+			}
 			
-			node& temp = bot->map[i];
+			node& temp = bot->floors[l][i];
 			temp.N = n;
 			temp.E = e;
 			temp.S = s;
@@ -630,71 +636,53 @@ namespace driver
 		}
 	}
 
+	void set_mov_indexes(int delta, bool up_ramp, bool down_ramp, int ramp_len)
+	{
+		robot* bot = robot::get_instance();
+		CHECK(bot);
+		CHECK(bot->map);
+		if(!up_ramp && !down_ramp)
+		{
+			bot->map[bot->index].bot = false;
+			bot->index += delta;
+			bot->map[bot->index].bot = true;
+		}
+		else if(up_ramp)
+		{
+			bot->map[bot->index].bot = false;
+			floor_num++;
+			bot->map = bot->floors[floor_num];
+
+			bot->index += delta;
+			bot->index += delta * ramp_len;
+
+			bot->map[bot->index].ramp = 0b10;
+			bot->map[bot->index].bot = true;
+
+			std::cout << "on a higher floor: " << floor_num << ',' << bot->index << std::endl;
+		}
+		else if(down_ramp)
+		{
+			bot->map[bot->index].bot = false;
+			floor_num--;
+			bot->map = bot->floors[floor_num];
+
+			bot->index += delta;
+			bot->index += delta * ramp_len;
+
+			bot->map[bot->index].ramp = 0b01;
+			bot->map[bot->index].bot = true;
+
+			std::cout << "on a lower floor: " << floor_num << ',' << bot->index << std::endl;
+		}
+	}
+
 	CREATE_DRIVER(bool, forward)
 	{
 		robot* bot = robot::get_instance();
 		CHECK(bot);
 		CHECK(bot->map);
 		auto org_index = bot->index;
-		switch(bot->dir)
-		{
-			case DIR::N:
-			{
-				if(helper::is_valid_index(bot->index - horz_size) && !bot->map[bot->index].N){
-					bot->map[bot->index].bot = false;
-					(bot->index) -= horz_size;
-					bot->map[bot->index].bot = true;
-				}
-				else{
-					std::cerr << "ERROR: Cannot move forward!" << std::endl;
-					debug::print_robot_info(bot);
-					return false;
-				}
-				break;
-			}
-			case DIR::E:
-			{
-				if(helper::is_valid_index(bot->index + 1) && !bot->map[bot->index].E){
-					bot->map[bot->index].bot = false;
-					(bot->index)++;
-					bot->map[bot->index].bot = true;
-				}
-				else{
-					std::cerr << "ERROR: Cannot move forward!" << std::endl;
-					debug::print_robot_info(bot);
-					return false;
-				}
-				break;
-			}
-			case DIR::S:
-			{
-				if(helper::is_valid_index(bot->index + horz_size) && !bot->map[bot->index].S){
-					bot->map[bot->index].bot = false;
-					(bot->index) += horz_size;
-					bot->map[bot->index].bot = true;
-				}
-				else{
-					std::cerr << "ERROR: Cannot move forward!" << std::endl;
-					debug::print_robot_info(bot);
-					return false;
-				}
-				break;
-			}
-			case DIR::W:
-			{
-				if(helper::is_valid_index(bot->index - 1) && !bot->map[bot->index].W){
-					bot->map[bot->index].bot = false;
-					(bot->index)--;
-					bot->map[bot->index].bot = true;
-				}
-				else{
-					std::cerr << "ERROR: Cannot move forward!" << std::endl;
-					debug::print_robot_info(bot);
-					return false;
-				}
-				break;
-			}
-		}
 		/*
 		 *
 		 * aysnc call using serial: PythonScript::CallPythonFunction("SendSerialCommand", "f\n");
@@ -741,6 +729,63 @@ namespace driver
 				}
 			}
 			std::this_thread::sleep_for(std::chrono::milliseconds(20));
+		}
+
+		int ramp = (int)(*Bridge::get_data_value("ramp"))[0];
+		int ramp_len = (int)(*Bridge::get_data_value("ramp"))[1];
+		//works since it can't be both :)
+		bool up_ramp = ramp == 1;
+		bool down_ramp = ramp == 10;
+		switch(bot->dir)
+		{
+			case DIR::N:
+			{
+				if(helper::is_valid_index(bot->index - horz_size) && !bot->map[bot->index].N){
+					set_mov_indexes(-horz_size, up_ramp, down_ramp, ramp_len);
+				}
+				else{
+					std::cerr << "ERROR: Cannot move forward!" << std::endl;
+					debug::print_robot_info(bot);
+					return false;
+				}
+				break;
+			}
+			case DIR::E:
+			{
+				if(helper::is_valid_index(bot->index + 1) && !bot->map[bot->index].E){
+					set_mov_indexes(1, up_ramp, down_ramp, ramp_len);
+				}
+				else{
+					std::cerr << "ERROR: Cannot move forward!" << std::endl;
+					debug::print_robot_info(bot);
+					return false;
+				}
+				break;
+			}
+			case DIR::S:
+			{
+				if(helper::is_valid_index(bot->index + horz_size) && !bot->map[bot->index].S){
+					set_mov_indexes(horz_size, up_ramp, down_ramp, ramp_len);
+				}
+				else{
+					std::cerr << "ERROR: Cannot move forward!" << std::endl;
+					debug::print_robot_info(bot);
+					return false;
+				}
+				break;
+			}
+			case DIR::W:
+			{
+				if(helper::is_valid_index(bot->index - 1) && !bot->map[bot->index].W){
+					set_mov_indexes(-1, up_ramp, down_ramp, ramp_len);
+				}
+				else{
+					std::cerr << "ERROR: Cannot move forward!" << std::endl;
+					debug::print_robot_info(bot);
+					return false;
+				}
+				break;
+			}
 		}
 
 		auto status = *Bridge::get_data_value("forward_status");
