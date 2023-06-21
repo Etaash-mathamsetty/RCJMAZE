@@ -125,26 +125,57 @@ namespace driver
 			std::filesystem::remove("save.txt");
 	}
 
-	bool set_mov_indexes(int delta, bool up_ramp, bool down_ramp, int ramp_len = 1)
+	void set_ramp_wall()
+	{
+		robot* bot = robot::get_instance();
+		CHECK(bot);
+		CHECK(bot->map);
+
+		switch(bot->dir)
+		{
+			case DIR::N:
+				bot->map[bot->index].N = true;
+				bot->map[bot->index].E = true;
+				bot->map[bot->index].W = true;
+				return;
+			case DIR::E:
+				bot->map[bot->index].E = true;
+				bot->map[bot->index].N = true;
+				bot->map[bot->index].S = true;
+				return;
+			case DIR::W:
+				bot->map[bot->index].W = true;
+				bot->map[bot->index].N = true;
+				bot->map[bot->index].S = true;
+				return;
+			case DIR::S:
+				bot->map[bot->index].S = true;
+				bot->map[bot->index].E = true;
+				bot->map[bot->index].W = true;
+				return;
+		}
+	}
+
+	bool set_mov_indexes(int delta, int ramp_len = 1)
 	{
 		robot* bot = robot::get_instance();
 		CHECK(bot);
 		CHECK(bot->map);
 		CHECK(nodes);
-		CHECK(up_ramp && down_ramp);
+		
+		bot->map[bot->index].bot = false;
+		nodes[sim::sim_robot_index].bot = false;
+		bot->index += delta;
+		sim::sim_robot_index += delta;
+		bot->map[bot->index].bot = true;
+		nodes[sim::sim_robot_index].bot = true;
 
-		if((!up_ramp && !down_ramp) || sim::just_went_on_ramp)
+		bool up_ramp = nodes[sim::sim_robot_index].ramp & 0b01;
+		bool down_ramp = nodes[sim::sim_robot_index].ramp & 0b10;
+		CHECK(up_ramp && down_ramp);
+		if(up_ramp)
 		{
-			bot->map[bot->index].bot = false;
-			nodes[sim::sim_robot_index].bot = false;
-			bot->index += delta;
-			sim::sim_robot_index += delta;
-			bot->map[bot->index].bot = true;
-			nodes[sim::sim_robot_index].bot = true;
-			sim::just_went_on_ramp = false;
-		}
-		else if(up_ramp)
-		{
+			set_ramp_wall();
 			int down_ramp_index = sim::get_down_ramp_index(sim::sim_robot_index);
 			if(down_ramp_index == -1)
 			{
@@ -153,25 +184,25 @@ namespace driver
 			}
 			bot->map[bot->index].bot = false;
 			nodes[sim::sim_robot_index].bot = false;
+			bot->map[bot->index].ramp = 0b01;
 			floor_num++;
 			bot->map = bot->floors[floor_num];
 			nodes = floors[floor_num];
-			bot->index += delta;
 			bot->index += ramp_len * delta;
 			sim::sim_robot_index = down_ramp_index;
 			bot->map[bot->index].bot = true;
 			nodes[sim::sim_robot_index].bot = true;
-			bot->map[bot->index].ramp = 0b10;
-			sim::just_went_on_ramp = true;
+			bot->map[bot->index - delta].ramp = 0b10;
 			
 			if(!bot->floors_vis[floor_num])
 			{
 				bot->start_tile_floor[floor_num] = bot->index;
 				bot->floors_vis[floor_num] = true;
 			}
-		}
+		}			
 		else if(down_ramp)
 		{
+			set_ramp_wall();
 			int up_ramp_index = sim::get_up_ramp_index(sim::sim_robot_index);
 			if(up_ramp_index == -1)
 			{
@@ -180,16 +211,15 @@ namespace driver
 			}
 			bot->map[bot->index].bot = false;
 			nodes[sim::sim_robot_index].bot = false;
+			bot->map[bot->index].ramp = 0b10;
 			floor_num--;
 			bot->map = bot->floors[floor_num];
 			nodes = floors[floor_num];
-			bot->index += delta;
 			bot->index += ramp_len * delta;
 			sim::sim_robot_index = up_ramp_index;
 			bot->map[bot->index].bot = true;
 			nodes[sim::sim_robot_index].bot = true;
-			bot->map[bot->index].ramp = 0b01;
-			sim::just_went_on_ramp = true;
+			bot->map[bot->index - delta].ramp = 0b01;
 
 			if(!bot->floors_vis[floor_num])
 			{
@@ -214,15 +244,13 @@ namespace driver
  #endif
 		auto org_index = bot->index;
 		auto org_sim_index = sim::sim_robot_index;
-		bool upramp = nodes[sim::sim_robot_index].ramp & 0b1;
-		bool downramp = nodes[sim::sim_robot_index].ramp & 0b10;
 		switch(bot->dir)
 		{
 			case DIR::N:
 			{
 				if(helper::is_valid_index(bot->index - horz_size) && helper::is_valid_index(sim::sim_robot_index - horz_size) && !bot->map[bot->index].N)
 				{
-					if(!set_mov_indexes(-horz_size, upramp, downramp))
+					if(!set_mov_indexes(-horz_size))
 					{
 						return false;
 					}
@@ -238,7 +266,7 @@ namespace driver
 			{
 				if(helper::is_valid_index(bot->index + 1) && helper::is_valid_index(sim::sim_robot_index + 1) && !(bot->map[bot->index].E))
 				{
-					if(!set_mov_indexes(1, upramp, downramp))
+					if(!set_mov_indexes(1))
 					{
 						return false;
 					}
@@ -254,7 +282,7 @@ namespace driver
 			case DIR::S:
 			{
 				if(helper::is_valid_index(bot->index + horz_size) && helper::is_valid_index(sim::sim_robot_index + horz_size) && !bot->map[bot->index].S){
-					if(!set_mov_indexes(horz_size, upramp, downramp))
+					if(!set_mov_indexes(horz_size))
 					{
 						return false;
 					}
@@ -270,7 +298,7 @@ namespace driver
 			case DIR::W:
 			{
 				if(helper::is_valid_index(bot->index - 1) && helper::is_valid_index(sim::sim_robot_index - 1) && !(bot->map[bot->index].W)){
-					if(!set_mov_indexes(-1, upramp, downramp))
+					if(!set_mov_indexes(-1))
 					{
 						return false;
 					}

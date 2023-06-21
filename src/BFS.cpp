@@ -49,8 +49,7 @@ Stack<int> BFS()
 			/* return to start */
 			std::cout << "finished with the maze!" << std::endl;
 			std::cout << "returning to starting..." << std::endl;
-			if(floor_num == 0)
-				quitable = true;
+			quitable = true;
 			bot->map[bot->start_tile_floor[floor_num]].vis = false;
 			return BFS();
 		}
