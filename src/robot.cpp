@@ -14,8 +14,11 @@ robot::robot(){
 		dir = DIR::N;
 		floors = new node*[max_num_floors];
 		memset(floors, 0, sizeof(node*) * max_num_floors);
-		floors[0] = new node[horz_size * vert_size];
-		memset(floors[0], 0, horz_size * vert_size * sizeof(node));
+		for(int i = 0; i < max_num_floors; i++)
+		{
+			floors[i] = new node[horz_size * vert_size];
+			memset(floors[i], 0, horz_size * vert_size * sizeof(node));
+		}
 
 #ifdef DEBUG
 	std::cout << "INFO: Debug info is ENABLED" << std::endl;
