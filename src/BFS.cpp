@@ -178,7 +178,7 @@ int main(int argc, char* argv[]){
 				robot->forward();
 				debug::print_map();
 			}
-			debug::print_node(robot->map[robot->index]);
+			//debug::print_node(robot->map[robot->index]);
 			if(quitable && robot->index == helper::get_index(default_index, default_index))
 				break;
 			#ifdef TEST_MODE
