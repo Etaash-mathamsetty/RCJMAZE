@@ -98,8 +98,8 @@ int main(int argc, char* argv[]){
 				sim::read_map_from_file("field.txt");
 		}
 	}
+	nodes = floors[0];
 #endif
-
 	driver::init_robot();
 	robot* robot = robot::get_instance();
 	driver::get_sensor_data();
