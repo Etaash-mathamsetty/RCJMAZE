@@ -32,9 +32,9 @@ namespace sim
         }
         //std::cout << "sizeof DIR: " << sizeof(DIR) << std::endl;
         char x = 0;
-        in >> _horz_size;
-        _horz_size++;
-        in >> _vert_size;
+        in >> _horz_size[floor_number];
+        _horz_size[floor_number]++;
+        in >> _vert_size[floor_number];
 
         std::vector<int>* up_ramps_cur_floor_pos = (up_ramp_positions + floor_number); 
         std::vector<int>* down_ramp_cur_floor_pos = (down_ramp_positions + floor_number);
@@ -47,10 +47,10 @@ namespace sim
 
         //int v = 0;
         in.get(x);
-        for(int v = 0; v < _vert_size; v++)
+        for(int v = 0; v < _vert_size[floor_number]; v++)
         {
             if(v > 0){
-                for(int i = 0; i < _horz_size; i++){
+                for(int i = 0; i < _horz_size[floor_number]; i++){
                     //probably wont be necessary on an actual robot, but we need it to read from the field.txt properly
                     nodes[helper::get_index(v,i)].N = nodes[helper::get_index(v-1,i)].S;
                 }
@@ -59,7 +59,7 @@ namespace sim
             //get rid of extra plus
             //in.get(x);
             if(v == 0)
-                for(float i = 0; i < _horz_size; i+=0.5)
+                for(float i = 0; i < _horz_size[floor_number]; i+=0.5)
                 {
                     in.get(x);
                     //printf("x: %c i: %d\n", x, i);
@@ -84,7 +84,7 @@ namespace sim
                     //horz_size++;
                 }
             //printf("loop 2\n");
-            for(float i = 0; i < _horz_size; i+=0.5)
+            for(float i = 0; i < _horz_size[floor_number]; i+=0.5)
             {
                 in.get(x);
                 //printf("x: %c\n", x);
@@ -115,7 +115,7 @@ namespace sim
                     down_ramp_cur_floor_pos->push_back(helper::get_index(v,i));
             }
             //printf("loop 3\n");
-            for(float i = 0; i < _horz_size; i+=0.5)
+            for(float i = 0; i < _horz_size[floor_number]; i+=0.5)
             {
                 in.get(x);
                 //printf("x: %c\n", x);

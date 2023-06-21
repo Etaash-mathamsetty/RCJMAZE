@@ -12,8 +12,8 @@ namespace sim
 {
 
 #ifdef SIMULATION
-    inline int _horz_size;
-    inline int _vert_size;
+    inline int _horz_size[max_num_floors] = {0};
+    inline int _vert_size[max_num_floors] = {0};
     inline int sim_robot_index;
     inline std::vector<int> up_ramp_positions[max_num_floors];
     inline std::vector<int> down_ramp_positions[max_num_floors];
