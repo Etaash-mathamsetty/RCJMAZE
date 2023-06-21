@@ -77,7 +77,7 @@ Stack<int> BFS()
 int main(int argc, char* argv[]){
 	//setup signal handler
 	struct sigaction sigIntHandler;
-	sigIntHandler.sa_handler = [](int s){ driver::cleanup(); /* should clean everything up anyway */ exit(1);};
+	sigIntHandler.sa_handler = [](int s){ driver::cleanup(); /* exit() should clean everything else anyway */ exit(1);};
 	sigemptyset(&sigIntHandler.sa_mask);
 	sigIntHandler.sa_flags = 0;
 	sigaction(SIGINT, &sigIntHandler, NULL);
@@ -100,6 +100,7 @@ int main(int argc, char* argv[]){
 	}
 	nodes = floors[0];
 #endif
+
 	driver::init_robot();
 	robot* robot = robot::get_instance();
 	driver::get_sensor_data();
@@ -163,21 +164,19 @@ int main(int argc, char* argv[]){
 				{
 					case 1:
 						driver::turn_to(DIR::E);
-						robot->forward();
 						break;
 					case -1:
 						driver::turn_to(DIR::W);
-						robot->forward();
 						break;
 					case -horz_size:
 						driver::turn_to(DIR::N);
-						robot->forward();
 						break;
 					case horz_size:
 						driver::turn_to(DIR::S);
-						robot->forward();
 						break;
 				}
+				robot->forward();
+				debug::print_map();
 			}
 			debug::print_node(robot->map[robot->index]);
 			if(quitable && robot->index == helper::get_index(default_index, default_index))
