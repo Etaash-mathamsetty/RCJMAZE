@@ -2,9 +2,9 @@
 //#define FAKE_SERIAL
 #define DEBUG_DISPLAY
 // #define MOTORSOFF
-#define TEST
+//#define TEST
 // #define ALIGN_ANGLE
-#define NO_PI //basic auto when no raspberry pi (brain stem mode)
+//#define NO_PI //basic auto when no raspberry pi (brain stem mode)
 
 //define: debug display, motorsoff, test, comment out all others if you want to calibrate tofs 
 
@@ -34,7 +34,6 @@ void setup() {
   }
 
   restart = false;
-#ifndef FAKE_SERIAL
   PI_SERIAL.begin(115200);
   Serial.begin(9600);
   setMotors(&motorR, &motorL);
@@ -224,11 +223,8 @@ void pi_read_vision() {
         pi_send_tag("drop_status");
         PI_SERIAL.println("1.0");
 
-        if(num > 0)
-          left(90, 100, false);
         kitDrop(num, 'r');
-        if(num > 0)
-          right(90, 100, false);
+
         cur_cmd.remove(0);
 
         if(num == 0)
@@ -242,11 +238,8 @@ void pi_read_vision() {
         pi_send_tag("drop_status");
         PI_SERIAL.println("1.0");
 
-        if(num > 0)
-          right(90, 100, false);
         kitDrop(num, 'r');
-        if(num > 0)
-          left(90, 100, false);
+
         cur_cmd.remove(0);
 
         if(num == 0)
