@@ -6,7 +6,7 @@
 #include <sstream>
 #include <utility>
 
-#define SIMULATION
+//#define SIMULATION
 #define DEBUG
 //#define SIM_MOV_DELAY
 
@@ -118,12 +118,13 @@ const std::string cv_py_file = "cv.py";
 const std::string ser_py_file = "serial.py";
 const std::string cleanup_py_file = "cleanup.py";
 
+const int max_num_floors = 6;
+inline int floor_num = 0;
+
 #ifdef SIMULATION
 //simulation field
 /* number of simulation_node* we need to allocate for second_floor */
-const int max_num_floors = 6;
 inline int num_floors = 1;
-inline int floor_num = 0;
 inline simulation_node** floors;
 inline simulation_node* nodes;
 const static bool is_simulation = true;

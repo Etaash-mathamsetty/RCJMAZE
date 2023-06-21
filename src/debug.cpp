@@ -70,27 +70,26 @@ namespace debug
 #else
     robot* bot = robot::get_instance();
     CHECK(bot);
+    CHECK(bot->map);
     std::cout << "TODO: Print more than current tile!\n" << std::endl;
+    node cur_node = bot->map[bot->index];
     putchar('+');
-    putchar(bot->map[bot->index].N ? '-' : ' ');
+    putchar(cur_node.N ? '-' : ' ');
     puts("+\n");
-    putchar(bot->map[bot->index].W ? '|' : ' ');
+    putchar(cur_node.W ? '|' : ' ');
     putchar('x');
-    if(nodes[helper::get_index(i,l)].vic)
+    if(cur_node.vic)
         putchar('v');
-    if(nodes[helper::get_index(i,l)].checkpoint)
+    if(cur_node.checkpoint)
         putchar('c');
-    if(nodes[helper::get_index(i,l)].black)
-        putchar('b');
-    if(nodes[helper::get_index(i, l)].ramp)
+    if(cur_node.ramp)
         putchar('r');
-    if(!nodes[helper::get_index(i,l)].bot && !nodes[helper::get_index(i,l)].vic && !nodes[helper::get_index(i,l)].checkpoint &&
-        !nodes[helper::get_index(i,l)].black)
+    if(!cur_node.bot && !cur_node.vic && !cur_node.checkpoint && !cur_node.ramp)
         putchar(' ');
-    putchar(bot->map[bot->index].E ? '|' : ' ');
+    putchar(cur_node.E ? '|' : ' ');
     putchar('\n');
     putchar('+');
-    putchar(bot->map[bot->index].S ? '-' : ' ');
+    putchar(cur_node.S ? '-' : ' ');
     puts("+\n");
 #endif
 #endif
