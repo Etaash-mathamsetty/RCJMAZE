@@ -50,7 +50,7 @@ Stack<int> BFS()
 			std::cout << "finished with the maze!" << std::endl;
 			std::cout << "returning to starting..." << std::endl;
 			quitable = true;
-			bot->map[helper::get_index(default_index, default_index)].vis = false;
+			bot->map[bot->start_tile_floor[floor_num]].vis = false;
 			return BFS();
 		}
 

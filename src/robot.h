@@ -21,6 +21,8 @@ class robot
 		int index;
 		node* map;
 		node** floors;
+		bool floors_vis[max_num_floors] = {false};
+		int start_tile_floor[max_num_floors] = {0};
 
 		//helper funcs
 		bool forward();

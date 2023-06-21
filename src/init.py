@@ -7,7 +7,6 @@ import time
 
 print("Initializing Python subsystem")
 
-
 simulation = Rb.isSimulation()
 print("simulation = " + str(simulation))
 
@@ -34,6 +33,7 @@ if not simulation:
     if not video1.isOpened():
         print("failed to open video 1")
     ser = serial.Serial(port = serial_port, baudrate = 115200)
+    # flush random junk that might be there on init
     ser.flush()
 
 def SendSerialCommand(command):

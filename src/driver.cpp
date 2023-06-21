@@ -163,6 +163,12 @@ namespace driver
 			nodes[sim::sim_robot_index].bot = true;
 			bot->map[bot->index].ramp = 0b10;
 			sim::just_went_on_ramp = true;
+			
+			if(!bot->floors_vis[floor_num])
+			{
+				bot->start_tile_floor[floor_num] = bot->index;
+				bot->floors_vis[floor_num] = true;
+			}
 		}
 		else if(down_ramp)
 		{
@@ -184,6 +190,12 @@ namespace driver
 			nodes[sim::sim_robot_index].bot = true;
 			bot->map[bot->index].ramp = 0b01;
 			sim::just_went_on_ramp = true;
+
+			if(!bot->floors_vis[floor_num])
+			{
+				bot->start_tile_floor[floor_num] = bot->index;
+				bot->floors_vis[floor_num] = true;
+			}
 		}
 		
 		return true;
@@ -547,6 +559,12 @@ namespace driver
 			bot->map[bot->index].ramp = 0b10;
 			bot->map[bot->index].bot = true;
 
+			if(!bot->floors_vis[floor_num])
+			{
+				bot->start_tile_floor[floor_num] = bot->index;
+				bot->floors_vis[floor_num] = true;
+			}
+
 			std::cout << "on a higher floor: " << floor_num << ',' << bot->index << std::endl;
 		}
 		else if(down_ramp)
@@ -561,6 +579,12 @@ namespace driver
 
 			bot->map[bot->index].ramp = 0b01;
 			bot->map[bot->index].bot = true;
+
+			if(!bot->floors_vis[floor_num])
+			{
+				bot->start_tile_floor[floor_num] = bot->index;
+				bot->floors_vis[floor_num] = true;
+			}
 
 			std::cout << "on a lower floor: " << floor_num << ',' << bot->index << std::endl;
 		}
