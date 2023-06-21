@@ -7,6 +7,37 @@
 #include <filesystem>
 #include <fstream>
 
+void set_ramp_wall()
+{
+	robot* bot = robot::get_instance();
+	CHECK(bot);
+	CHECK(bot->map);
+
+	switch(bot->dir)
+	{
+		case DIR::N:
+			bot->map[bot->index].N = true;
+			bot->map[bot->index].E = true;
+			bot->map[bot->index].W = true;
+			return;
+		case DIR::E:
+			bot->map[bot->index].E = true;
+			bot->map[bot->index].N = true;
+			bot->map[bot->index].S = true;
+			return;
+		case DIR::W:
+			bot->map[bot->index].W = true;
+			bot->map[bot->index].N = true;
+			bot->map[bot->index].S = true;
+			return;
+		case DIR::S:
+			bot->map[bot->index].S = true;
+			bot->map[bot->index].E = true;
+			bot->map[bot->index].W = true;
+			return;
+	}
+}
+
 namespace driver
 {
     #ifdef SIMULATION
@@ -123,37 +154,6 @@ namespace driver
 		PythonScript::Exec(cleanup_py_file);
 		if(std::filesystem::exists("save.txt"))
 			std::filesystem::remove("save.txt");
-	}
-
-	void set_ramp_wall()
-	{
-		robot* bot = robot::get_instance();
-		CHECK(bot);
-		CHECK(bot->map);
-
-		switch(bot->dir)
-		{
-			case DIR::N:
-				bot->map[bot->index].N = true;
-				bot->map[bot->index].E = true;
-				bot->map[bot->index].W = true;
-				return;
-			case DIR::E:
-				bot->map[bot->index].E = true;
-				bot->map[bot->index].N = true;
-				bot->map[bot->index].S = true;
-				return;
-			case DIR::W:
-				bot->map[bot->index].W = true;
-				bot->map[bot->index].N = true;
-				bot->map[bot->index].S = true;
-				return;
-			case DIR::S:
-				bot->map[bot->index].S = true;
-				bot->map[bot->index].E = true;
-				bot->map[bot->index].W = true;
-				return;
-		}
 	}
 
 	bool set_mov_indexes(int delta, int ramp_len = 1)
@@ -568,23 +568,21 @@ namespace driver
 		robot* bot = robot::get_instance();
 		CHECK(bot);
 		CHECK(bot->map);
-		if(!up_ramp && !down_ramp)
+		bot->map[bot->index].bot = false;
+		bot->index += delta;
+		bot->map[bot->index].bot = true;
+
+		if(up_ramp)
 		{
-			bot->map[bot->index].bot = false;
-			bot->index += delta;
-			bot->map[bot->index].bot = true;
-		}
-		else if(up_ramp)
-		{
+			set_ramp_wall();
 			bot->map[bot->index].bot = false;
             bot->map[bot->index].ramp = 0b01;
 			floor_num++;
 			bot->map = bot->floors[floor_num];
 
-			bot->index += delta;
 			bot->index += delta * ramp_len;
 
-			bot->map[bot->index].ramp = 0b10;
+			bot->map[bot->index - delta].ramp = 0b10;
 			bot->map[bot->index].bot = true;
 
 			if(!bot->floors_vis[floor_num])
@@ -597,15 +595,15 @@ namespace driver
 		}
 		else if(down_ramp)
 		{
+			set_ramp_wall();
 			bot->map[bot->index].bot = false;
             bot->map[bot->index].ramp = 0b10;
 			floor_num--;
 			bot->map = bot->floors[floor_num];
 
-			bot->index += delta;
 			bot->index += delta * ramp_len;
 
-			bot->map[bot->index].ramp = 0b01;
+			bot->map[bot->index - delta].ramp = 0b01;
 			bot->map[bot->index].bot = true;
 
 			if(!bot->floors_vis[floor_num])
