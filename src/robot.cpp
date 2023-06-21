@@ -19,6 +19,7 @@ robot::robot(){
 			floors[i] = new node[horz_size * vert_size];
 			memset(floors[i], 0, horz_size * vert_size * sizeof(node));
 		}
+		this->map = this->floors[0];
 
 #ifdef DEBUG
 	std::cout << "INFO: Debug info is ENABLED" << std::endl;
