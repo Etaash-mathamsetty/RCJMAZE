@@ -26,7 +26,7 @@ struct simulation_node {
 		bool checkpoint : 1;
 		bool black : 1;
 	private:
-		uint8_t garbage : 6;
+		uint8_t garbage : 5;
 
 };
 #endif
@@ -61,7 +61,7 @@ struct node {
 		uint8_t ramp : 2;
 		bool checkpoint : 1;
 	private:
-		uint8_t garbage : 7;
+		uint8_t garbage : 6;
 };
 
 struct ramp_pair
