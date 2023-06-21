@@ -133,7 +133,7 @@ namespace driver
 		CHECK(nodes);
 		CHECK(up_ramp && down_ramp);
 
-		if(!up_ramp && !down_ramp)
+		if((!up_ramp && !down_ramp) || sim::just_went_on_ramp)
 		{
 			bot->map[bot->index].bot = false;
 			nodes[sim::sim_robot_index].bot = false;
@@ -141,6 +141,7 @@ namespace driver
 			sim::sim_robot_index += delta;
 			bot->map[bot->index].bot = true;
 			nodes[sim::sim_robot_index].bot = true;
+			sim::just_went_on_ramp = false;
 		}
 		else if(up_ramp)
 		{
@@ -161,6 +162,7 @@ namespace driver
 			bot->map[bot->index].bot = true;
 			nodes[sim::sim_robot_index].bot = true;
 			bot->map[bot->index].ramp = 0b10;
+			sim::just_went_on_ramp = true;
 		}
 		else if(down_ramp)
 		{
@@ -181,6 +183,7 @@ namespace driver
 			bot->map[bot->index].bot = true;
 			nodes[sim::sim_robot_index].bot = true;
 			bot->map[bot->index].ramp = 0b01;
+			sim::just_went_on_ramp = true;
 		}
 		
 		return true;

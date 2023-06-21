@@ -8,7 +8,7 @@
 
 #define SIMULATION
 #define DEBUG
-//#define SIM_MOV_DELAY
+#define SIM_MOV_DELAY
 
 #ifdef SIMULATION
 //is the bigger one in terms of size, shouldn't impact the smaller node's values when using memcpy
