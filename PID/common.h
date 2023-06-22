@@ -28,7 +28,7 @@
 #define FRONT_RIGHT A15
 #define FRONT_LEFT A13
 #define BACK_RIGHT A10
-#define BACK_LEFT A11
+#define BACK_LEFT A8
 #define UPDATE_BNO() bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER)
 
 #ifdef DEBUG_DISPLAY
@@ -55,8 +55,8 @@ const int minspeed = 200;
 const double KP_TURN = 1.2;
 const double KI_TURN = 0.00003;
 const double KD_TURN = 0.243;
-const int DRIVE_BOOST = 60;
-const int TURN_BOOST = 80;
+const int DRIVE_BOOST = 40;
+const int TURN_BOOST = 85;
 
 
 const double DRIVE_STRAIGHT_KP = 3.0;

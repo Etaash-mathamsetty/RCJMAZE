@@ -5,7 +5,7 @@
 #define TEST
 // #define ALIGN_ANGLE
 #define NO_PI //basic auto when no raspberry pi (brain stem mode)
-// #define LIMIT
+#define LIMIT
 
 //define: debug display, motorsoff, test, comment out all others if you want to calibrate tofs 
 
@@ -548,8 +548,6 @@ void backup_align(int speed, int time) {
   while (tofCalibrated(5) >= 50) {
     utils::forward(-speed);
   }
-  
-  delay(400);
 
   int32_t tstart = millis();
 
@@ -574,7 +572,7 @@ void backup_align(int speed, int time) {
   utils::stopMotors();
 
   bno.begin(OPERATION_MODE_IMUPLUS);
-  delay(80);
+  delay(50);
 }
 
 void right(int relative_angle, int speed, bool turn_status = true) {
@@ -608,7 +606,7 @@ void right(int relative_angle, int speed, bool turn_status = true) {
  
   if(tofCalibrated(5) <= wall_tresh - 30)
   {
-    backup_align(SPEED, 600);
+    backup_align(SPEED, 1000);
     // while(tofCalibrated(5) >= 70)
     // {
     //   forward(-speed);
@@ -732,8 +730,13 @@ void raw_right(double relative_angle, int speed) {
 
     if (digitalRead(BACK_LEFT) || digitalRead(BACK_RIGHT)) {
       resetTicks();
-      while(motorR.getTicks() < 4 * CM_TO_ENCODERS) {
+      while(abs(motorR.getTicks()) < 4 * CM_TO_ENCODERS) {
         forward(SPEED * 0.75);
+      }
+    } else if (digitalRead(FRONT_LEFT) || digitalRead(FRONT_RIGHT)) {
+      resetTicks();
+      while(abs(motorR.getTicks()) < 4 * CM_TO_ENCODERS) {
+        forward(-SPEED * 0.75);
       }
     }
 
@@ -810,8 +813,13 @@ void raw_left(double relative_angle, int speed) {
 
     if (digitalRead(BACK_LEFT) || digitalRead(BACK_RIGHT)) {
       resetTicks();
-      while(motorR.getTicks() < 4 * CM_TO_ENCODERS) {
+      while(abs(motorR.getTicks()) < 4 * CM_TO_ENCODERS) {
         forward(SPEED * 0.75);
+      }
+    } else if (digitalRead(FRONT_LEFT) || digitalRead(FRONT_RIGHT)) {
+      resetTicks();
+      while(abs(motorR.getTicks()) < 4 * CM_TO_ENCODERS) {
+        forward(-SPEED * 0.75);
       }
     }
 
@@ -1199,7 +1207,7 @@ bool handle_up_ramp(double start_pitch, int32_t end_encoders)
     double old_theta = BNO_Z;
     double old_x = motorR.getTicks();
     const float wall_kp = 0.05f;
-    while(abs(BNO_Z - start_pitch) > 2)
+    while(abs(BNO_Z - start_pitch) >= 4)
     {
       UPDATE_BNO();
       int32_t right = (_tofCalibrated(0) + _tofCalibrated(1))/2;
@@ -1214,17 +1222,19 @@ bool handle_up_ramp(double start_pitch, int32_t end_encoders)
         // calculate distance on a ramp
 
         int32_t delta_x = abs(motorR.getTicks()) - abs(old_x);
-        int32_t delta_theta = BNO_Z - start_pitch;
+        double delta_theta = BNO_Z - start_pitch;
         distance += delta_x * cos(delta_theta * (PI/180));
         old_x = motorR.getTicks();
       }
     }
+
+    stopMotors();
+
     oled.clearDisplay();
     oled.setCursor(0,0);
     oled.print("Ramps: ");
     oled.print(distance / (int32_t) (30 * CM_TO_ENCODERS));
-    stopMotors();
-    delay(200);
+    delay(500);
     pi_send_tag("ramp");
     PI_SERIAL.print(1.0);
     PI_SERIAL.print(",");
@@ -1266,7 +1276,7 @@ bool handle_down_ramp(double start_pitch, double end_encoders)
     double old_theta = BNO_Z;
     double old_x = motorR.getTicks();
     const float wall_kp = 0.05f;
-    while(abs(BNO_Z - start_pitch) >= 3)
+    while(abs(BNO_Z - start_pitch) >= 4)
     {
       UPDATE_BNO();
       int32_t right = (_tofCalibrated(0) + _tofCalibrated(1))/2;
@@ -1280,19 +1290,19 @@ bool handle_down_ramp(double start_pitch, double end_encoders)
       if (!(millis() % delta_time)) {
         // calculate distance on a ramp
         int32_t delta_x = abs(motorR.getTicks()) - abs(old_x);
-        int32_t delta_theta = BNO_Z - start_pitch;
+        double delta_theta = BNO_Z - start_pitch;
         distance += delta_x * cos(delta_theta * (PI/180));
         old_x = motorR.getTicks();
       }
     }
 
+    stopMotors();
+
     oled.clearDisplay();
     oled.setCursor(0,0);
     oled.print("Ramps: ");
     oled.print(distance / (int32_t) (30 * CM_TO_ENCODERS));
-    stopMotors();
-    delay(200);
-    stopMotors();
+    delay(500);
     pi_send_tag("ramp");
     PI_SERIAL.print(10.0);
     PI_SERIAL.print(",");
@@ -1318,7 +1328,7 @@ int left_obstacle() {
     forward(-SPEED * 0.7);
 
     if (tofCalibrated(5) < 80 || digitalRead(BACK_LEFT) || digitalRead(BACK_RIGHT)) {
-      forward_ticks = motorR.getTicks();
+      forward_ticks = abs(motorR.getTicks());
       break;
     }
   }
@@ -1350,7 +1360,7 @@ int right_obstacle() {
     forward(-SPEED * 0.7);
 
     if (tofCalibrated(5) < 80 || digitalRead(BACK_LEFT) || digitalRead(BACK_RIGHT)) {
-      forward_ticks = motorR.getTicks();
+      forward_ticks = abs(motorR.getTicks());
       break;
     }
   }
@@ -1632,7 +1642,7 @@ void alignAngle(bool reset, int tolerance = 5) {
   if (reset) {
     bno.begin(OPERATION_MODE_IMUPLUS);
     oled.println("BNO has reset!");
-    delay(200);
+    delay(50);
   }
 }
 
@@ -1807,13 +1817,13 @@ void loop()
 
   // int clear_oled_counter = 0;
 
-  for (int i = 0; i <= 5; i++) {
-    Serial.print(i);
-    Serial.print(": ");
-    Serial.print(_tofCalibrated(i));
-    Serial.print(", ");
-  }
-  Serial.println();
+  // for (int i = 0; i <= 5; i++) {
+  //   Serial.print(i);
+  //   Serial.print(": ");
+  //   Serial.print(_tofCalibrated(i));
+  //   Serial.print(", ");
+  // }
+  // Serial.println();
   // returnColor(false); 
   // Serial.print("Front Left: ");
   // Serial.print(digitalRead(A13));
@@ -1824,8 +1834,8 @@ void loop()
   // Serial.print(" Back Right: ");
   // Serial.println(digitalRead(BACK_RIGHT));
   // Serial.println(motorR.getTicks());
-  // UPDATE_BNO();
-  // Serial.println(BNO_Z);
+  UPDATE_BNO();
+  Serial.println(BNO_Z);
 
   // int r,g,b,c;
   // tcaselect(6);
@@ -1878,7 +1888,7 @@ void loop()
 
   if(!walls[0])
   { 
-    driveCM(32, 110);
+    driveCM(31, 110);
   }
   else if(!walls[1])
   {
