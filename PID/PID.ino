@@ -1223,11 +1223,13 @@ bool handle_up_ramp(double start_pitch, int32_t end_encoders)
     oled.clearDisplay();
     oled.setCursor(0,0);
     oled.print("Ramps: ");
-    oled.print(distance % (int32_t) (30 * CM_TO_ENCODERS));
+    oled.print(distance / (int32_t) (30 * CM_TO_ENCODERS));
     stopMotors();
     delay(200);
     pi_send_tag("ramp");
-    PI_SERIAL.println(1.0);
+    PI_SERIAL.print(1.0);
+    PI_SERIAL.print(",");
+    PI_SERIAL.println(distance / (int32_t) (30 * CM_TO_ENCODERS));
     return true;
   }
 
@@ -1289,12 +1291,14 @@ bool handle_down_ramp(double start_pitch, double end_encoders)
     oled.clearDisplay();
     oled.setCursor(0,0);
     oled.print("Ramps: ");
-    oled.print(distance % (int32_t) (30 * CM_TO_ENCODERS));
+    oled.print(distance / (int32_t) (30 * CM_TO_ENCODERS));
     stopMotors();
     delay(200);
     stopMotors();
     pi_send_tag("ramp");
-    PI_SERIAL.println(10.0);
+    PI_SERIAL.print(10.0);
+    PI_SERIAL.print(",");
+    PI_SERIAL.println(distance / (int32_t) (30 * CM_TO_ENCODERS));
     return true;
   }
 
