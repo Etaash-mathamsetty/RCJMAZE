@@ -151,7 +151,7 @@ int main(int argc, char* argv[]){
 					if(old_floor != floor_num)
 						break;
 				}
-				if(quitable && robot->index == helper::get_index(default_index, default_index) && floor_num == 0)
+				if(quitable && robot->index == helper::get_index(default_index, default_index) && floor_num == start_floor)
 					break;
 			}
 		}
@@ -186,7 +186,7 @@ int main(int argc, char* argv[]){
 					break;
 			}
 			//debug::print_node(robot->map[robot->index]);
-			if(quitable && robot->index == helper::get_index(default_index, default_index))
+			if(quitable && robot->index == helper::get_index(default_index, default_index) && floor_num = start_floor)
 				break;
 			#ifdef TEST_MODE
 				std::cout << "press any key to continue..." << std::endl;

@@ -118,8 +118,9 @@ const std::string cv_py_file = "cv.py";
 const std::string ser_py_file = "serial.py";
 const std::string cleanup_py_file = "cleanup.py";
 
-const int max_num_floors = 6;
-inline int floor_num = 0;
+const int max_num_floors = 10;
+const int start_floor = 4;
+inline int floor_num = start_floor;
 
 #ifdef SIMULATION
 //simulation field

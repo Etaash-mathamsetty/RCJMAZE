@@ -25,9 +25,9 @@ namespace debug
 	{
 #ifdef DEBUG
 #ifdef SIMULATION
-        for(int i = 0; i < sim::_vert_size[floor_num]; i++)
+        for(int i = 0; i < sim::_vert_size[floor_num - start_floor]; i++)
 		{
-            for(int l = 0; l < sim::_horz_size[floor_num]; l++)
+            for(int l = 0; l < sim::_horz_size[floor_num - start_floor]; l++)
 			{
                 putchar('+');
                 if(nodes[helper::get_index(i,l)].N)
@@ -36,7 +36,7 @@ namespace debug
                     putchar(' ');
             }
             putchar('\n');
-            for(int l = 0; l < sim::_horz_size[floor_num]; l++)
+            for(int l = 0; l < sim::_horz_size[floor_num - start_floor]; l++)
 			{
                 if(nodes[helper::get_index(i,l)].W)
                     putchar('|');
@@ -58,10 +58,10 @@ namespace debug
             }
             putchar('\n');
         }
-        for(int l = 0; l < sim::_horz_size[floor_num]; l++)
+        for(int l = 0; l < sim::_horz_size[floor_num - start_floor]; l++)
 		{
             putchar('+');
-            if(nodes[helper::get_index(sim::_vert_size[floor_num]-1,l)].S)
+            if(nodes[helper::get_index(sim::_vert_size[floor_num - start_floor]-1,l)].S)
                 putchar('-');
             else
                 putchar(' ');
