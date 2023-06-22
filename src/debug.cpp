@@ -75,7 +75,7 @@ namespace debug
     node cur_node = bot->map[bot->index];
     putchar('+');
     putchar(cur_node.N ? '-' : ' ');
-    puts("+\n");
+    puts("+");
     putchar(cur_node.W ? '|' : ' ');
     putchar('x');
     if(cur_node.vic)
