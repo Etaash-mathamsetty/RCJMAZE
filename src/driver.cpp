@@ -53,62 +53,33 @@ namespace driver
 		if(num_floors > 1 && floors == nullptr)
 			floors = new simulation_node*[max_num_floors];
 		bool n, s, e, w, vic, bot_here, vis, ramp, checkpoint, black;
+		for(int l = 0; l < num_floors; l++)
 		for(int i = 0; i < horz_size * vert_size; i++)
 		{
+			int bot_l = l + start_floor;
 			in >> n >> s >> e >> w >> vic >> bot_here >> vis >> ramp >> checkpoint;
-			bot->map[i].N = n;
-			bot->map[i].S = s;
-			bot->map[i].E = e;
-			bot->map[i].W = w;
-			bot->map[i].vic = vic;
-			bot->map[i].bot = bot_here;
-			bot->map[i].vis = vis;
-			bot->map[i].checkpoint = checkpoint;
-			if(bot->map[i].bot)
+			bot->floors[bot_l][i].N = n;
+			bot->floors[bot_l][i].S = s;
+			bot->floors[bot_l][i].E = e;
+			bot->floors[bot_l][i].W = w;
+			bot->floors[bot_l][i].vic = vic;
+			bot->floors[bot_l][i].bot = bot_here;
+			bot->floors[bot_l][i].vis = vis;
+			bot->floors[bot_l][i].checkpoint = checkpoint;
+			if(bot->floors[bot_l][i].bot)
 				bot->index = i;
 			in >> n >> s >> e >> w >> vic >> bot_here >> vis >> ramp >> checkpoint >> black;
-			nodes[i].N = n;
-			nodes[i].S = s;
-			nodes[i].E = e;
-			nodes[i].W = w;
-			nodes[i].vic = vic;
-			nodes[i].bot = bot_here;
-			nodes[i].vis = vis;
-			nodes[i].checkpoint = checkpoint;
-			nodes[i].black = black;
-			if(nodes[i].bot)
+			floors[l][i].N = n;
+			floors[l][i].S = s;
+			floors[l][i].E = e;
+			floors[l][i].W = w;
+			floors[l][i].vic = vic;
+			floors[l][i].bot = bot_here;
+			floors[l][i].vis = vis;
+			floors[l][i].checkpoint = checkpoint;
+			floors[l][i].black = black;
+			if(floors[l][i].bot)
 				sim::sim_robot_index = i;
-		}
-		if(num_floors > 1)
-		{
-			for(int l = 0; l < num_floors; l++)
-			for(int i = 0; i < horz_size * vert_size; i++)
-			{
-				in >> n >> s >> e >> w >> vic >> bot_here >> vis >> ramp >> checkpoint;
-				bot->floors[l][i].N = n;
-				bot->floors[l][i].S = s;
-				bot->floors[l][i].E = e;
-				bot->floors[l][i].W = w;
-				bot->floors[l][i].bot = bot_here;
-				bot->floors[l][i].vic = vic;
-				bot->floors[l][i].vis = vis;
-				bot->floors[l][i].ramp = ramp;
-				bot->floors[l][i].checkpoint = checkpoint;
-				if(bot->floors[l][i].bot)
-					sim::sim_robot_index = i;
-
-				in >> n >> s >> e >> w >> vic >> bot_here >> vis >> ramp >> checkpoint >> black;
-				floors[l][i].N = n;
-				floors[l][i].S = s;
-				floors[l][i].E = e;
-				floors[l][i].W = w;
-				floors[l][i].vic = vic;
-				floors[l][i].vis = vis;
-				floors[l][i].ramp = ramp;
-				floors[l][i].black = black;
-				floors[l][i].bot = bot_here;
-				floors[l][i].checkpoint = checkpoint;
-			}
 		}
 	}
 
@@ -123,11 +94,12 @@ namespace driver
 		for(int l = 0; l < num_floors; l++)
 		for(int i = 0; i < horz_size * vert_size; i++)
 		{
-			out << bot->floors[l][i].N << " " << bot->floors[l][i].S << " ";
-			out << bot->floors[l][i].E << " " << bot->floors[l][i].W << " ";
-			out << bot->floors[l][i].vic << " " << bot->floors[l][i].bot << " ";
-			out << bot->floors[l][i].vis << " " << bot->floors[l][i].ramp << " ";
-			out << bot->floors[l][i].checkpoint << std::endl;
+			int bot_l = l + start_floor;
+			out << bot->floors[bot_l][i].N << " " << bot->floors[bot_l][i].S << " ";
+			out << bot->floors[bot_l][i].E << " " << bot->floors[bot_l][i].W << " ";
+			out << bot->floors[bot_l][i].vic << " " << bot->floors[bot_l][i].bot << " ";
+			out << bot->floors[bot_l][i].vis << " " << bot->floors[bot_l][i].ramp << " ";
+			out << bot->floors[bot_l][i].checkpoint << std::endl;
 
 			out << floors[l][i].N << " " << floors[l][i].S << " " << floors[l][i].E << " ";
 			out << floors[l][i].W << " " << floors[l][i].vic << " " << floors[l][i].bot << " ";
@@ -187,7 +159,7 @@ namespace driver
 			bot->map[bot->index].ramp = 0b01;
 			floor_num++;
 			bot->map = bot->floors[floor_num];
-			nodes = floors[floor_num];
+			nodes = floors[floor_num - start_floor];
 			bot->index += ramp_len * delta;
 			sim::sim_robot_index = down_ramp_index;
 			bot->map[bot->index].bot = true;
@@ -214,7 +186,7 @@ namespace driver
 			bot->map[bot->index].ramp = 0b10;
 			floor_num--;
 			bot->map = bot->floors[floor_num];
-			nodes = floors[floor_num];
+			nodes = floors[floor_num - start_floor];
 			bot->index += ramp_len * delta;
 			sim::sim_robot_index = up_ramp_index;
 			bot->map[bot->index].bot = true;
