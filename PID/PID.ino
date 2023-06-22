@@ -1214,10 +1214,9 @@ bool handle_up_ramp(double start_pitch, int32_t end_encoders)
         // calculate distance on a ramp
 
         int32_t delta_x = abs(motorR.getTicks()) - abs(old_x);
-        int32_t delta_theta = BNO_Z - old_theta;
+        int32_t delta_theta = BNO_Z - start_pitch;
         distance += delta_x * cos(delta_theta * (PI/180));
-        double old_theta = BNO_Z;
-        double old_x = motorR.getTicks();
+        old_x = motorR.getTicks();
       }
     }
     oled.clearDisplay();
@@ -1281,10 +1280,9 @@ bool handle_down_ramp(double start_pitch, double end_encoders)
       if (!(millis() % delta_time)) {
         // calculate distance on a ramp
         int32_t delta_x = abs(motorR.getTicks()) - abs(old_x);
-        int32_t delta_theta = BNO_Z - old_theta;
+        int32_t delta_theta = BNO_Z - start_pitch;
         distance += delta_x * cos(delta_theta * (PI/180));
-        double old_theta = BNO_Z;
-        double old_x = motorR.getTicks();
+        old_x = motorR.getTicks();
       }
     }
 
