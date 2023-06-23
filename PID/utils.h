@@ -81,10 +81,10 @@ void kitDrop(int num, char side) {
   if(num > 0)
   {
     if(side == 'r'){
-      myservo2.write(0); 
+      myservo2.write(50); 
     } 
     else {
-      myservo2.write(50); 
+      myservo2.write(0); 
     }
   }
   
