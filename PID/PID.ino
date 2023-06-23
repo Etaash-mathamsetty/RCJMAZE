@@ -67,7 +67,7 @@ void setup() {
     oled.println("right disconnect");
   } else {
     Serial.println("limit init successful");
-    oled.println("limit successful");
+    oled.println("limit init!");
   }
 #endif
 
@@ -1223,7 +1223,7 @@ bool handle_up_ramp(double start_pitch, int32_t end_encoders)
 
   //bno.begin(OPERATION_MODE_IMUPLUS);
   //delay(20);
-  double new_angle = 0;
+  double new_angle = BNO_X;
 
   double distance = 0;
   auto old_ticks = motorR.getTicks();
@@ -1307,7 +1307,7 @@ bool handle_down_ramp(double start_pitch, double end_encoders)
   double distance = 0;
   UPDATE_BNO();
   //bno.begin(OPERATION_MODE_IMUPLUS);
-  double new_angle = 0;
+  double new_angle = BNO_X;
 
   motorR.resetTicks();
   while(abs(motorR.getTicks()) < abs(ticks))
@@ -1639,7 +1639,7 @@ void alignAngle(bool reset, int tolerance = 5) {
   int lnum = 1, rnum = 0;
   const float kP = 0.7;
   const float BNO_KP = 1.4;
-  addBoost(TURN_BOOST - 5);
+  addBoost(ALIGN_TURN_BOOST);
 
 
   tofR1 = tofCalibrated(0); 
@@ -1681,9 +1681,9 @@ void alignAngle(bool reset, int tolerance = 5) {
     if(abs(BNO_X - new_angle) < 2.5)
     {
       if (BNO_X  - new_angle < 0) {
-        raw_right(abs(BNO_X - new_angle), SPEED - 40, true);
+        raw_right(abs(BNO_X - new_angle), ALIGN_SPEED, true);
       } else {
-        raw_left(abs(BNO_X - new_angle), SPEED - 40, true);
+        raw_left(abs(BNO_X - new_angle), ALIGN_SPEED, true);
       } 
     }
     return;
