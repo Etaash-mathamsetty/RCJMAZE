@@ -57,7 +57,7 @@ const double KI_TURN = 0.00003;
 const double KD_TURN = 0.243;
 const int DRIVE_BOOST = 40;
 const int TURN_BOOST = 105;
-const int ALIGN_TURN_BOOST = 60;
+const int ALIGN_TURN_BOOST = 0;
 
 
 const double DRIVE_STRAIGHT_KP = 3.0;
@@ -85,7 +85,7 @@ uint16_t BNO055_SAMPLERATE_DELAY_MS = 10;
 double ACCEL_VEL_TRANSITION = (double)(BNO055_SAMPLERATE_DELAY_MS) / 1000.0;
 double ACCEL_POS_TRANSITION = 0.5 * ACCEL_VEL_TRANSITION * ACCEL_VEL_TRANSITION;
 
-const int wall_tresh = 185;
+const int wall_tresh = 190;
 
 bool black_tile_detected = false;
 

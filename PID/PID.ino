@@ -96,6 +96,8 @@ void setup() {
   myservo.write(170);
   delay(100);
   myservo.write(175);
+  myservo.detach();
+  myservo2.detach();
   oled.println("Servo reset");
   tcaselect(6);
   if (!tcs.begin())
@@ -184,7 +186,7 @@ bool* get_tof_vals(double threshold) {
   for (int i = TOF_START; i <= TOF_NUMBER; i++) {
     reading = tofCalibrated(i);
 
-    if (reading < threshold - ((i >= 4) ? 0 : 55)) {
+    if (reading < threshold - ((i >= 4) ? 55 : 0)) {
       arr[i] = true;
       Serial.print("Wall: ");
     } else {
@@ -229,7 +231,7 @@ void pi_read_vision() {
         pi_send_tag("drop_status");
         PI_SERIAL.println("1.0");
 
-        kitDrop(num, 'r');
+        kitDrop(num, 'l');
 
         cur_cmd.remove(0);
 
@@ -320,7 +322,7 @@ void pi_read_data() {
         if (cur_cmd[0] == 'g' || cur_cmd[0] == 'f') {
           Serial.println("FORWARD");
           oled.println("forward");
-          driveCM(31, 110);
+          driveCM(32, 110);
         } else {
           Serial.println("ERR: Invalid Parameter");
         }
@@ -400,7 +402,7 @@ void pi_read_data() {
           oled.println("forward");
           turn(c);
           //pi_send_data({ false, false, false, false });
-          driveCM(31, 110);
+          driveCM(32, 110);
         } else if (cur_cmd[0] == 't') {
           Serial.print("turn to ");
           Serial.println(c);
@@ -424,7 +426,7 @@ void pi_read_data() {
         if (cur_cmd[0] == 'g' || cur_cmd[0] == 'f') {
           Serial.println("FORWARD");
           oled.println("forward");
-          driveCM(31, 110);
+          driveCM(32, 110);
         } else {
           Serial.println("ERR: Invalid Parameter");
         }
@@ -540,7 +542,7 @@ int returnColor(bool only_black = false){
 
 void backup_align(int speed, int time) {
 
-  while (tofCalibrated(5) >= 50) {
+  while (tofCalibrated(5) >= 60 || digitalRead(BACK_LEFT) || digitalRead(BACK_RIGHT)) {
     utils::forward(-speed);
   }
 
@@ -1267,7 +1269,7 @@ bool handle_up_ramp(double start_pitch, int32_t end_encoders)
 
       if(left <= wall_tresh && right <= wall_tresh)
         err = (right - left) * wall_kp;
-      utils::forward(100.0 + bno_error, 100.0 - bno_error);
+      utils::forward(100.0 + err, 100.0 - err);
 
       // calculate distance on a ramp
       double delta_x = abs(motorR.getTicks()) - abs(old_x);
@@ -1348,7 +1350,7 @@ bool handle_down_ramp(double start_pitch, double end_encoders)
 
       if(left <= wall_tresh && right <= wall_tresh)
         err = (right - left) * wall_kp;
-      utils::forward(90.0 - bno_error, 90.0 - bno_error);
+      utils::forward(90.0 + err, 90.0 - err);
 
       // calculate distance on a ramp
       double delta_x = abs(motorR.getTicks()) - abs(old_x);
@@ -1398,10 +1400,10 @@ int left_obstacle() {
     forward(-SPEED * 0.7);
 
     if (digitalRead(BACK_LEFT) || digitalRead(BACK_RIGHT)) {
-      forward_ticks = abs(motorR.getTicks());
       break;
     }
   }
+  forward_ticks = abs(motorR.getTicks());
 
   stopMotors();
   delay(100);
@@ -1430,10 +1432,11 @@ int right_obstacle() {
     forward(-SPEED * 0.7);
 
     if (digitalRead(BACK_LEFT) || digitalRead(BACK_RIGHT)) {
-      forward_ticks = abs(motorR.getTicks());
       break;
     }
   }
+
+  forward_ticks = abs(motorR.getTicks());
 
   stopMotors();
   delay(100);
@@ -1506,16 +1509,16 @@ void drive(int32_t encoders, int speed) {
     if (digitalRead(A13) == HIGH && abs(BNO_Z) < 4) {
       ticks_before = abs(motorR.getTicks());
       int dist = left_obstacle();
-      motorR.setTicks(ticks_before - dist);
-      encoders *= 1.0 / cos(15.0 * (PI/180));
+      motorR.setTicks(-(ticks_before - dist));
+      // encoders *= 1.0 / cos(15.0 * (PI/180));
       tstart = millis();
     }
 
     if (digitalRead(A15) == HIGH && abs(BNO_Z) < 4) {
       ticks_before = abs(motorR.getTicks());
       int dist = right_obstacle();
-      motorR.setTicks(ticks_before - dist);
-      encoders *= 1.0 / cos(15.0 * (PI/180));
+      motorR.setTicks(-(ticks_before - dist));
+      // encoders *= 1.0 / cos(15.0 * (PI/180));
       tstart = millis();
     }
 #endif
@@ -1574,7 +1577,7 @@ void drive(int32_t encoders, int speed) {
       }
     }
 
-    forward((millis() - tstart  < 6000) ? PID : 210);
+    forward((millis() - tstart  < 6000) ? PID : 180);
     angle = orientation;
   } 
   //correct horizontal error when inside of hallway 
@@ -1901,13 +1904,13 @@ void loop()
 
   // int clear_oled_counter = 0;
 
-  // for (int i = 0; i <= 5; i++) {
-  //   Serial.print(i);
-  //   Serial.print(": ");
-  //   Serial.print(_tofCalibrated(i));
-  //   Serial.print(", ");
-  // }
-  // Serial.println();
+  for (int i = 0; i <= 5; i++) {
+    Serial.print(i);
+    Serial.print(": ");
+    Serial.print(_tofCalibrated(i));
+    Serial.print(", ");
+  }
+  Serial.println();
   // returnColor(false); 
   // Serial.print("Front Left: ");
   // Serial.print(digitalRead(A13));
@@ -1920,8 +1923,7 @@ void loop()
   // Serial.println(motorR.getTicks());
   // right(90, SPEED);
   // delay(500);
-  driveCM(31, SPEED);
-  delay(500);
+
   // UPDATE_BNO();
   // Serial.println(BNO_Z);
 
@@ -1976,7 +1978,7 @@ void loop()
 
   if(!walls[0])
   { 
-    driveCM(31, 110);
+    driveCM(32, 110);
   }
   else if(!walls[1])
   {

@@ -71,6 +71,8 @@ void kitDrop(int num, char side) {
   static int columnNum = 1; 
   static int numDropped = 0; 
   const int offset_for_stack[3] = {10, 7, 0};
+  myservo.attach(servopin);
+  myservo2.attach(servopin2);
 
   analogWrite(5, 50);
   if(side == 'r'){
@@ -104,6 +106,8 @@ void kitDrop(int num, char side) {
 
   delay(1000);
   analogWrite(5, 0);
+  myservo.detach();
+  myservo2.detach();
 }
 
 void resetServo() {
