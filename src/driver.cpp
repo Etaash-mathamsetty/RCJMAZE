@@ -586,6 +586,8 @@ namespace driver
 
 			std::cout << "on a lower floor: " << floor_num << ',' << bot->index << std::endl;
 		}
+
+		Bridge::remove_data_value("ramp");
 	}
 
 	CREATE_DRIVER(bool, forward)
@@ -594,6 +596,7 @@ namespace driver
 		CHECK(bot);
 		CHECK(bot->map);
 		auto org_index = bot->index;
+		auto org_floor = floor_num;
 		/*
 		 *
 		 * aysnc call using serial: PythonScript::CallPythonFunction("SendSerialCommand", "f\n");
@@ -647,6 +650,11 @@ namespace driver
 		//works since it can't be both :)
 		bool up_ramp = ramp == 1;
 		bool down_ramp = ramp == 10;
+		if(up_ramp || down_ramp)
+		{
+			std::cerr << "ramp recv: " << ramp << "," << ramp_len << std::endl;
+		}
+
 		switch(bot->dir)
 		{
 			case DIR::N:
@@ -746,6 +754,8 @@ namespace driver
 			{
 				std::cout << "drive::forward: WARN: Failed to move forward, returning false" << std::endl;
 				bot->index = org_index;
+				floor_num = org_floor;
+				bot->map = bot->floors[org_floor];
 				bot->map[bot->index].vis = false;
 				get_sensor_data();
 			}
