@@ -338,7 +338,7 @@ void pi_read_data() {
         pi_send_tag("drop_status");
         PI_SERIAL.println("1.0");
 
-        kitDrop(num, 'r');
+        kitDrop(num, 'l');
 
         cur_cmd.remove(0);
 
