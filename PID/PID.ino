@@ -1269,7 +1269,7 @@ bool handle_up_ramp(double start_pitch, int32_t end_encoders)
 
       // calculate distance on a ramp
       double delta_x = abs(motorR.getTicks()) - abs(old_x);
-      double delta_theta = BNO_Z - start_pitch;
+      double delta_theta = abs(BNO_Z - start_pitch);
       distance += delta_x * cos(delta_theta * (PI/180));
       old_x = motorR.getTicks();
     }
@@ -1350,7 +1350,7 @@ bool handle_down_ramp(double start_pitch, double end_encoders)
 
       // calculate distance on a ramp
       double delta_x = abs(motorR.getTicks()) - abs(old_x);
-      double delta_theta = BNO_Z - start_pitch;
+      double delta_theta = abs(BNO_Z - start_pitch);
       distance += delta_x * cos(delta_theta * (PI/180));
       old_x = motorR.getTicks();
     }
