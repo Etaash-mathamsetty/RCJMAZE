@@ -1501,7 +1501,7 @@ void drive(int encoders, int speed) {
     }
 
 #ifndef NO_LIMIT
-    if (digitalRead(A13) == HIGH && abs(BNO_Z) < 3) {
+    if (digitalRead(A13) == HIGH && abs(BNO_Z) < 4) {
       ticks_before = abs(motorR.getTicks());
       int dist = left_obstacle();
       motorR.setTicks(ticks_before - dist);
@@ -1509,7 +1509,7 @@ void drive(int encoders, int speed) {
       tstart = millis();
     }
 
-    if (digitalRead(A15) == HIGH && abs(BNO_Z) < 3) {
+    if (digitalRead(A15) == HIGH && abs(BNO_Z) < 4) {
       ticks_before = abs(motorR.getTicks());
       int dist = right_obstacle();
       motorR.setTicks(ticks_before - dist);
