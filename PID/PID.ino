@@ -1505,7 +1505,7 @@ void drive(int encoders, int speed) {
       ticks_before = abs(motorR.getTicks());
       int dist = left_obstacle();
       motorR.setTicks(ticks_before - dist);
-      encoders /= cos(15 * (PI/180));
+      encoders *= 1.0 / cos(15.0 * (PI/180));
       tstart = millis();
     }
 
@@ -1513,7 +1513,7 @@ void drive(int encoders, int speed) {
       ticks_before = abs(motorR.getTicks());
       int dist = right_obstacle();
       motorR.setTicks(ticks_before - dist);
-      encoders /= cos(15 * (PI/180));
+      encoders *= 1.0 / cos(15.0 * (PI/180));
       tstart = millis();
     }
 #endif
