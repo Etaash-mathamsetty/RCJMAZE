@@ -712,10 +712,14 @@ namespace driver
 		bool black_tile = !(bool)status[1];
 		bool failed = (bool)status[2];
 
+		std::cout << "status recv: " << black_tile << "," << failed << std::endl;
+
 		//black_tile = true when black tile (since we negated above)
 		//failed = true when failed
 		if(failed || black_tile)
 		{
+			floor_num = org_floor;
+			bot->map = bot->floors[org_floor];
 			bot->map[org_index].bot = true;
 			bot->map[bot->index].bot = false;
 			if(black_tile)
