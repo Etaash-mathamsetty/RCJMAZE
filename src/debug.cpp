@@ -77,14 +77,13 @@ namespace debug
     putchar(cur_node.N ? '-' : ' ');
     puts("+");
     putchar(cur_node.W ? '|' : ' ');
-    putchar('x');
     if(cur_node.vic)
         putchar('v');
     if(cur_node.checkpoint)
         putchar('c');
     if(cur_node.ramp)
         putchar('r');
-    if(!cur_node.bot && !cur_node.vic && !cur_node.checkpoint && !cur_node.ramp)
+    if(!cur_node.vic && !cur_node.checkpoint && !cur_node.ramp)
         putchar(' ');
     putchar(cur_node.E ? '|' : ' ');
     putchar('\n');
