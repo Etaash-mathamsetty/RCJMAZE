@@ -51,8 +51,9 @@ bool has_child_exited(pid_t pid)
     pid_t ret = waitpid(pid, &status, WNOHANG);
     if(ret == -1)
     {
+        //can happen when program SEGV
         std::cerr << "error with waitpid" << std::endl;
-        exit(EXIT_FAILURE);
+        return false;
     }
     if(ret == 0)
     {
