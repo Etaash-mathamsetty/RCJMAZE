@@ -1228,8 +1228,8 @@ bool handle_up_ramp(double start_pitch, int32_t end_encoders)
 
   UPDATE_BNO();
 
-  bno.begin(OPERATION_MODE_IMUPLUS);
-  delay(20);
+  //bno.begin(OPERATION_MODE_IMUPLUS);
+  //delay(20);
   double new_angle = 0;
 
   double distance = 0;
@@ -1241,7 +1241,7 @@ bool handle_up_ramp(double start_pitch, int32_t end_encoders)
   }
 
   UPDATE_BNO();
-  if(abs(BNO_Z - start_pitch) <= 3 || BNO_Z - start_pitch >= 3)
+  if(abs(BNO_Z - start_pitch) <= 3 || BNO_Z - start_pitch >= 4)
   {
     //not a ramp
     // int32_t dist = abs(motorL.getTicks()) - end_encoders;
@@ -1257,7 +1257,6 @@ bool handle_up_ramp(double start_pitch, int32_t end_encoders)
   }
   else
   {
-    double old_theta = BNO_Z;
     double old_x = motorR.getTicks();
     const float wall_kp = 0.10f;
 
@@ -1314,7 +1313,7 @@ bool handle_down_ramp(double start_pitch, double end_encoders)
   int32_t delta_time = 10;
   double distance = 0;
   UPDATE_BNO();
-  bno.begin(OPERATION_MODE_IMUPLUS);
+  //bno.begin(OPERATION_MODE_IMUPLUS);
   double new_angle = 0;
 
   motorR.resetTicks();
@@ -1323,7 +1322,7 @@ bool handle_down_ramp(double start_pitch, double end_encoders)
     forward(90);
   }
   UPDATE_BNO();
-  if(abs(BNO_Z - start_pitch) <= 3 || BNO_Z - start_pitch <= -3)
+  if(abs(BNO_Z - start_pitch) <= 3 || BNO_Z - start_pitch <= -4)
   {
     //not a ramp
     // int32_t dist = abs(motorL.getTicks()) - end_encoders;
@@ -1339,11 +1338,10 @@ bool handle_down_ramp(double start_pitch, double end_encoders)
   }
   else
   {
-    double old_theta = BNO_Z;
     double old_x = motorR.getTicks();
     const float wall_kp = 0.15f;
     const double BNO_KP = 0.5;
-    while(abs(BNO_Z - start_pitch) >= 4)
+    while(abs(BNO_Z - start_pitch) >= 4 && tofCalibrated(4) >= 90)
     {
       UPDATE_BNO();
       double reading = abs(BNO_X - new_angle > 180) ? BNO_X - 360: BNO_X;
