@@ -33,6 +33,7 @@ void setup() {
     utils::resetServo();
     cur_direction = 0;
     global_angle = 0.0;
+    black_tile_detected = false;
   }
 
   restart = false;
@@ -198,7 +199,7 @@ bool* get_tof_vals(double threshold) {
   return arr;
 }
 
-void driveCM(float,int,int);
+void driveCM(float,int,int y = 10);
 void left(int, int, bool);
 void right(int, int, bool);
 
@@ -319,7 +320,7 @@ void pi_read_data() {
         if (cur_cmd[0] == 'g' || cur_cmd[0] == 'f') {
           Serial.println("FORWARD");
           oled.println("forward");
-          driveCM(30, 110, 1);
+          driveCM(31, 110);
         } else {
           Serial.println("ERR: Invalid Parameter");
         }
@@ -399,7 +400,7 @@ void pi_read_data() {
           oled.println("forward");
           turn(c);
           //pi_send_data({ false, false, false, false });
-          driveCM(30, 110, 1);
+          driveCM(31, 110);
         } else if (cur_cmd[0] == 't') {
           Serial.print("turn to ");
           Serial.println(c);
@@ -423,7 +424,7 @@ void pi_read_data() {
         if (cur_cmd[0] == 'g' || cur_cmd[0] == 'f') {
           Serial.println("FORWARD");
           oled.println("forward");
-          driveCM(30, 110, 1);
+          driveCM(31, 110);
         } else {
           Serial.println("ERR: Invalid Parameter");
         }
@@ -950,7 +951,7 @@ void driveCM(float cm, int speed = 200, int tolerance = 10) {
         oled.clearDisplay();
         oled.println("achievement unlocked!");
         oled.println("How did we get here?");
-        while(tofCalibrated(4) >= 70)
+        while(tofCalibrated(4) >= 90)
         {
           forward(speed * 0.7);
         }
@@ -977,7 +978,7 @@ void driveCM(float cm, int speed = 200, int tolerance = 10) {
         oled.clearDisplay();
         oled.println("achievement unlocked!");
         oled.println("How did we get here?");
-        while(tofCalibrated(4) >= 70)
+        while(tofCalibrated(4) >= 90)
         {
           forward(speed * 0.7);
         }
@@ -1207,7 +1208,8 @@ void driveCM(float cm, int speed = 200, int tolerance = 10) {
   returnColor();
 
   //WARN: drive function can no longer be used on it's own (when communicating with stereo pi) !!!!!
-  pi_send_data(false, true);
+  pi_send_data(false, !black_tile_detected);
+  black_tile_detected = false;
 }
 
 bool handle_up_ramp(double start_pitch, int32_t end_encoders)
@@ -1534,12 +1536,17 @@ void drive(int32_t encoders, int speed) {
 
     if(returnColor(true) == 1)
     {
-      while(/* motorR.getTicks() > 0 && */ motorL.getTicks() > 0 && tofCalibrated(5) >= 40)
+      while(/* motorR.getTicks() > 0 && */ motorL.getTicks() > 0 && tofCalibrated(5) >= 50)
       {
         forward(-speed);
       }
       stopMotors();
-      pi_send_data(false, false);
+      //pi_send_data(false, false);
+      black_tile_detected = true;
+      pi_send_tag("ramp");
+      PI_SERIAL.print(0.0);
+      PI_SERIAL.print(',');
+      PI_SERIAL.println(0.0);
       resetBoost();
       return;
     }
@@ -1553,7 +1560,7 @@ void drive(int32_t encoders, int speed) {
     // Serial.println(speed * (double)(abs(encoders) - abs(motor1.getTicks()))/abs(encoders));
     bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
 
-    if (abs(orientationData.orientation.z) < 5) {
+    if (abs(BNO_Z) < 5) {
       while(PI_SERIAL.available()) {
         auto right_ticks = motorR.getTicks();
         auto left_ticks = motorL.getTicks();

@@ -87,6 +87,8 @@ double ACCEL_POS_TRANSITION = 0.5 * ACCEL_VEL_TRANSITION * ACCEL_VEL_TRANSITION;
 
 const int wall_tresh = 185;
 
+bool black_tile_detected = false;
+
 inline void tcaselect(uint8_t i) {
   if (i > 7)
     return;

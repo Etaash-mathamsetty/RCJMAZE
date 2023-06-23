@@ -556,11 +556,12 @@ namespace driver
 			bot->index += delta * ramp_len;
 
 			bot->map[bot->index - delta].ramp = 0b10;
+			bot->map[bot->index - delta].vis = true;
 			bot->map[bot->index].bot = true;
 
 			if(!bot->floors_vis[floor_num])
 			{
-				bot->start_tile_floor[floor_num] = bot->index;
+				bot->start_tile_floor[floor_num] = bot->index - delta;
 				bot->floors_vis[floor_num] = true;
 			}
 
@@ -577,11 +578,12 @@ namespace driver
 			bot->index += delta * ramp_len;
 
 			bot->map[bot->index - delta].ramp = 0b01;
+			bot->map[bot->index - delta].vis = true;
 			bot->map[bot->index].bot = true;
 
 			if(!bot->floors_vis[floor_num])
 			{
-				bot->start_tile_floor[floor_num] = bot->index;
+				bot->start_tile_floor[floor_num] = bot->index - delta;
 				bot->floors_vis[floor_num] = true;
 			}
 
