@@ -541,8 +541,14 @@ namespace driver
 		robot* bot = robot::get_instance();
 		CHECK(bot);
 		CHECK(bot->map);
+		int org_index = bot->index;
+
 		bot->map[bot->index].bot = false;
 		bot->index += delta;
+		if(!down_ramp && !up_ramp && bot->map[org_index].vic)
+		{
+			bot->map[bot->index].vic = true;
+		}
 		bot->map[bot->index].bot = true;
 
 		if(up_ramp)
