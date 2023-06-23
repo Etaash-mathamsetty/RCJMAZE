@@ -338,11 +338,8 @@ void pi_read_data() {
         pi_send_tag("drop_status");
         PI_SERIAL.println("1.0");
 
-        if(num > 0)
-          left(90, 100, false);
         kitDrop(num, 'r');
-        if(num > 0)
-          right(90, 100, false);
+
         cur_cmd.remove(0);
 
         if(num == 0)
@@ -356,11 +353,7 @@ void pi_read_data() {
         pi_send_tag("drop_status");
         PI_SERIAL.println("1.0");
 
-        if(num > 0)
-          right(90, 100, false);
         kitDrop(num, 'r');
-        if(num > 0)
-          left(90, 100, false);
         cur_cmd.remove(0);
 
         if(num == 0)
