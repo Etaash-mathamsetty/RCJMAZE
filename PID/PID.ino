@@ -1905,13 +1905,15 @@ void loop()
 
   // int clear_oled_counter = 0;
 
-  for (int i = 0; i <= 5; i++) {
-    Serial.print(i);
-    Serial.print(": ");
-    Serial.print(_tofCalibrated(i));
-    Serial.print(", ");
-  }
-  Serial.println();
+  // for (int i = 0; i <= 5; i++) {
+  //   Serial.print(i);
+  //   Serial.print(": ");
+  //   Serial.print(_tofCalibrated(i));
+  //   Serial.print(", ");
+  // }
+  // Serial.println();
+  kitDrop(1, 'r');
+  delay(1000);
   // returnColor(false); 
   // Serial.print("Front Left: ");
   // Serial.print(digitalRead(A13));
