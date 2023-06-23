@@ -96,6 +96,7 @@ void setup() {
   myservo.write(170);
   delay(100);
   myservo.write(175);
+  delay(40);
   myservo.detach();
   myservo2.detach();
   oled.println("Servo reset");
