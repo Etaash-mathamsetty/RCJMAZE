@@ -418,6 +418,7 @@ namespace driver
 			{
 				bot->index = i;
 				bot->map = bot->floors[l];
+				floor_num = l;
 			}
 			
 			node& temp = bot->floors[l][i];
