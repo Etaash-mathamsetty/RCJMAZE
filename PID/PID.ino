@@ -1445,7 +1445,7 @@ int right_obstacle() {
 
 }
 
-void drive(int encoders, int speed) {
+void drive(int32_t encoders, int speed) {
 #ifndef MOTORSOFF
   // bno.begin(OPERATION_MODE_IMUPLUS);
   double orientation_offset;
