@@ -57,7 +57,7 @@ const double KI_TURN = 0.00003;
 const double KD_TURN = 0.243;
 const int DRIVE_BOOST = 40;
 const int TURN_BOOST = 105;
-const int ALIGN_TURN_BOOST = 60;
+const int ALIGN_TURN_BOOST = 70;
 
 
 const double DRIVE_STRAIGHT_KP = 3.0;
@@ -66,10 +66,10 @@ const double KI_FORWARD = 0.003;
 const double KD_FORWARD = 0.01;
 const double SAMPLERATE_DELAY_MS = 10.0;
 const double TIMES_PER_SECOND = 1000.0 / SAMPLERATE_DELAY_MS;
-volatile double global_angle = 0;
+volatile int32_t global_angle = 0;
 
 const int SPEED = 105;
-const int ALIGN_SPEED = 45;
+const int ALIGN_SPEED = 60;
 
 const double TOF_DISTANCE = 58.64;
 
