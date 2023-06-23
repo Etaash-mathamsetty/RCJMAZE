@@ -683,8 +683,8 @@ void raw_right(double relative_angle, int speed, bool alignment) {
 
 #ifndef MOTORSOFF
   if (alignment) {
-    motorL.addBoost(ALIGN_TURN_BOOST);
-    motorR.addBoost(ALIGN_TURN_BOOST);
+    motorL.addBoost(ALIGN_TURN_BOOST + 5);
+    motorR.addBoost(ALIGN_TURN_BOOST + 5);
     speed = ALIGN_SPEED;
   }
   else {
@@ -1700,6 +1700,7 @@ void alignAngle(bool reset, int tolerance = 5) {
 
   //const int width = TOF_DISTANCE;
   //const int angle = atan(width/len) * (180/PI);
+  addBoost(ALIGN_TURN_BOOST + 10);
 
   while(abs(len) >= tolerance) {
     forward(len * kP, -len * kP);

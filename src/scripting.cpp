@@ -21,7 +21,8 @@ namespace Bridge
 
     void remove_data_value(const std::string& key)
     {
-        data_values.erase(key);
+        if(data_values.count(key) != 0)
+            data_values.erase(key);
     }
 
     std::optional<std::vector<float>> get_data_value(const std::string& key)
