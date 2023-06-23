@@ -2,6 +2,9 @@
 
 maze 2023 
 
+how to find raspberry pi (something like):  
+`fping -aq -g ip_addr/24`  
+
 ```
 ..........................................
 .  . . . .      . . . . .       .        .
