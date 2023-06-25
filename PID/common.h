@@ -1,6 +1,7 @@
 #include <VL53L0X.h>
 #include <Wire.h>
 #include <Adafruit_BNO055.h>
+#include "Adafruit_AS726x.h"
 #ifdef DEBUG_DISPLAY
 #include <U8g2lib.h>
 #include <U8x8lib.h> 
@@ -40,7 +41,11 @@ Adafruit_BNO055 bno;
 
 VL53L0X tof;
 
-Adafruit_TCS34725 tcs = Adafruit_TCS34725(TCS34725_INTEGRATIONTIME_2_4MS, TCS34725_GAIN_16X);
+Adafruit_TCS34725 tcs = Adafruit_TCS34725(TCS34725_INTEGRATIONTIME_2_4MS, TCS34725_GAIN_16X);\
+
+Adafruit_AS726x ams;
+
+uint16_t amsValues[AS726x_NUM_CHANNELS];
 
 
 Motor motorL(MPORT2);
@@ -69,7 +74,7 @@ const double TIMES_PER_SECOND = 1000.0 / SAMPLERATE_DELAY_MS;
 volatile int32_t global_angle = 0;
 
 const int SPEED = 105;
-const int ALIGN_SPEED = 60;
+const int ALIGN_SPEED = 70;
 
 const double TOF_DISTANCE = 58.64;
 
@@ -85,7 +90,7 @@ uint16_t BNO055_SAMPLERATE_DELAY_MS = 10;
 double ACCEL_VEL_TRANSITION = (double)(BNO055_SAMPLERATE_DELAY_MS) / 1000.0;
 double ACCEL_POS_TRANSITION = 0.5 * ACCEL_VEL_TRANSITION * ACCEL_VEL_TRANSITION;
 
-const int wall_tresh = 190;
+const int wall_tresh = 175;
 
 bool black_tile_detected = false;
 
