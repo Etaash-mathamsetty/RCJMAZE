@@ -32,7 +32,7 @@ void setup() {
     utils::resetTicks();
     utils::resetServo();
     cur_direction = 0;
-    global_angle = 0.0;
+    global_angle = 0;
     black_tile_detected = false;
   }
 
@@ -51,6 +51,7 @@ void setup() {
   oled.println("Starting...");
 
   bno.begin(OPERATION_MODE_IMUPLUS);
+  global_angle = 0;
   oled.println("BNO init done!");
 
 #ifndef NO_LIMIT
@@ -573,6 +574,7 @@ void backup_align(int speed, int time) {
   utils::stopMotors();
 
   bno.begin(OPERATION_MODE_IMUPLUS);
+  global_angle = 0;
   delay(50);
 }
 
@@ -628,11 +630,6 @@ void right(int relative_angle, int speed, bool turn_status = true) {
 
 void left(int relative_angle, int speed, bool turn_status = true) {
   bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
-
-  double orientation = orientationData.orientation.x;
-
-  if (abs(orientationData.orientation.x - global_angle) > 180)
-    orientation = orientationData.orientation.x - 360;
 
   int offset = relative_angle - (int) (orientationData.orientation.x) % relative_angle;
 
@@ -786,7 +783,6 @@ void raw_right(double relative_angle, int speed, bool alignment) {
   }
   resetBoost();
   stopMotors();
-  global_angle = math::wrapAround(global_angle + relative_angle, 360);
 #endif
 }
 
@@ -814,7 +810,6 @@ void raw_left(double relative_angle, int speed, bool alignment) {
 
   const double initial_angle = orientationData.orientation.x;
   double orientation = cross_over ? orientationData.orientation.x + relative_angle: orientationData.orientation.x;
-  // double angle = cross_over ? global_angle : global_angle - relative_angle;
   double angle = orientation - relative_angle;
   double last_error = abs((orientationData.orientation.x - angle) / angle);
 
@@ -887,7 +882,6 @@ void raw_left(double relative_angle, int speed, bool alignment) {
   }
   resetBoost();
   stopMotors();
-  global_angle = math::wrapAround(global_angle - relative_angle, 360);
 #endif
 }
 
@@ -903,11 +897,16 @@ void turn(char char_end_direction) {
 
   switch ((int) cur_direction - (int)end_direction) {
     case -3:
-    case 1: left(90, SPEED); break;
+    case 1: left(90, SPEED); global_angle = math::wrapAround(global_angle - 90, 360); break;
     case -1:
-    case 3: right(90, SPEED); break;
+    case 3: right(90, SPEED); global_angle = math::wrapAround(global_angle + 90, 360); break;
     case 2:
-    case -2: left(90, SPEED, false); left(90, SPEED); break;
+    case -2: 
+      left(90, SPEED, false); 
+      global_angle = math::wrapAround(global_angle - 90, 360); 
+      left(90, SPEED); 
+      global_angle = math::wrapAround(global_angle - 90, 360); 
+      break;
     default: Serial.println("invalid");
     case 0: pi_send_tag("turn_status"); PI_SERIAL.println(0.0); break;
   }
@@ -1217,7 +1216,7 @@ void driveCM(float cm, int speed = 200, int tolerance = 10) {
 
 bool handle_up_ramp(double start_pitch, int32_t end_encoders)
 {
-  int32_t ticks = 12 * CM_TO_ENCODERS;
+  int32_t ticks = 4 * CM_TO_ENCODERS;
   int32_t back_up = 0;
   int32_t delta_x = 0;
   int32_t delta_theta = 0;
@@ -1225,10 +1224,8 @@ bool handle_up_ramp(double start_pitch, int32_t end_encoders)
   const double BNO_KP = 0.5;
 
   UPDATE_BNO();
-
-  //bno.begin(OPERATION_MODE_IMUPLUS);
   //delay(20);
-  double new_angle = BNO_X;
+  double new_angle = 0;
 
   double distance = 0;
   auto old_ticks = motorR.getTicks();
@@ -1298,6 +1295,7 @@ bool handle_up_ramp(double start_pitch, int32_t end_encoders)
     PI_SERIAL.print(1.0);
     PI_SERIAL.print(",");
     PI_SERIAL.println(round((distance / (30.0 * CM_TO_ENCODERS)) - 0.4));
+    alignAngle(true);
     return true;
   }
 
@@ -1305,14 +1303,13 @@ bool handle_up_ramp(double start_pitch, int32_t end_encoders)
 
 bool handle_down_ramp(double start_pitch, double end_encoders)
 {
-  int32_t ticks = 12 * CM_TO_ENCODERS;
+  int32_t ticks = 4 * CM_TO_ENCODERS;
   int32_t back_up = 0;
   auto old_ticks = motorR.getTicks();
   int32_t delta_time = 10;
   double distance = 0;
   UPDATE_BNO();
-  //bno.begin(OPERATION_MODE_IMUPLUS);
-  double new_angle = BNO_X;
+  double new_angle = 0;
 
   motorR.resetTicks();
   while(abs(motorR.getTicks()) < abs(ticks))
@@ -1380,6 +1377,7 @@ bool handle_down_ramp(double start_pitch, double end_encoders)
     PI_SERIAL.print(10.0);
     PI_SERIAL.print(",");
     PI_SERIAL.println(round((distance / (30.0 * CM_TO_ENCODERS)) - 0.4));
+    alignAngle(true);
     return true;
   }
 
@@ -1400,7 +1398,7 @@ int left_obstacle() {
   while(abs(motorR.getTicks()) < forward_ticks) {
     forward(-SPEED * 0.7);
 
-    if (digitalRead(BACK_LEFT) || digitalRead(BACK_RIGHT)) {
+    if (digitalRead(BACK_LEFT) || digitalRead(BACK_RIGHT) || tofCalibrated(5) <= 40) {
       break;
     }
   }
@@ -1432,7 +1430,7 @@ int right_obstacle() {
   while(abs(motorR.getTicks()) < forward_ticks) {
     forward(-SPEED * 0.7);
 
-    if (digitalRead(BACK_LEFT) || digitalRead(BACK_RIGHT)) {
+    if (digitalRead(BACK_LEFT) || digitalRead(BACK_RIGHT) || tofCalibrated(5) <= 40) {
       break;
     }
   }
@@ -1453,7 +1451,6 @@ int right_obstacle() {
 
 void drive(int32_t encoders, int speed) {
 #ifndef MOTORSOFF
-  // bno.begin(OPERATION_MODE_IMUPLUS);
   double orientation_offset;
   addBoost(DRIVE_BOOST);
   UPDATE_BNO();
@@ -1474,6 +1471,7 @@ void drive(int32_t encoders, int speed) {
   bool down_ramp_detect = false;
   uint32_t tstart = millis();
   int32_t ticks_before = 0;
+  bool limit_detected = false;
   // encoders = orig_encoders / cos(-orientationData.orientation.z * (2 * PI / 360));
 
 
@@ -1513,6 +1511,7 @@ void drive(int32_t encoders, int speed) {
       motorR.setTicks(-(ticks_before - dist));
       // encoders *= 1.0 / cos(15.0 * (PI/180));
       tstart = millis();
+      limit_detected = true;
     }
 
     if (digitalRead(A15) == HIGH && abs(BNO_Z) < 4) {
@@ -1521,6 +1520,7 @@ void drive(int32_t encoders, int speed) {
       motorR.setTicks(-(ticks_before - dist));
       // encoders *= 1.0 / cos(15.0 * (PI/180));
       tstart = millis();
+      limit_detected = true;
     }
 #endif
 
@@ -1578,8 +1578,14 @@ void drive(int32_t encoders, int speed) {
       }
     }
 
-    forward((millis() - tstart  < 6000) ? PID : 180);
+    if (limit_detected) {
+      forward((millis() - tstart  < 5000) ? SPEED * 0.75 : 180);
+    } else {
+      forward((millis() - tstart  < 5000) ? PID : 180);
+    }
+
     angle = orientation;
+
   } 
   //correct horizontal error when inside of hallway 
 /*  if(tofR < 175 && tofL < 175){ 
@@ -1675,6 +1681,7 @@ void alignAngle(bool reset, int tolerance = 5) {
     Serial.println("too high values");
     UPDATE_BNO();
     double new_angle = closestToDirection(BNO_X);
+    // double new_angle = global_angle;
 
     double reading;
     do {
@@ -1729,6 +1736,7 @@ void alignAngle(bool reset, int tolerance = 5) {
 
   if (reset) {
     bno.begin(OPERATION_MODE_IMUPLUS);
+    global_angle = 0;
     oled.println("BNO has reset!");
     delay(50);
   }
