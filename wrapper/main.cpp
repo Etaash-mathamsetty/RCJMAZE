@@ -189,6 +189,14 @@ int main(int argc, char **argv)
     fs::path parent_path = path_to_bfs.parent_path();
     std::cout << "parent path: " << parent_path << std::endl;
 
+    std::string save_path = parent_path.string() + "/save.txt";
+
+    if(fs::exists(save_path))
+    {
+        fs::remove(save_path);
+        std::cout << "removed save.txt" << std::endl;
+    }
+
     while(!button_pressed());
     while(!button_released());
 
