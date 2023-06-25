@@ -268,10 +268,6 @@ void pi_read_vision() {
     else if(c == 'q')
     {
       Serial.println("Restarting...");
-      oled.clear();
-      oled.clearDisplay();
-      oled.setCursor(0, 0);
-      oled.println("Restarting...");
       delay(200);
       restart = true;
       return;
@@ -440,10 +436,6 @@ void pi_read_data() {
         if(cur_cmd[0] == 'q')
         {
           Serial.println("restarting");
-          oled.clear();
-          oled.clearDisplay();
-          oled.setCursor(0,0);
-          oled.println("restarting");
           delay(200);
           restart = true;
           return;
@@ -1283,7 +1275,7 @@ bool handle_up_ramp(double start_pitch, int32_t end_encoders)
 
       if(left <= wall_tresh && right <= wall_tresh)
         err = (right - left) * wall_kp;
-      utils::forward(100.0, 100.0);
+      utils::forward(100.0 + err, 100.0 - err);
 
       // calculate distance on a ramp
       double delta_x = abs(motorR.getTicks()) - abs(old_x);
@@ -1294,7 +1286,7 @@ bool handle_up_ramp(double start_pitch, int32_t end_encoders)
 
     stopMotors();
 
-    if((distance / (30.0 * CM_TO_ENCODERS)) <= 1.15)
+    if((distance / (30.0 * CM_TO_ENCODERS)) - 0.4 <= 0.65)
     {
       motorR.getTicks() = old_ticks + ticks - back_up;
       motorL.resetTicks();
@@ -1379,7 +1371,7 @@ bool handle_down_ramp(double start_pitch, double end_encoders)
 
       if(left <= wall_tresh && right <= wall_tresh)
         err = (right - left) * wall_kp;
-      utils::forward(90.0, 90.0);
+      utils::forward(90.0 + err, 90.0 - err);
 
       // calculate distance on a ramp
       double delta_x = abs(motorR.getTicks()) - abs(old_x);
@@ -1390,7 +1382,7 @@ bool handle_down_ramp(double start_pitch, double end_encoders)
 
     stopMotors();
 
-    if((distance / (30.0 * CM_TO_ENCODERS)) <= 1.15)
+    if((distance / (30.0 * CM_TO_ENCODERS)) - 0.4 <= 0.65)
     {
       motorR.getTicks() = old_ticks + ticks - back_up;
       motorL.resetTicks();
@@ -1508,7 +1500,7 @@ void drive(int32_t encoders, int speed) {
   uint32_t tstart = millis();
   int32_t ticks_before = 0;
   bool limit_detected = false;
-  double BNO_KP = 0.2;
+  double BNO_KP = 15;
   // encoders = orig_encoders / cos(-orientationData.orientation.z * (2 * PI / 360));
 
 
@@ -1625,7 +1617,7 @@ void drive(int32_t encoders, int speed) {
       reading = BNO_X;
     }
     
-    double error = (reading - new_angle) * BNO_KP;
+    double error = (reading - new_angle) * (BNO_KP + abs(reading - new_angle)/360);
 
     if (limit_detected) {
       if (millis() - tstart < 5000) {
@@ -1938,14 +1930,17 @@ void loop()
   // kitDrop(1, 'r');
   // delay(1000);
   // returnColor(false); 
-  Serial.print("Front Left: ");
-  Serial.print(digitalRead(FRONT_LEFT));
-  Serial.print(" Front Right: ");
-  Serial.print(digitalRead(FRONT_RIGHT));
-  Serial.print(" Back Left: ");
-  Serial.print(digitalRead(BACK_LEFT));
-  Serial.print(" Back Right: ");
-  Serial.println(digitalRead(BACK_RIGHT));
+  // Serial.print("Front Left: ");
+  // Serial.print(digitalRead(FRONT_LEFT));
+  // Serial.print(" Front Right: ");
+  // Serial.print(digitalRead(FRONT_RIGHT));
+  // Serial.print(" Back Left: ");
+  // Serial.print(digitalRead(BACK_LEFT));
+  // Serial.print(" Back Right: ");
+  // Serial.println(digitalRead(BACK_RIGHT));
+
+  drive(100 * CM_TO_ENCODERS, SPEED);
+  delay(1000);
   // Serial.println(motorR.getTicks());
   // right(90, SPEED);
   // delay(500);
