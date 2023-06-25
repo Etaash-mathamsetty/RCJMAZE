@@ -1226,7 +1226,7 @@ bool handle_up_ramp(double start_pitch, int32_t end_encoders)
 
   UPDATE_BNO();
   //delay(20);
-  double new_angle = 0;
+  double new_angle = closestToDirection(BNO_X);
 
   double distance = 0;
   auto old_ticks = motorR.getTicks();
@@ -1259,8 +1259,15 @@ bool handle_up_ramp(double start_pitch, int32_t end_encoders)
     while(abs(BNO_Z - start_pitch) >= 4 && tofCalibrated(4) >= 90)
     {
       UPDATE_BNO();
-      double reading = abs(BNO_X - new_angle > 180) ? BNO_X - 360: BNO_X;
-      double bno_error = (reading - new_angle) * BNO_KP;
+      double reading;
+
+      if (BNO_X - new_angle > 180) {
+        reading = BNO_X - 360;
+      } else if (BNO_X - new_angle < -180) {
+        reading = BNO_X + 360;
+      } else {
+        reading = BNO_X;
+      }
 
       int32_t right = (_tofCalibrated(0) + _tofCalibrated(1))/2;
       int32_t left = (_tofCalibrated(2) + _tofCalibrated(3))/2;
@@ -1532,6 +1539,8 @@ void drive(int32_t encoders, int speed) {
       int dist = left_obstacle();
       motorR.setTicks(-(ticks_before - dist));
       // encoders *= 1.0 / cos(15.0 * (PI/180));
+      UPDATE_BNO();
+      new_angle = BNO_X;
       tstart = millis();
       limit_detected = true;
     }
@@ -1540,6 +1549,8 @@ void drive(int32_t encoders, int speed) {
       ticks_before = abs(motorR.getTicks());
       int dist = right_obstacle();
       motorR.setTicks(-(ticks_before - dist));
+      UPDATE_BNO();
+      new_angle = BNO_X;
       // encoders *= 1.0 / cos(15.0 * (PI/180));
       tstart = millis();
       limit_detected = true;
