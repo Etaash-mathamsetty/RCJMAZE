@@ -23,7 +23,7 @@ bool button_pressed()
     const int thresh_count = 50;
     for(int i = 0; i < thresh_count; i++)
     {
-        if(!digitalRead(pin))
+        if(digitalRead(pin))
             return false;
 	    usleep(1000);
     }
@@ -37,7 +37,7 @@ bool button_released()
     const int thresh_count = 50;
     for(int i = 0; i < thresh_count; i++)
     {
-        if(digitalRead(pin))
+        if(!digitalRead(pin))
             return false;
 	    usleep(1000);
     }
@@ -59,7 +59,6 @@ bool has_child_exited(pid_t pid)
     {
         return false;
     }
-    
 
     if(WIFEXITED(status) && WEXITSTATUS(status) == 0)
     {
@@ -178,7 +177,7 @@ int main(int argc, char **argv)
 
 #ifndef DEBUG_LOGIC
     wiringPiSetup();
-    pinMode(pin, INPUT);
+    pinMode(pin, INPUT_PULLUP);
 #endif
 
     if(!path_to_bfs.has_parent_path())
