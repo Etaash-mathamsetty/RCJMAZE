@@ -109,11 +109,11 @@ void kitDrop(int num, char side) {
     delay(1000); 
     numDropped++;
   }
-  
-  analogWrite(5, 0);
+
   myservo.detach();
   myservo2.detach();
   delay(1000);
+  analogWrite(5, 0);
 }
 
 void resetServo() {
