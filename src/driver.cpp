@@ -536,7 +536,7 @@ namespace driver
 		}
 	}
 
-	void set_mov_indexes(int delta, bool up_ramp, bool down_ramp, int ramp_len)
+	void set_mov_indexes(int delta, bool up_ramp, bool down_ramp, int ramp_len, bool victim)
 	{
 		robot* bot = robot::get_instance();
 		CHECK(bot);
@@ -545,7 +545,7 @@ namespace driver
 
 		bot->map[bot->index].bot = false;
 		bot->index += delta;
-		if(!down_ramp && !up_ramp && bot->map[org_index].vic)
+		if(!down_ramp && !up_ramp && bot->map[org_index].vic && victim)
 		{
 			bot->map[bot->index].vic = true;
 		}
@@ -632,6 +632,7 @@ namespace driver
 		
 		//wait for it to finish running
 		auto time_step = std::chrono::high_resolution_clock::now();
+		bool victim = false;
 		while((bool)(*Bridge::get_data_value("forward_status"))[0]) 
 		{ 
 			PythonScript::Exec(ser_py_file);
@@ -641,7 +642,7 @@ namespace driver
 				for(int i = 0; i < 2; i++)
 				{
 					PythonScript::Exec(cv_py_file);
-					bool victim = (*Bridge::get_data_value("victim"))[0];
+					victim = (*Bridge::get_data_value("victim"))[0];
 					bool left = (*Bridge::get_data_value("left"))[0];
 					int nrk = (*Bridge::get_data_value("NRK"))[0];
 					if(victim)
@@ -669,7 +670,7 @@ namespace driver
 			case DIR::N:
 			{
 				if(helper::is_valid_index(bot->index - horz_size) && !bot->map[bot->index].N){
-					set_mov_indexes(-horz_size, up_ramp, down_ramp, ramp_len);
+					set_mov_indexes(-horz_size, up_ramp, down_ramp, ramp_len, victim);
 				}
 				else{
 					std::cerr << "ERROR: Cannot move forward!" << std::endl;
@@ -681,7 +682,7 @@ namespace driver
 			case DIR::E:
 			{
 				if(helper::is_valid_index(bot->index + 1) && !bot->map[bot->index].E){
-					set_mov_indexes(1, up_ramp, down_ramp, ramp_len);
+					set_mov_indexes(1, up_ramp, down_ramp, ramp_len, victim);
 				}
 				else{
 					std::cerr << "ERROR: Cannot move forward!" << std::endl;
@@ -693,7 +694,7 @@ namespace driver
 			case DIR::S:
 			{
 				if(helper::is_valid_index(bot->index + horz_size) && !bot->map[bot->index].S){
-					set_mov_indexes(horz_size, up_ramp, down_ramp, ramp_len);
+					set_mov_indexes(horz_size, up_ramp, down_ramp, ramp_len, victim);
 				}
 				else{
 					std::cerr << "ERROR: Cannot move forward!" << std::endl;
@@ -705,7 +706,7 @@ namespace driver
 			case DIR::W:
 			{
 				if(helper::is_valid_index(bot->index - 1) && !bot->map[bot->index].W){
-					set_mov_indexes(-1, up_ramp, down_ramp, ramp_len);
+					set_mov_indexes(-1, up_ramp, down_ramp, ramp_len, victim);
 				}
 				else{
 					std::cerr << "ERROR: Cannot move forward!" << std::endl;

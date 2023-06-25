@@ -52,7 +52,7 @@ bool has_child_exited(pid_t pid)
     if(ret == -1)
     {
         //can happen when program SEGV
-        std::cerr << "error with waitpid" << std::endl;
+        //std::cerr << "error with waitpid" << std::endl;
         return false;
     }
     if(ret == 0)
@@ -90,7 +90,7 @@ void run_parent_and_child(const fs::path& path_to_bfs, const fs::path& parent_pa
         std::cout << "parent process starting: " << getpid() << std::endl;
         //wait for child to start
         sleep(5);
-	std::cout << "delay over" << std::endl;
+	    std::cout << "delay over" << std::endl;
         while(!button_pressed())
         {
             if(has_child_exited(child_pid))
