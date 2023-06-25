@@ -1674,6 +1674,8 @@ void drive(int32_t encoders, int speed) {
       pi_send_tag("ramp");
       PI_SERIAL.print(0.0);
       PI_SERIAL.print(',');
+      PI_SERIAL.print(0.0);
+      PI_SERIAL.print(',');
       PI_SERIAL.println(0.0);
       resetBoost();
       return;
@@ -1737,6 +1739,8 @@ void drive(int32_t encoders, int speed) {
   resetBoost();
 
   pi_send_tag("ramp");
+  PI_SERIAL.print(0.0);
+  PI_SERIAL.print(",");
   PI_SERIAL.print(0.0);
   PI_SERIAL.print(",");
   PI_SERIAL.println(0.0);
