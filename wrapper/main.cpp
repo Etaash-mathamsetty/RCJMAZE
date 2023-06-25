@@ -178,7 +178,7 @@ int main(int argc, char **argv)
 #ifndef DEBUG_LOGIC
     wiringPiSetup();
     pinMode(pin, INPUT);
-    pullUpDnControl(pin, PUD_UP)
+    pullUpDnControl(pin, PUD_UP);
 #endif
 
     if(!path_to_bfs.has_parent_path())
