@@ -66,6 +66,8 @@ std::list<int>& BFS()
 	} while(worker.size() > 0);
 
 
+	std::cout << "backtracking:" << std::endl;
+
 	//backtracking
 	path.push_front(cur_index);
 	do
