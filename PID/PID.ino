@@ -566,6 +566,7 @@ int returnColor(bool only_black = false){
     UPDATE_BNO();
 
     readColors();
+#ifdef TEST
     Serial.print("Violet:"); Serial.print(amsValues[AS726x_VIOLET]);
     Serial.print(",Blue:"); Serial.print(amsValues[AS726x_BLUE]);
     Serial.print(",Green:"); Serial.print(amsValues[AS726x_GREEN]);
@@ -573,42 +574,57 @@ int returnColor(bool only_black = false){
     Serial.print(",Orange:"); Serial.print(amsValues[AS726x_ORANGE]);
     Serial.print(",Red:"); Serial.print(amsValues[AS726x_RED]);
     Serial.println();
+#endif
 
     bool violet_greatest = true;
     int dark_count = 0;
     int bright_count = 0;
 
-    for (int i = 0; i <= AS726x_RED; i++) {
-      if (amsValues[AS726x_VIOLET] < amsValues[i]) {
-        violet_greatest = false;
+    for(int l = 0; l <= persistance_count; l++)
+    {
+      for (int i = 0; i <= AS726x_RED; i++) {
+        if (amsValues[AS726x_VIOLET] < amsValues[i]) {
+          violet_greatest = false;
+        }
+
+        if (amsValues[i] < 1000) {
+          dark_count++;
+        }
+
+        if(amsValues[i] > 10000) {
+          bright_count++;
+        }
       }
 
-      if (amsValues[i] < 1000) {
-        dark_count++;
+      if (bright_count >= 2 && abs(BNO_Z) < 12) {
+        Serial.println(" silver detected");
+        silver_detect++;
+      }
+      else if (violet_greatest && amsValues[AS726x_VIOLET]/amsValues[AS726x_YELLOW] > 3 && abs(BNO_Z) < 12) {
+        Serial.println(" blue detected");
+        blue_detect++;
+      }
+      else if (dark_count >= 4 && abs(BNO_Z) < 12) {
+        Serial.println(" black detected");
+        black_detect++;
       }
 
-      if(amsValues[i] > 10000) {
-        bright_count++;
-      }
-    }
+    readColors();
+  }
 
-    if (bright_count >= 2 && abs(BNO_Z) < 12) {
-      Serial.println(" silver detected");
-      return 2;
-    }
-    else if (violet_greatest && amsValues[AS726x_VIOLET]/amsValues[AS726x_YELLOW] > 3 && abs(BNO_Z) < 12) {
-      Serial.println(" blue detected");
+    if(blue_detect >= persistance_count && !only_black)
+    {
       stopMotors();
-      // delay(5000);
+      delay(5000);
       return 3;
     }
-    else if (dark_count >= 4 && abs(BNO_Z) < 12) {
-      Serial.println(" black detected");
-      return 1;
+    if(silver_detect >= persistance_count && !only_black)
+    {
+      return 2;
     }
-    else {
-      Serial.println(" white detected");
-      return 0;
+    if(black_detect >= persistance_count)
+    {
+      return 1;
     }
       
 #endif
