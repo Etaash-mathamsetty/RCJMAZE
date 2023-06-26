@@ -19,8 +19,10 @@ robot::robot(){
 			floors[i] = new node[horz_size * vert_size];
 			memset(floors[i], 0, horz_size * vert_size * sizeof(node));
 		}
-		map = floors[start_floor];
+		map = this->floors[start_floor];
+		memset(floors_vis, 0, sizeof(floors_vis));
 		floors_vis[start_floor] = true;
+		memset(start_tile_floor, 0, sizeof(start_tile_floor));
 		start_tile_floor[start_floor] = helper::get_index(default_index, default_index);
 
 #ifdef DEBUG
