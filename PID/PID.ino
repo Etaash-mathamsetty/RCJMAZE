@@ -1036,8 +1036,8 @@ void driveCM(float cm, int speed = 200, int tolerance = 10) {
   pi_send_data(true, true);
 #if 1
   const float mult_factor = 1.0;
-  unsigned int right = (tofCalibrated(2) + tofCalibrated(3)) / 2;
-  unsigned int left = (tofCalibrated(0) + tofCalibrated(1)) / 2;
+  uint right = (tofCalibrated(2) + tofCalibrated(3)) / 2;
+  uint left = (tofCalibrated(0) + tofCalibrated(1)) / 2;
   const float half_chassis = 75;
   const double target_dist_from_wall = (300.0 - half_chassis * 2) / 2.0;
 
@@ -1914,15 +1914,15 @@ void alignAngle(bool reset, int tolerance = 10) {
   }
 }
 
-unsigned int _tofRawValue(int select) {
+uint _tofRawValue(int select) {
   tcaselect(select);
   return tof.readRangeSingleMillimeters();
 }
 
-unsigned int _tofCalibrated(int select) {
-  unsigned int dist = 0;
-  unsigned int cal = 0;
-  const unsigned int max_dist = 250;
+uint _tofCalibrated(int select) {
+  uint dist = 0;
+  uint cal = 0;
+  const uint max_dist = 250;
   switch (select) {
     case 0:
       {
@@ -1987,7 +1987,7 @@ unsigned int _tofCalibrated(int select) {
   }
 }
 
-unsigned int tofCalibrated(int select) {
+uint tofCalibrated(int select) {
   uint32_t dist = 0;
   const int samples = 2;
   for (int n = 0; n < samples; n++) {

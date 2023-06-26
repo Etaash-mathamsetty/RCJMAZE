@@ -43,6 +43,8 @@ U8X8_SSD1306_128X64_NONAME_SW_I2C oled(OLED_CLK, OLED_DATA);
 #define oled_clear()
 #endif
 
+typedef unsigned int uint;
+
 Adafruit_BNO055 bno;
 
 VL53L0X tof;
