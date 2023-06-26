@@ -21,15 +21,17 @@
 bool quitable = false;
 
 //returns shortest possible path to the nearest unvisited tile
-std::list<int> BFS()
+std::list<int>& BFS()
 {
 	robot* bot = robot::get_instance();
 	//set everything to an obv invalid index
-	int parent[horz_size * vert_size];
+	static int parent[horz_size * vert_size];
 	for(int i = 0; i < horz_size * vert_size; i++)
 		parent[i] = -1;
-	std::list<int> worker;
-	std::list<int> path;
+	static std::list<int> worker;
+	static std::list<int> path;
+	path.clear();
+	worker.clear();
 	int cur_index = bot->index;
 	do
 	{
@@ -162,7 +164,7 @@ int main(int argc, char* argv[]){
 		//REAL CODE HERE
 		while(true)
 		{
-			std::list<int> path = BFS();
+			std::list<int>& path = BFS();
 			debug::print_path(path);
 			int old_floor = floor_num;
 			for(int index : path)
