@@ -107,11 +107,11 @@ void setup() {
   myservo2.attach(servopin2);
   resetServo();
   myservo.write(175);
-  delay(100);
+  delay(50);
   myservo.write(170);
-  delay(100);
+  delay(50);
   myservo.write(175);
-  delay(40);
+  delay(50);
   myservo.detach();
   myservo2.detach();
   oled_println("Servo reset");
@@ -1420,11 +1420,14 @@ bool handle_up_ramp(double start_pitch, int32_t end_encoders) {
 
       double bno_error = (reading - new_angle) * (BNO_KP + abs(reading - new_angle) / 360);
 
-      if (bno_error > 80) {
-        bno_error = 80;
-      } else if (bno_error < -80) {
-        bno_error = -80;
-      }
+      // if (bno_error > 80) {
+      //   bno_error = 80;
+      // } else if (bno_error < -80) {
+      //   bno_error = -80;
+      // }
+
+      bno_error = min(bno_error, 50);
+      bno_error = max(bno_error, -50);
 
       int32_t right = (_tofCalibrated(0) + _tofCalibrated(1)) / 2;
       int32_t left = (_tofCalibrated(2) + _tofCalibrated(3)) / 2;
@@ -1432,7 +1435,12 @@ bool handle_up_ramp(double start_pitch, int32_t end_encoders) {
 
       if (left <= wall_tresh && right <= wall_tresh)
         err = (right - left) * wall_kp;
-      utils::forward(120.0 + bno_error, 120.0 - bno_error);
+      else if (left <= wall_tresh)
+        err = (75 - left) * wall_kp;
+      else if (right <= wall_tresh)
+        err = (right - 75) * wall_kp;
+
+      utils::forward(120.0 + bno_error + err, 120.0 - bno_error - err);
 
       // calculate distance on a ramp
       double delta_x = abs(motorR.getTicks()) - abs(old_x);
@@ -1560,11 +1568,8 @@ bool handle_down_ramp(double start_pitch, double end_encoders) {
       double reading = abs(BNO_X - new_angle > 180) ? BNO_X - 360 : BNO_X;
       double bno_error = (reading - new_angle) * BNO_KP;
 
-      if (bno_error > 80) {
-        bno_error = (80 - new_angle) * BNO_KP;
-      } else if (bno_error < -80) {
-        bno_error = (-80 - new_angle) * BNO_KP;
-      }
+      bno_error = min(bno_error, 30);
+      bno_error = max(bno_error, -30);
 
       int32_t right = (_tofCalibrated(0) + _tofCalibrated(1)) / 2;
       int32_t left = (_tofCalibrated(2) + _tofCalibrated(3)) / 2;
@@ -1572,7 +1577,13 @@ bool handle_down_ramp(double start_pitch, double end_encoders) {
 
       if (left <= wall_tresh && right <= wall_tresh)
         err = (right - left) * wall_kp;
-      utils::forward(75.0 + err, 75.0 - err);
+      //at the end of the ramp there will only be 1 wall
+      else if (left <= wall_tresh)
+        err = (75 - left) * wall_kp;
+      else if (right <= wall_tresh)
+        err = (right - 75) * wall_kp;
+
+      utils::forward(80.0 + err, 80.0 - err);
 
       // calculate distance on a ramp
       double delta_x = abs(motorR.getTicks()) - abs(old_x);
