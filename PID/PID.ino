@@ -22,10 +22,8 @@ bool restart = false;
 
 void setup() {
   if (restart) {
-    oled.clearDisplay();
-    oled.clear();
-    oled.setCursor(0, 0);
-    oled.println("Reinit...");
+    oled_clear();
+    oled_println("Reinit...");
     delay(200);
     //reinit all variables here:
     utils::resetBoost();
@@ -45,15 +43,17 @@ void setup() {
   Serial.println("starting the code!");
   //Wire.begin();
   //Wire.setClockStretchLimit(200000L);
+#ifdef DEBUG_DISPLAY
   oled.begin();
   oled.setFlipMode(0);
   oled.setFont(u8x8_font_chroma48medium8_r);
   oled.setCursor(0, 0);
-  oled.println("Starting...");
+  oled_println("Starting...");
+#endif
 
   bno.begin(OPERATION_MODE_IMUPLUS);
   global_angle = 0;
-  oled.println("BNO init done!");
+  oled_println("BNO init done!");
 
 #ifndef NO_LIMIT
   pinMode(FRONT_RIGHT, INPUT_PULLUP);
@@ -63,27 +63,27 @@ void setup() {
 
   if (digitalRead(FRONT_LEFT)) {
     Serial.println("front left limit disconnected");
-    oled.println("front left disconnect");
+    oled_println("front left disconnect");
   }
 
   if (digitalRead(FRONT_RIGHT)) {
     Serial.println("front right limit disconnected");
-    oled.println("front right disconnect");
+    oled_println("front right disconnect");
   }
 
   if (digitalRead(BACK_LEFT)) {
     Serial.println("back left limit disconnected");
-    oled.println("back left disconnect");
+    oled_println("back left disconnect");
   }
 
   if (digitalRead(BACK_RIGHT)) {
     Serial.println("back right limit disconnected");
-    oled.println("back right disconnect");
+    oled_println("back right disconnect");
   }
 
   if (!(digitalRead(FRONT_LEFT) || digitalRead(FRONT_RIGHT) || digitalRead(BACK_LEFT) || digitalRead(BACK_RIGHT))) {
     Serial.println("limit init successful");
-    oled.println("limit init!");
+    oled_println("limit init!");
   }
 #endif
 
@@ -102,7 +102,7 @@ void setup() {
     //tof.setTimeout(500);
     //tof.startContinuous();
   }
-  oled.println("TOF init done!");
+  oled_println("TOF init done!");
   myservo.attach(servopin);
   myservo2.attach(servopin2);
   resetServo();
@@ -114,13 +114,13 @@ void setup() {
   delay(40);
   myservo.detach();
   myservo2.detach();
-  oled.println("Servo reset");
+  oled_println("Servo reset");
 
 #ifdef AMS
   while (!ams.begin()) {
 
     // Serial.println("could not connect to sensor! Please check your wiring.");
-    oled.println("AMS init fail!!!!!");
+    oled_println("AMS init fail!!!!!");
     delay(100);
   }
   ams.drvOn();
@@ -130,7 +130,7 @@ void setup() {
   tcaselect(6);
   if (!tcs.begin()) {
     Serial.println("color sensor init fail!");
-    oled.println("TCS init fail!");
+    oled_println("TCS init fail!");
   }
 #endif
 
@@ -139,14 +139,9 @@ void setup() {
   pinMode(4, OUTPUT);
   analogWrite(2, 50);
   Serial.println("TOF INIT SUCCEED!");
-#ifdef DEBUG_DISPLAY
-  oled.println("Startup Done!");
+  oled_println("Startup Done!");
   delay(1000);
-  oled.setCursor(0, 0);
-  oled.clearDisplay();
-  oled.clear();
-  oled.clearWriteError();
-#endif
+  oled_clear();
 
   analogWrite(2, 0);
   // delay(500);
@@ -209,13 +204,13 @@ void pi_send_data(bool walls[4]) {
   PI_SERIAL.print(walls[math::wrapAround((int)s - (int)cur_direction, 4)]);
   PI_SERIAL.print(",");
   PI_SERIAL.println(walls[math::wrapAround((int)w - (int)cur_direction, 4)]);
-  // oled.print(walls[math::wrapAround((int)n - (int)cur_direction, 4)]);
-  // oled.print(",");
-  // oled.print(walls[math::wrapAround((int)e - (int)cur_direction, 4)]);
-  // oled.print(",");
-  // oled.print(walls[math::wrapAround((int)s - (int)cur_direction, 4)]);
-  // oled.print(",");
-  // oled.println(walls[math::wrapAround((int)w - (int)cur_direction, 4)]);
+  // oled_print(walls[math::wrapAround((int)n - (int)cur_direction, 4)]);
+  // oled_print(",");
+  // oled_print(walls[math::wrapAround((int)e - (int)cur_direction, 4)]);
+  // oled_print(",");
+  // oled_print(walls[math::wrapAround((int)s - (int)cur_direction, 4)]);
+  // oled_print(",");
+  // oled_println(walls[math::wrapAround((int)w - (int)cur_direction, 4)]);
 }
 
 bool* get_tof_vals(double threshold) {
@@ -355,7 +350,7 @@ void pi_read_data() {
       if (cur_cmd.length() > 0) {
         if (cur_cmd[0] == 'g' || cur_cmd[0] == 'f') {
           Serial.println("FORWARD");
-          oled.println("forward");
+          oled_println("forward");
           driveCM(tile_dist, 110);
         } else {
           Serial.println("ERR: Invalid Parameter");
@@ -400,7 +395,7 @@ void pi_read_data() {
       } else {
         bool* arr = get_tof_vals(wall_tresh);
 
-        //oled.println("test2");
+        //oled_println("test2");
 
         // Serial.print("Tof Vals: ");
         // Serial.println(vals);
@@ -418,10 +413,8 @@ void pi_read_data() {
 
         if (returnColor() == 2) {
           pi_send_tag("CP");
-          PI_SERIAL.println("1.1");
-          oled.clearDisplay();
-          oled.setCursor(0, 0);
-          oled.print("Silver detected!");
+          PI_SERIAL.println("1.0");
+          oled_clear();
           stopMotors();
           delay(4000);
         } else {
@@ -438,19 +431,19 @@ void pi_read_data() {
           Serial.print("turn to ");
           Serial.println(c);
           Serial.println("FORWARD");
-          oled.print("turn to ");
-          oled.println(c);
-          oled.println("forward");
+          oled_print("turn to ");
+          oled_println(c);
+          oled_println("forward");
           turn(c);
           //pi_send_data({ false, false, false, false });
           driveCM(tile_dist, 110);
         } else if (cur_cmd[0] == 't') {
           Serial.print("turn to ");
           Serial.println(c);
-          oled.print("turn to ");
-          oled.println(c);
+          oled_print("turn to ");
+          oled_println(c);
           turn(c);
-          oled.println("done");
+          oled_println("done");
           //pi_send_data({ false, false, false, false });
         } else {
           Serial.println("ERR: Invalid Command");
@@ -466,7 +459,7 @@ void pi_read_data() {
       if (cur_cmd.length() > 0) {
         if (cur_cmd[0] == 'g' || cur_cmd[0] == 'f') {
           Serial.println("FORWARD");
-          oled.println("forward");
+          oled_println("forward");
           driveCM(tile_dist, 110);
         } else {
           Serial.println("ERR: Invalid Parameter");
@@ -517,14 +510,14 @@ int returnColor(bool only_black = false) {
     if (c >= 40 && abs((r / (double)g) * 100.0 - ((double)b / r) * 100.0) <= 10 && abs(BNO_Z) < 12) {
       //   silver_persistance++;
       // Serial.println("silver detected");
-      // oled.println("silver");
+      // oled_println("silver");
       //pi_send_tag("color");
       //PI_SERIAL.println("silver");
       silver_detect++;  //change later
     }
     if (c < 20 && (double)b / r < 1.0 && abs(BNO_Z) < 12) {
       // Serial.println("black detected");
-      //oled.println("black");
+      //oled_println("black");
       //pi_send_tag("color");
       //PI_SERIAL.println("black");
       black_detect++;
@@ -538,7 +531,7 @@ int returnColor(bool only_black = false) {
     Serial.println(" blue detected");
     // oled.clearDisplay();
     // oled.setCursor(0, 0);
-    // oled.println(" blue detected");
+    // oled_println(" blue detected");
     stopMotors();
     delay(5000);
     return 3;
@@ -546,13 +539,13 @@ int returnColor(bool only_black = false) {
     Serial.println(" black detected");
     // oled.clearDisplay();
     // oled.setCursor(0, 0);
-    // oled.println(" black detected");
+    // oled_println(" black detected");
     return 1;
   } else if (silver_detect >= persistance_count && !only_black) {
     Serial.println(" silver detected");
     // oled.clearDisplay();
     // oled.setCursor(0, 0);
-    // oled.println(" silver detected");
+    // oled_println(" silver detected");
     return 2;
   } else {
     Serial.println(" white detected");
@@ -599,26 +592,23 @@ int returnColor(bool only_black = false) {
 
   if (dark_count >= 5 && abs(BNO_Z) < 12) {
     // stopMotors();
-    oled.clearDisplay();
-    oled.setCursor(0,0);
-    oled.println(" black detected");
+    oled_clear();
+    oled_println(" black detected");
     // delay(5000);
     Serial.println(" black detected");
     return 1;
   } else if (bright_count >= 3 && abs(BNO_Z) < 12 && !only_black) {
     // stopMotors();
-    oled.clearDisplay();
-    oled.setCursor(0,0);
-    oled.println(" silver detected");
+    oled_clear();
+    oled_println(" silver detected");
     // delay(5000);
     Serial.println(" silver detected");
     return 2;
   } else if (violet_greatest && !only_black && amsValues[AS726x_VIOLET] > 40 && amsValues[AS726x_RED] <= 18 && amsValues[AS726x_BLUE] >= 18 && abs(BNO_Z) < 12) {
     stopMotors();
     Serial.println(" blue detected");
-    oled.clearDisplay();
-    oled.setCursor(0,0);
-    oled.println(" blue detected");
+    oled_clear();
+    oled_println(" blue detected");
     delay(5000);
     return 3;
   }
@@ -627,7 +617,7 @@ int returnColor(bool only_black = false) {
 
   // if(b > (r * 2.5) && !only_black){
   //   // Serial.println("blue detected");
-  //   // oled.println("blue");
+  //   // oled_println("blue");
   //   //pi_send_tag("color");
   //  //PI_SERIAL.println("blue");
   //   return 0; //change later
@@ -829,7 +819,7 @@ void raw_right(double relative_angle, int speed, bool alignment) {
     // {
     //   stopMotors();
     //   pi_read_vision();
-    //   oled.println("detected");
+    //   oled_println("detected");
     // }
 
     if (digitalRead(BACK_LEFT) || digitalRead(BACK_RIGHT)) {
@@ -941,7 +931,7 @@ void raw_left(double relative_angle, int speed, bool alignment) {
     // {
     //   stopMotors();
     //   pi_read_vision();
-    //   oled.println("detected");
+    //   oled_println("detected");
     // }
 
     if (digitalRead(BACK_LEFT) || digitalRead(BACK_RIGHT)) {
@@ -1068,7 +1058,7 @@ void driveCM(float cm, int speed = 200, int tolerance = 10) {
   }
 
   //angle = max(angle, 90 - 30);
-  oled.println(angle * mult_factor);
+  oled_println(angle * mult_factor);
   bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
 
   bool optimal_alignment = horizontalError >= tolerance && abs(orientationData.orientation.z) < 12;
@@ -1082,9 +1072,9 @@ void driveCM(float cm, int speed = 200, int tolerance = 10) {
         drive((cm * CM_TO_ENCODERS) / abs(sin(angle * (PI / 180))), speed);
       else {
         Serial.println("achievement unlocked! How did we get here?");
-        oled.clearDisplay();
-        oled.println("achievement unlocked!");
-        oled.println("How did we get here?");
+        oled_clear();
+        oled_println("achievement unlocked!");
+        oled_println("How did we get here?");
         while (tofCalibrated(4) >= 90) {
           forward(speed * 0.7);
         }
@@ -1108,9 +1098,9 @@ void driveCM(float cm, int speed = 200, int tolerance = 10) {
         drive((cm * CM_TO_ENCODERS) / abs(sin(angle * (PI / 180))), speed);
       else {
         Serial.println("achievement unlocked! How did we get here?");
-        oled.clearDisplay();
-        oled.println("achievement unlocked!");
-        oled.println("How did we get here?");
+        oled_clear();
+        oled_println("achievement unlocked!");
+        oled_println("How did we get here?");
         while (tofCalibrated(4) >= 90) {
           forward(speed * 0.7);
         }
@@ -1129,7 +1119,7 @@ void driveCM(float cm, int speed = 200, int tolerance = 10) {
       // raw_right(360-orientationData.orientation.x, SPEED);
     }
   } else if (optimal_alignment && left <= wall_tresh && right >= wall_tresh && abs(left - target_dist_from_wall) > 30.0) {
-    oled.println("single left wall");
+    oled_println("single left wall");
 
     double angle = 90.0;
 
@@ -1141,17 +1131,17 @@ void driveCM(float cm, int speed = 200, int tolerance = 10) {
     } else if (left - target_dist_from_wall < 0.0) {
       raw_right(90.0 - angle, SPEED, true);
     }
-    oled.print("Angle: ");
-    oled.println(90.0 - angle);
-    // oled.print(atan((cm * 10)/(150 - (half_chassis + left))));
+    oled_print("Angle: ");
+    oled_println(90.0 - angle);
+    // oled_print(atan((cm * 10)/(150 - (half_chassis + left))));
 
     if (tofCalibrated(4) > wall_tresh - 50)
       drive(cm / sin(angle * (PI / 180)) * CM_TO_ENCODERS, speed);
     else {
       Serial.println("achievement unlocked! How did we get here?");
-      oled.clearDisplay();
-      oled.println("achievement unlocked!");
-      oled.println("How did we get here?");
+      oled_clear();
+      oled_println("achievement unlocked!");
+      oled_println("How did we get here?");
       while (tofCalibrated(4) >= 70) {
         forward(SPEED * 0.7);
       }
@@ -1172,15 +1162,15 @@ void driveCM(float cm, int speed = 200, int tolerance = 10) {
     }
 
   } else if (optimal_alignment && left >= wall_tresh && right <= wall_tresh && abs(right - target_dist_from_wall) > 30.0) {
-    oled.println("single right wall");
-    oled.print("Angle: ");
+    oled_println("single right wall");
+    oled_print("Angle: ");
 
     double angle = 90.0;
 
     if (right != target_dist_from_wall)
       angle = atan((cm * 10.0) / (abs(right - target_dist_from_wall))) * (180 / PI);
 
-    oled.println(90.0 - angle);
+    oled_println(90.0 - angle);
 
     if (right - target_dist_from_wall > 0.0) {
       raw_right(90.0 - angle, SPEED, true);
@@ -1192,9 +1182,9 @@ void driveCM(float cm, int speed = 200, int tolerance = 10) {
       drive(cm / sin(angle * (PI / 180)) * CM_TO_ENCODERS, speed);
     else {
       Serial.println("achievement unlocked! How did we get here?");
-      oled.clearDisplay();
-      oled.println("achievement unlocked!");
-      oled.println("How did we get here?");
+      oled_clear();
+      oled_println("achievement unlocked!");
+      oled_println("How did we get here?");
       while (tofCalibrated(4) >= 70) {
         forward(SPEED * 0.7);
       }
@@ -1246,8 +1236,8 @@ void driveCM(float cm, int speed = 200, int tolerance = 10) {
 
   //     Serial.println("achievement unlocked! How did we get here?");
   //     oled.clearDisplay();
-  //     oled.println("achievement unlocked!");
-  //     oled.println("How did we get here?");
+  //     oled_println("achievement unlocked!");
+  //     oled_println("How did we get here?");
 
   //     while(tofCalibrated(4) >= 60)
   //     {
@@ -1284,8 +1274,8 @@ void driveCM(float cm, int speed = 200, int tolerance = 10) {
   //   {
   //     Serial.println("achievement unlocked! How did we get here?");
   //     oled.clearDisplay();
-  //     oled.println("achievement unlocked!");
-  //     oled.println("How did we get here?");
+  //     oled_println("achievement unlocked!");
+  //     oled_println("How did we get here?");
 
   //     while(tofCalibrated(4) >= 60)
   //     {
@@ -1313,9 +1303,9 @@ void driveCM(float cm, int speed = 200, int tolerance = 10) {
       drive((cm * CM_TO_ENCODERS), speed);
     else {
       Serial.println("achievement unlocked! How did we get here?");
-      oled.clearDisplay();
-      oled.println("achievement unlocked!");
-      oled.println("How did we get here?");
+      oled_clear();
+      oled_println("achievement unlocked!");
+      oled_println("How did we get here?");
       while (tofCalibrated(4) >= 70) {
         forward(SPEED * 0.7);
       }
@@ -1366,7 +1356,7 @@ bool handle_up_ramp(double start_pitch, int32_t end_encoders) {
   // stopMotors();
   // oled.clearDisplay();
   // oled.setCursor(0,0);
-  // oled.println("start forward ramp");
+  // oled_println("start forward ramp");
   // delay(1000);
 
 
@@ -1377,7 +1367,7 @@ bool handle_up_ramp(double start_pitch, int32_t end_encoders) {
   // stopMotors();
   // oled.clearDisplay();
   // oled.setCursor(0,0);
-  // oled.println("end forward ramp");
+  // oled_println("end forward ramp");
   // delay(1000);
   // bool* arr = get_tof_vals(wall_tresh);
 
@@ -1386,7 +1376,7 @@ bool handle_up_ramp(double start_pitch, int32_t end_encoders) {
     // stopMotors();
     // oled.clearDisplay();
     // oled.setCursor(0, 0);
-    // oled.println("no walls either side");
+    // oled_println("no walls either side");
     // delay(5000);
     motorR.getTicks() = old_ticks - ticks - 4 * CM_TO_ENCODERS;
     motorL.getTicks() = -old_ticks - ticks + 4 * CM_TO_ENCODERS;
@@ -1409,7 +1399,7 @@ bool handle_up_ramp(double start_pitch, int32_t end_encoders) {
     // stopMotors();
     // oled.clearDisplay();
     // oled.setCursor(0,0);
-    // oled.println("not enough pitch");
+    // oled_println("not enough pitch");
     // delay(5000);
     return false;
   } else {
@@ -1461,14 +1451,13 @@ bool handle_up_ramp(double start_pitch, int32_t end_encoders) {
       // while (abs(motorL.getTicks()) < ticks) {
       //   forward(SPEED * -0.75);
       // }
-      oled.clearDisplay();
-      oled.setCursor(0, 0);
-      oled.print("Fake Ramp: ");
-      oled.println((distance / (30.0 * CM_TO_ENCODERS)) - 0.4);
-      oled.print("Distance: ");
-      oled.println(distance);
-      oled.print("Height: ");
-      oled.println(height);
+      oled_clear();
+      oled_print("Fake Ramp: ");
+      oled_println((distance / (30.0 * CM_TO_ENCODERS)) - 0.4);
+      oled_print("Distance: ");
+      oled_println(distance);
+      oled_print("Height: ");
+      oled_println(height);
       stopMotors();
       delay(5000);
       return true;
@@ -1497,11 +1486,10 @@ bool handle_up_ramp(double start_pitch, int32_t end_encoders) {
 
     stopMotors();
     alignAngle(true);
-    oled.clearDisplay();
-    oled.setCursor(0, 0);
-    oled.print("Ramps: ");
-    oled.println((distance / (30.0 * CM_TO_ENCODERS)) - 0.4);
-    oled.print(height / (30.0 * CM_TO_ENCODERS));
+    oled_clear();
+    oled_print("Ramps: ");
+    oled_println((distance / (30.0 * CM_TO_ENCODERS)) - 0.4);
+    oled_print(height / (30.0 * CM_TO_ENCODERS));
     delay(5000);
     pi_send_tag("ramp");
     PI_SERIAL.print(1.0);
@@ -1544,7 +1532,7 @@ bool handle_down_ramp(double start_pitch, double end_encoders) {
     // stopMotors();
     // oled.clearDisplay();
     // oled.setCursor(0, 0);
-    // oled.println("no walls either side");
+    // oled_println("no walls either side");
     // delay(5000);
     motorR.getTicks() = old_ticks - ticks - 4 * CM_TO_ENCODERS;
     motorL.getTicks() = -old_ticks - ticks + 4 * CM_TO_ENCODERS;
@@ -1557,7 +1545,7 @@ bool handle_down_ramp(double start_pitch, double end_encoders) {
     // stopMotors();
     // oled.clearDisplay();
     // oled.setCursor(0,0);
-    // oled.println("not enough pitch");
+    // oled_println("not enough pitch");
     // delay(5000);
 
     motorR.getTicks() = old_ticks - ticks - 4 * CM_TO_ENCODERS;
@@ -1603,14 +1591,13 @@ bool handle_down_ramp(double start_pitch, double end_encoders) {
       // }
 
       stopMotors();
-      oled.clearDisplay();
-      oled.setCursor(0, 0);
-      oled.print("Fake Ramp: ");
-      oled.println((distance / (30.0 * CM_TO_ENCODERS)) - 0.2);
-      oled.print("Distance: ");
-      oled.println(distance);
-      oled.print("Height: ");
-      oled.println(height);
+      oled_clear();
+      oled_print("Fake Ramp: ");
+      oled_println((distance / (30.0 * CM_TO_ENCODERS)) - 0.2);
+      oled_print("Distance: ");
+      oled_println(distance);
+      oled_print("Height: ");
+      oled_println(height);
       stopMotors();
       delay(5000);
 
@@ -1640,11 +1627,10 @@ bool handle_down_ramp(double start_pitch, double end_encoders) {
 
     stopMotors();
     alignAngle(true);
-    oled.clearDisplay();
-    oled.setCursor(0, 0);
-    oled.print("Ramps: ");
-    oled.println((distance / (30.0 * CM_TO_ENCODERS)) - 0.2);
-    oled.print(height / (30.0 * CM_TO_ENCODERS));
+    oled_clear();
+    oled_print("Ramps: ");
+    oled_println((distance / (30.0 * CM_TO_ENCODERS)) - 0.2);
+    oled_print(height / (30.0 * CM_TO_ENCODERS));
     delay(5000);
     pi_send_tag("ramp");
     PI_SERIAL.print(10.0);
@@ -1662,7 +1648,7 @@ bool handle_down_ramp(double start_pitch, double end_encoders) {
 }
 
 int left_obstacle() {
-  oled.println("Left");
+  oled_println("Left");
 
   stopMotors();
   delay(100);
@@ -1694,7 +1680,7 @@ int left_obstacle() {
 }
 
 int right_obstacle() {
-  oled.println("Right");
+  oled_println("Right");
 
   stopMotors();
   delay(100);
@@ -1750,7 +1736,7 @@ void drive(int32_t encoders, int speed) {
     UPDATE_BNO();
 
     if ((BNO_Z - start_pitch < -5.5 /* || BNO_Z < -5.5 */) && !down_ramp_detect) {
-      oled.println("down ramp detect!!");
+      oled_println("down ramp detect!!");
       bool res = handle_up_ramp(start_pitch, encoders);
       ramp_detect = res;
 
@@ -1760,7 +1746,7 @@ void drive(int32_t encoders, int speed) {
 
     if ((BNO_Z - start_pitch > 5.5 /* || BNO_Z > 5.5 */) && !ramp_detect) {
       // stopMotors();
-      oled.println("down ramp detect!!");
+      oled_println("down ramp detect!!");
       bool res = handle_down_ramp(start_pitch, encoders);
       down_ramp_detect = res;
       tstart = millis();
@@ -1835,7 +1821,7 @@ void drive(int32_t encoders, int speed) {
         pi_read_vision();
         if (restart)
           return;
-        oled.println("detected");
+        oled_println("detected");
         motorR.getTicks() = right_ticks;
         motorL.getTicks() = left_ticks;
       }
@@ -1908,7 +1894,6 @@ void alignAngle(bool reset, int tolerance = 10) {
   float BNO_KP = 1.4;
   addBoost(ALIGN_TURN_BOOST);
 
-
   tofR1 = tofCalibrated(0);
   tofR2 = tofCalibrated(1);
   tofR3 = tofCalibrated(2);
@@ -1929,7 +1914,7 @@ void alignAngle(bool reset, int tolerance = 10) {
   if ((tofR3 >= wall_tresh || tofR4 >= wall_tresh) && (tofR1 >= wall_tresh || tofR2 >= wall_tresh)) {
 
     Serial.println("too high values");
-    oled.println("BNO ALIGNMENT!");
+    oled_println("BNO ALIGNMENT!");
     UPDATE_BNO();
 
     double new_angle = closestToDirection(BNO_X);
@@ -2004,7 +1989,7 @@ void alignAngle(bool reset, int tolerance = 10) {
   if (reset) {
     bno.begin(OPERATION_MODE_IMUPLUS);
     global_angle = 0;
-    oled.println("BNO has reset!");
+    oled_println("BNO has reset!");
     delay(50);
   }
 }
@@ -2076,9 +2061,7 @@ unsigned int _tofCalibrated(int select) {
     default:
       {
         Serial.println("Invalid TOF sensor");
-#ifdef DEBUG_DISPLAY
-        oled.println("Invalid TOF sensor");
-#endif
+        oled_println("Invalid TOF sensor");
         return -1;
       }
   }
@@ -2091,13 +2074,11 @@ unsigned int tofCalibrated(int select) {
     dist += _tofCalibrated(select);
   }
   dist /= 2;
-  //oled.println(dist);
+  //oled_println(dist);
   return dist;
 }
 
 void oled_display_walls(bool walls[4]) {
-#ifdef DEBUG_DISPLAY
-
   const char char_map[4] = { 'n', 'e', 's', 'w' };
   String data = "    ";
 
@@ -2106,8 +2087,7 @@ void oled_display_walls(bool walls[4]) {
       data[i] = char_map[i];
   }
 
-  oled.println(data.c_str());
-#endif
+  oled_println(data.c_str());
 }
 
 void kitDrop(int num, char side) {
@@ -2195,15 +2175,14 @@ void loop() {
     setup();
   }
 
-  oled.print("dir: ");
-  oled.println(dir_to_char(cur_direction));
+  oled_print("dir: ");
+  oled_println(dir_to_char(cur_direction));
 
 #ifdef DEBUG_DISPLAY
   oled.setCursor(0, 0);
   clear_oled_counter++;
   if (clear_oled_counter > 5) {
-    oled.clearDisplay();
-    oled.clear();
+    oled_clear();
     clear_oled_counter = 0;
   }
 #endif
@@ -2257,14 +2236,14 @@ void loop() {
 
 // int r,g,b,c;
 // tcs.getRawData(&r, &g, &b, &c);
-// oled.println();
-// oled.print(r);
-// oled.print(" ");
-// oled.print(g);
-// oled.print(" ");
-// oled.print(b);
-// oled.println(" ");
-// oled.print(c);
+// oled_println();
+// oled_print(r);
+// oled_print(" ");
+// oled_print(g);
+// oled_print(" ");
+// oled_print(b);
+// oled_println(" ");
+// oled_print(c);
 // bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
 // // Serial.print("Orientation X:");
 // // Serial.println(orientationData.orientation.x);
@@ -2316,7 +2295,7 @@ void loop() {
   oled.setCursor(0, 0);
   clear_oled_counter++;
   if (clear_oled_counter > 5) {
-    oled.clearDisplay();
+    oled_clear();
     clear_oled_counter = 0;
   }
 

@@ -34,19 +34,27 @@
 
 #ifdef DEBUG_DISPLAY
 U8X8_SSD1306_128X64_NONAME_SW_I2C oled(OLED_CLK, OLED_DATA);
+#define oled_println(...) oled.println(__VA_ARGS__)
+#define oled_print(...) oled.print(__VA_ARGS__)
+#define oled_clear() oled.clear(); oled.clearDisplay(); oled.setCursor(0, 0)
+#else
+#define oled_println(...)
+#define oled_print(...)
+#define oled_clear()
 #endif
 
-/* might need sensor id of 55, but I doubt it  */
 Adafruit_BNO055 bno;
 
 VL53L0X tof;
 
-Adafruit_TCS34725 tcs = Adafruit_TCS34725(TCS34725_INTEGRATIONTIME_2_4MS, TCS34725_GAIN_16X);\
-
+#ifdef TCS
+Adafruit_TCS34725 tcs = Adafruit_TCS34725(TCS34725_INTEGRATIONTIME_2_4MS, TCS34725_GAIN_16X);
+#endif
+#ifdef AMS
 Adafruit_AS726x ams;
+#endif
 
 uint16_t amsValues[AS726x_NUM_CHANNELS];
-
 
 Motor motorL(MPORT2);
 Motor motorR(MPORT1, true, true);
