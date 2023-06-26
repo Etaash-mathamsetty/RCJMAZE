@@ -663,7 +663,7 @@ namespace driver
 		bool down_ramp = ramp == 10;
 		if(up_ramp || down_ramp)
 		{
-			std::cerr << "ramp recv: " << ramp << "," << ramp_len << std::endl;
+			std::cerr << "ramp recv: " << ramp << "," << ramp_len << "," << ramp_height << std::endl;
 		}
 
 		switch(bot->dir)

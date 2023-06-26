@@ -36,10 +36,10 @@ robot::~robot()
 {
 	for(int i = 0; i < max_num_floors; i++)
 	{
-		if(floors[i])
-			delete[] floors[i];
+		if(this->floors[i])
+			delete[] this->floors[i];
 	}
-	delete[] floors;
+	delete[] this->floors;
 	//delete[] map;
 }
 
