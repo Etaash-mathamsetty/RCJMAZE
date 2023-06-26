@@ -138,14 +138,16 @@ namespace debug
 #endif
     }
 
-    void print_path(Stack<int>& path)
+    void print_path(std::list<int>& path)
     {
         #ifdef DEBUG
-        for(size_t i = 0; i < path.Size(); i++)
+        bool first = false;
+        for(int index : path)
         {
-            if(i > 0)
+            if(!first)
                 putchar(',');
-            std::cout << path[i];
+            std::cout << index;
+            first = true;
         }
         putchar('\n');
         #endif

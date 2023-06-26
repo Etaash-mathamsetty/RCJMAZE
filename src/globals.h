@@ -64,13 +64,6 @@ struct node {
 		uint8_t garbage : 6;
 };
 
-struct ramp_pair
-{
-	//pair: 1st element: floor, 2nd element: index of ramp in that floor
-	std::pair<int, int> ramp1;
-	std::pair<int, int> ramp2;
-};
-
 enum class DIR
 {
 		N,
