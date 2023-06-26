@@ -124,8 +124,7 @@ void setup() {
     Serial.println("could not connect to sensor! Please check your wiring.");
     oled.println("could not connect to sensor! Please check your wiring.");
   }
-
-  pinMode(A1, OUTPUT);
+  ams.drvOn();
 #endif
 #ifdef TCS
   tcaselect(6);
@@ -364,7 +363,7 @@ void pi_read_data() {
         if (cur_cmd[0] == 'g' || cur_cmd[0] == 'f') {
           Serial.println("FORWARD");
           oled.println("forward");
-          driveCM(32, 110);
+          driveCM(tile_dist, 110);
         } else {
           Serial.println("ERR: Invalid Parameter");
         }
@@ -454,7 +453,7 @@ void pi_read_data() {
           oled.println("forward");
           turn(c);
           //pi_send_data({ false, false, false, false });
-          driveCM(32, 110);
+          driveCM(tile_dist, 110);
         } else if (cur_cmd[0] == 't') {
           Serial.print("turn to ");
           Serial.println(c);
@@ -478,7 +477,7 @@ void pi_read_data() {
         if (cur_cmd[0] == 'g' || cur_cmd[0] == 'f') {
           Serial.println("FORWARD");
           oled.println("forward");
-          driveCM(32, 110);
+          driveCM(tile_dist, 110);
         } else {
           Serial.println("ERR: Invalid Parameter");
         }
@@ -1980,15 +1979,13 @@ unsigned int _tofCalibrated(int select)
         cal = tof.readRangeSingleMillimeters();
         cal = min(cal, max_dist);
         return cal; 
-        //wowzers very cool 
     }
     case 1: 
     {
         tcaselect(1);
         cal = tof.readRangeSingleMillimeters();
         cal = min(cal, max_dist);        
-        return cal; 
-        //pretty good 6/14 
+        return cal;  
     }
     case 2: 
     {
@@ -2277,7 +2274,7 @@ void loop()
 
   if(!walls[0])
   { 
-    driveCM(32, 110);
+    driveCM(tile_dist, 110);
   }
   else if(!walls[1])
   {
