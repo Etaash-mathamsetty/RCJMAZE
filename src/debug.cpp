@@ -141,13 +141,13 @@ namespace debug
     void print_path(std::list<int>& path)
     {
         #ifdef DEBUG
-        bool first = false;
+        bool first = true;
         for(int index : path)
         {
             if(!first)
                 putchar(',');
             std::cout << index;
-            first = true;
+            first = false;
         }
         putchar('\n');
         #endif
