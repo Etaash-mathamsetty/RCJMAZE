@@ -91,7 +91,7 @@ double ACCEL_VEL_TRANSITION = (double)(BNO055_SAMPLERATE_DELAY_MS) / 1000.0;
 double ACCEL_POS_TRANSITION = 0.5 * ACCEL_VEL_TRANSITION * ACCEL_VEL_TRANSITION;
 
 const int wall_tresh = 175;
-const float tile_dist = 31.5;
+const float tile_dist = 31;
 
 bool black_tile_detected = false;
 
