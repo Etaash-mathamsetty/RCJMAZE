@@ -74,7 +74,7 @@ const double TIMES_PER_SECOND = 1000.0 / SAMPLERATE_DELAY_MS;
 volatile int32_t global_angle = 0;
 
 const int SPEED = 105;
-const int ALIGN_SPEED = 70;
+const int ALIGN_SPEED = 90;
 
 const double TOF_DISTANCE = 58.64;
 

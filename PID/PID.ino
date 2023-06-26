@@ -533,6 +533,7 @@ int returnColor(bool only_black = false){
 
   #ifdef TCS
     for (int i = 0; i <= persistance_count; i++) {
+
       if (c >= 40 && abs((r / (double)g) * 100.0 - ((double)b/r) * 100.0) <= 10 && abs(BNO_Z) < 12) {
    //   silver_persistance++;
       // Serial.println("silver detected"); 
@@ -729,6 +730,10 @@ void left(int relative_angle, int speed, bool turn_status = true) {
 
 void raw_right(double relative_angle, int speed, bool alignment) {
 
+  if (abs(relative_angle) < 1) {
+    return;
+  }
+
 #ifndef MOTORSOFF
   if (alignment) {
     motorL.addBoost(ALIGN_TURN_BOOST);
@@ -835,6 +840,10 @@ void raw_right(double relative_angle, int speed, bool alignment) {
 
 void raw_left(double relative_angle, int speed, bool alignment) {
 #ifndef MOTORSOFF
+
+  if (abs(relative_angle) < 1) {
+    return;
+  }
 
   if (!alignment) {
     motorL.addBoost(TURN_BOOST);
@@ -961,7 +970,7 @@ void turn(char char_end_direction) {
   cur_direction = end_direction;
 }
 
-void alignAngle(bool, int x = 5);
+void alignAngle(bool, int x = 10);
 
 void driveCM(float cm, int speed = 200, int tolerance = 10) {
   //kitDrop(1);
@@ -980,7 +989,21 @@ void driveCM(float cm, int speed = 200, int tolerance = 10) {
   const double target_dist_from_wall = (300.0 - half_chassis * 2) / 2.0;
 
   double horizontalError = abs((int)left - (int)right) / 2;
+
+  if (horizontalError == 0) {
+    horizontalError = 0.0001;
+  }
+
   double angle = abs(atan((cm * 10.0) / horizontalError) * (180.0/PI));
+
+  if (abs(angle) < 1) {
+    return;
+  }
+
+  if (abs(angle) == 180.0) {
+    angle -= 0.0001;
+  }
+
   //angle = max(angle, 90 - 30);
   oled.println(angle * mult_factor);
   bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
@@ -1268,7 +1291,7 @@ bool handle_up_ramp(double start_pitch, int32_t end_encoders)
   int32_t delta_x = 0;
   int32_t delta_theta = 0;
   int32_t delta_time = 10;
-  const double BNO_KP = 8;
+  const double BNO_KP = 3;
 
   UPDATE_BNO();
   //delay(20);
@@ -1281,6 +1304,15 @@ bool handle_up_ramp(double start_pitch, int32_t end_encoders)
   while(abs(motorR.getTicks()) < abs(ticks))
   {
     forward(100);
+  }
+
+  bool* arr = get_tof_vals(wall_tresh);
+
+    // n e s w
+  bool walls[4] = { arr[4], arr[2] || arr[3], arr[5], arr[0] || arr[1] };
+
+  if (!(walls[1] && walls[2])) {
+    return false;
   }
 
   UPDATE_BNO();
@@ -1324,7 +1356,7 @@ bool handle_up_ramp(double start_pitch, int32_t end_encoders)
 
       if(left <= wall_tresh && right <= wall_tresh)
         err = (right - left) * wall_kp;
-      utils::forward(100.0 + bno_error, 100.0 - bno_error);
+      utils::forward(120.0 + bno_error, 120.0 - bno_error);
 
       // calculate distance on a ramp
       double delta_x = abs(motorR.getTicks()) - abs(old_x);
@@ -1384,12 +1416,19 @@ bool handle_up_ramp(double start_pitch, int32_t end_encoders)
     oled.setCursor(0,0);
     oled.print("Ramps: ");
     oled.println((distance / (30.0 * CM_TO_ENCODERS)) - 0.4);
-    oled.print(distance);
+    oled.print(height / (30.0 * CM_TO_ENCODERS));
     delay(5000);
     pi_send_tag("ramp");
     PI_SERIAL.print(1.0);
     PI_SERIAL.print(",");
-    PI_SERIAL.println(round((distance / (30.0 * CM_TO_ENCODERS)) - 0.4));
+    PI_SERIAL.print(round((distance / (30.0 * CM_TO_ENCODERS)) - 0.4));
+    PI_SERIAL.print(",");
+    height = round(height / (30.0 * CM_TO_ENCODERS));
+    if(height == 0)
+    {
+      height = 1;
+    }
+    PI_SERIAL.println(height);
     alignAngle(true);
     return true;
   }
@@ -1413,6 +1452,17 @@ bool handle_down_ramp(double start_pitch, double end_encoders)
     forward(90);
   }
   UPDATE_BNO();
+
+  bool* arr = get_tof_vals(wall_tresh);
+
+    // n e s w
+  bool walls[4] = { arr[4], arr[2] || arr[3], arr[5], arr[0] || arr[1] };
+
+
+  if (!(walls[1] && walls[2])) {
+    return false;
+  }
+
   if(abs(BNO_Z - start_pitch) <= 3 || BNO_Z - start_pitch <= -4)
   {
     //not a ramp
@@ -1498,19 +1548,25 @@ bool handle_down_ramp(double start_pitch, double end_encoders)
       forward(bno_error, -bno_error);
     }
 
-
     stopMotors();
     alignAngle(true);
     oled.clearDisplay();
     oled.setCursor(0,0);
     oled.print("Ramps: ");
     oled.println((distance / (30.0 * CM_TO_ENCODERS)) - 0.2);
-    oled.print(distance);
+    oled.print(height / (30.0 * CM_TO_ENCODERS));
     delay(5000);
     pi_send_tag("ramp");
     PI_SERIAL.print(10.0);
     PI_SERIAL.print(",");
-    PI_SERIAL.println(round((distance / (30.0 * CM_TO_ENCODERS)) - 0.2));
+    PI_SERIAL.print(round((distance / (30.0 * CM_TO_ENCODERS)) - 0.2));
+    PI_SERIAL.print(",");
+    height = round(height / (30.0 * CM_TO_ENCODERS));
+    if(height == 0)
+    {
+      height = 1;
+    }
+    PI_SERIAL.println(height);
     alignAngle(true);
     return true;
   }
@@ -1580,7 +1636,6 @@ int right_obstacle() {
   delay(100);
 
   return abs(forward_ticks);
-
 }
 
 void drive(int32_t encoders, int speed) {
@@ -1605,7 +1660,7 @@ void drive(int32_t encoders, int speed) {
 
   while ((abs(motorR.getTicks()) < abs(encoders) && abs(motorL.getTicks()) < abs(encoders) && (tofCalibrated(4) >= 90)) || ramp_detect || down_ramp_detect) {
     UPDATE_BNO();
-    // encoders = orig_encoders / cos(abs(orientationData.orientation.z * (2 * PI / 360)));
+
     if((BNO_Z - start_pitch < -5.5 /*|| BNO_Z < -5.5 */) && !down_ramp_detect)
     {
       // stopMotors();
@@ -1760,12 +1815,12 @@ int closestToDirection(double num) {
   }
 }
 
-void alignAngle(bool reset, int tolerance = 5) {
+void alignAngle(bool reset, int tolerance = 10) {
   int tofR1, tofR2; 
   int tofR3, tofR4;
   int lnum = 1, rnum = 0;
-  const float kP = 0.7;
-  const float BNO_KP = 1.4;
+  float kP = 0.7;
+  float BNO_KP = 1.4;
   addBoost(ALIGN_TURN_BOOST);
 
 
@@ -1794,6 +1849,13 @@ void alignAngle(bool reset, int tolerance = 5) {
     double new_angle = closestToDirection(BNO_X);
     // double new_angle = global_angle;
     double reading;
+
+    if (abs(new_angle - BNO_X) < 3) {
+      return;
+    }
+
+    double tstart = millis();
+
     do {
         UPDATE_BNO();
         
@@ -1806,6 +1868,11 @@ void alignAngle(bool reset, int tolerance = 5) {
         }
 
         double error = (reading - new_angle) * BNO_KP;
+
+        if (millis() - tstart > 5000) {
+          BNO_KP = 4;
+        }
+        
         forward(error * BNO_KP, -error * BNO_KP);
 
         if (abs(error * BNO_KP) < 10) {
@@ -1829,7 +1896,12 @@ void alignAngle(bool reset, int tolerance = 5) {
   //const int angle = atan(width/len) * (180/PI);
   addBoost(ALIGN_TURN_BOOST + 10);
 
+  double tstart = millis();
+
   while(abs(len) >= tolerance) {
+    if (millis() - tstart > 5000) {
+      kP = 2.5;
+    }
     forward(len * kP, -len * kP);
     //Serial.print("Speed: ");
     //Serial.println(len * kP);
@@ -1962,6 +2034,71 @@ void oled_display_walls(bool walls[4])
 #endif
 }
 
+void kitDrop(int num, char side) { 
+  static int columnNum = 1; 
+  static int numDropped = 0; 
+  const int offset_for_stack[3] = {10, 7, 0};
+
+  bool* arr = get_tof_vals(wall_tresh);
+
+  bool walls[4] = { arr[4], arr[2] || arr[3], arr[5], arr[0] || arr[1] };
+
+  if(side == 'r')
+  {
+    if(!walls[1])
+      return;
+  }
+  if(side == 'l')
+  {
+    if(!walls[3])
+      return;
+  }
+
+  if(numDropped <= total)
+  {
+    myservo.attach(servopin);
+    myservo2.attach(servopin2);
+  }
+
+  analogWrite(5, 50);
+  if(num > 0)
+  {
+    if(side == 'r'){
+      myservo2.write(50); 
+    } 
+    else {
+      myservo2.write(0); 
+    }
+  }
+  
+  for (int i = 0; i < num; i++) {  
+    if (numDropped && !(numDropped % num_per_column))
+      columnNum++; 
+    
+    if (numDropped > total) {
+      myservo.write(0);
+      delay(200);
+      analogWrite(5, 0);
+      return;
+    }
+
+    myservo.write(180 - (60*columnNum + offset_for_stack[columnNum - 1])); 
+    Serial.print("columnNum");
+    Serial.println(columnNum);
+    Serial.println("numDropped");
+    Serial.println(numDropped);
+    delay(1000); 
+    myservo.write(175); 
+    delay(1000); 
+    numDropped++;
+  }
+
+  myservo.detach();
+  myservo2.detach();
+  delay(1000);
+  analogWrite(5, 0);
+}
+
 //#define TEST
 #ifndef TEST
 
@@ -2008,7 +2145,6 @@ void loop()
 
 }
 #else
-
 
 void loop()
 {

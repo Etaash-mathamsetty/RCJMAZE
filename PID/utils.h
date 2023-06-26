@@ -67,55 +67,6 @@ void resetBoost()
   addBoost(0);
 }
 
-void kitDrop(int num, char side) { 
-  static int columnNum = 1; 
-  static int numDropped = 0; 
-  const int offset_for_stack[3] = {10, 7, 0};
-  if(numDropped <= total)
-  {
-    myservo.attach(servopin);
-    myservo2.attach(servopin2);
-  }
-
-  analogWrite(5, 50);
-  if(num > 0)
-  {
-    if(side == 'r'){
-      myservo2.write(50); 
-    } 
-    else {
-      myservo2.write(0); 
-    }
-  }
-  
-  for (int i = 0; i < num; i++) {  
-    if (numDropped && !(numDropped % num_per_column))
-      columnNum++; 
-    
-    if (numDropped > total) {
-      myservo.write(0);
-      delay(200);
-      analogWrite(5, 0);
-      return;
-    }
-
-    myservo.write(180 - (60*columnNum + offset_for_stack[columnNum - 1])); 
-    Serial.print("columnNum");
-    Serial.println(columnNum);
-    Serial.println("numDropped");
-    Serial.println(numDropped);
-    delay(1000); 
-    myservo.write(175); 
-    delay(1000); 
-    numDropped++;
-  }
-
-  myservo.detach();
-  myservo2.detach();
-  delay(1000);
-  analogWrite(5, 0);
-}
-
 void resetServo() {
   myservo.write(175);
   delay(200);
