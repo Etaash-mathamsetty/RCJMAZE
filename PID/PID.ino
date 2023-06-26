@@ -1347,12 +1347,10 @@ bool handle_up_ramp(double start_pitch, int32_t end_encoders)
     forward(100);
   }
 
-  bool* arr = get_tof_vals(wall_tresh);
+  // bool* arr = get_tof_vals(wall_tresh);
 
     // n e s w
-  bool walls[4] = { arr[4], arr[2] || arr[3], arr[5], arr[0] || arr[1] };
-
-  if (!(walls[1] && walls[2])) {
+  if (!((tofCalibrated(1) < 250 || tofCalibrated(0) < 250) && (tofCalibrated(2) < 250 || tofCalibrated(3) < 250))) {
     return false;
   }
 
@@ -1494,13 +1492,13 @@ bool handle_down_ramp(double start_pitch, double end_encoders)
   }
   UPDATE_BNO();
 
-  bool* arr = get_tof_vals(wall_tresh);
+  // bool* arr = get_tof_vals(wall_tresh);
 
-    // n e s w
-  bool walls[4] = { arr[4], arr[2] || arr[3], arr[5], arr[0] || arr[1] };
+  //   // n e s w
+  // bool walls[4] = { arr[4], arr[2] || arr[3], arr[5], arr[0] || arr[1] };
 
 
-  if (!(walls[1] && walls[2])) {
+  if (!((tofCalibrated(1) < 250 || tofCalibrated(0) < 250) && (tofCalibrated(2) < 250 || tofCalibrated(3) < 250))) {
     return false;
   }
 
@@ -1704,11 +1702,10 @@ void drive(int32_t encoders, int speed) {
 
     if((BNO_Z - start_pitch < -5.5 /*|| BNO_Z < -5.5 */) && !down_ramp_detect)
     {
-      // stopMotors();
-      bool res = handle_up_ramp(start_pitch, encoders);
       oled.println("down ramp detect!!");
-      // stopMotors();
-      // delay(500);
+      ticks_before = abs(motorR.getTicks());
+      bool res = handle_up_ramp(start_pitch, encoders);
+      motorR.setTicks(-ticks_before - 7 * CM_TO_ENCODERS);
       ramp_detect = res;
 
       if(res)
@@ -1718,11 +1715,12 @@ void drive(int32_t encoders, int speed) {
     if((BNO_Z - start_pitch > 5.5 /* || BNO_Z > 5.5 */) && !ramp_detect)
     {
       // stopMotors();
-      bool res = handle_down_ramp(start_pitch, encoders);
       oled.println("down ramp detect!!");
-      // stopMotors();
-      // delay(500);
+      ticks_before = abs(motorR.getTicks());
+      bool res = handle_down_ramp(start_pitch, encoders);
+      motorR.setTicks(-ticks_before - 7 * CM_TO_ENCODERS);
       down_ramp_detect = res;
+      tstart = millis();
 
       if(res)
         return;
@@ -1910,8 +1908,8 @@ void alignAngle(bool reset, int tolerance = 10) {
 
         double error = (reading - new_angle) * BNO_KP;
 
-        if (millis() - tstart > 5000) {
-          BNO_KP = 4;
+        if (millis() - tstart > 3000) {
+          addBoost(ALIGN_TURN_BOOST + 60);
         }
         
         forward(error * BNO_KP, -error * BNO_KP);
@@ -1940,8 +1938,8 @@ void alignAngle(bool reset, int tolerance = 10) {
   double tstart = millis();
 
   while(abs(len) >= tolerance) {
-    if (millis() - tstart > 5000) {
-      kP = 2.5;
+    if (millis() - tstart > 3000) {
+      addBoost(ALIGN_TURN_BOOST + 60);
     }
     forward(len * kP, -len * kP);
     //Serial.print("Speed: ");
