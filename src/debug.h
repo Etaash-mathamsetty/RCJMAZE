@@ -5,8 +5,8 @@
 #include "helpers.h"
 #include "globals.h"
 #include "simulation.h"
-#include "link-list.h"
 #include <iostream>
+#include <list>
 
 namespace debug
 {
@@ -17,7 +17,7 @@ namespace debug
 
 	void print_map();
 
-    void print_path(Stack<int>& path);
+    void print_path(std::list<int>& path);
 };
 
 #endif // DEBUG_H_INCLUDED

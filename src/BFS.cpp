@@ -5,11 +5,12 @@
 #include <sstream>
 #include <string.h>
 #include <math.h>
+#include <list>
 #include <chrono>
 #include <algorithm>
+#include <iterator>
 #include <signal.h>
 #include <unistd.h>
-#include "link-list.h"
 #include "driver.h"
 #include "globals.h"
 #include "debug.h"
@@ -19,15 +20,17 @@
 bool quitable = false;
 
 //returns shortest possible path to the nearest unvisited tile
-Stack<int> BFS()
+std::list<int>& BFS()
 {
 	robot* bot = robot::get_instance();
 	//set everything to an obv invalid index
-	int parent[horz_size * vert_size];
+	static int parent[horz_size * vert_size];
 	for(int i = 0; i < horz_size * vert_size; i++)
 		parent[i] = -1;
-	LinkedList<int> worker;
-	Stack<int> path;
+	static std::list<int> worker;
+	static std::list<int> path;
+	path.clear();
+	worker.clear();
 	int cur_index = bot->index;
 	do
 	{
@@ -54,7 +57,7 @@ Stack<int> BFS()
 			return BFS();
 		}
 
-		cur_index = worker[0].value;
+		cur_index = worker.front();
 
 		// BFS is done
 		if(!bot->map[cur_index].vis)
@@ -63,13 +66,15 @@ Stack<int> BFS()
 	} while(worker.size() > 0);
 
 
+	std::cout << "backtracking:" << std::endl;
+
 	//backtracking
-	path.Push(cur_index);
+	path.push_front(cur_index);
 	do
 	{
-		path.Push(parent[path[0]]);
-	} while(path[0] != bot->index);
-	path.Pop();
+		path.push_front(parent[path.front()]);
+	} while(path.front() != bot->index);
+	path.pop_front();
 
 	return path;
 }
@@ -125,12 +130,12 @@ int main(int argc, char* argv[]){
 			//BFS code goes here
 			while(true)
 			{
-				Stack<int> path = BFS();
+				std::list<int> path = BFS();
 				debug::print_path(path);
 				int old_floor = floor_num;
-				for(size_t l = 0; l < path.Size(); l++)
+				for(int index : path)
 				{
-					switch(path[l] - robot->index)
+					switch(index - robot->index)
 					{
 						case 1:
 							driver::turn_to(DIR::E);
@@ -160,12 +165,13 @@ int main(int argc, char* argv[]){
 		//REAL CODE HERE
 		while(true)
 		{
-			Stack<int> path = BFS();
+			std::cout << "running BFS()" << std::endl;
+			std::list<int>& path = BFS();
 			debug::print_path(path);
 			int old_floor = floor_num;
-			for(size_t l = 0; l < path.Size(); l++)
+			for(int index : path)
 			{
-				switch(path[l] - robot->index)
+				switch(index - robot->index)
 				{
 					case 1:
 						driver::turn_to(DIR::E);
