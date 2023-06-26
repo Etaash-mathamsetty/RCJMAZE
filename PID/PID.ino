@@ -26,10 +26,10 @@ void setup() {
     oled_println("Reinit...");
     delay(200);
     //reinit all variables here:
-    utils::resetBoost();
-    utils::stopMotors();
-    utils::resetTicks();
-    utils::resetServo();
+    resetBoost();
+    stopMotors();
+    resetTicks();
+    resetServo();
     cur_direction = n;
     global_angle = 0;
     black_tile_detected = false;
@@ -629,7 +629,7 @@ int returnColor(bool only_black = false) {
 void backup_align(int speed, int time) {
 
   while (tofCalibrated(5) >= 60 || digitalRead(BACK_LEFT) || digitalRead(BACK_RIGHT)) {
-    utils::forward(-speed);
+    forward(-speed);
   }
 
   stopMotors();
@@ -1440,7 +1440,7 @@ bool handle_up_ramp(double start_pitch, int32_t end_encoders) {
       else if (right <= wall_tresh)
         err = (right - 75) * wall_kp;
 
-      utils::forward(120.0 + bno_error + err, 120.0 - bno_error - err);
+      forward(120.0 + bno_error + err, 120.0 - bno_error - err);
 
       // calculate distance on a ramp
       double delta_x = abs(motorR.getTicks()) - abs(old_x);
@@ -1583,7 +1583,7 @@ bool handle_down_ramp(double start_pitch, double end_encoders) {
       else if (right <= wall_tresh)
         err = (right - 75) * wall_kp;
 
-      utils::forward(80.0 + err, 80.0 - err);
+      forward(80.0 + err, 80.0 - err);
 
       // calculate distance on a ramp
       double delta_x = abs(motorR.getTicks()) - abs(old_x);
