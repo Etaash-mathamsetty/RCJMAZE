@@ -163,6 +163,7 @@ int main(int argc, char* argv[]){
 		//REAL CODE HERE
 		while(true)
 		{
+			std::cout << "running BFS()" << std::endl;
 			std::list<int>& path = BFS();
 			debug::print_path(path);
 			int old_floor = floor_num;
