@@ -78,14 +78,14 @@ if True:
         
             lower = np.array([red_low_hsv, green_low_hsv, yellow_low_hsv])
             upper = np.array([red_high_hsv, green_high_hsv, yellow_high_hsv])
-
             
             mask = cv2.inRange(frame, lower[i], upper[i])
             _,color_contours,_ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
             if len(color_contours) > 0:
                 color_cont = max(color_contours, key=cv2.contourArea)
                 org = cv2.drawContours(org, [color_cont], -1, (0,255,0), 3)
-                if cv2.contourArea(color_cont) >= 1400:
+                _,_,w,h = cv2.boundingRect(color_cont)
+                if cv2.contourArea(color_cont) >= 1400 and w/h <= 2.5 and w/h >= 0.25:
                     bounding_rect.append(cv2.boundingRect(color_cont))
                 else:
                     bounding_rect.append([])
