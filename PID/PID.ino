@@ -2,13 +2,13 @@
 //#define FAKE_SERIAL
 #define DEBUG_DISPLAY
 // #define MOTORSOFF
-// #define TEST
+#define TEST
 // #define ALIGN_ANGLE
 // #define NO_PI //basic auto when no raspberry pi (brain stem mode)
 // #define NO_LIMIT
 // #define NO_PID
 // #define TCS
-// #define AMS
+#define AMS
 
 //define: debug display, motorsoff, test, comment out all others if you want to calibrate tofs 
 
@@ -124,6 +124,8 @@ void setup() {
     Serial.println("could not connect to sensor! Please check your wiring.");
     oled.println("could not connect to sensor! Please check your wiring.");
   }
+
+  pinMode(A1, OUTPUT);
 #endif
 #ifdef TCS
   tcaselect(6);
@@ -159,7 +161,7 @@ void readColors() {
   //wait till data is available
   bool rdy = false;
   while(!rdy){
-    delay(5);
+    // delay(1);
     rdy = ams.dataReady();
   }
   //ams.drvOff(); //uncomment this if you want to use the driver LED for readings
@@ -518,20 +520,11 @@ int returnColor(bool only_black = false){
   Serial.print("sub:");
   Serial.print((double)r/g * 100.0 - (double)b/r * 100.0);
 #endif
-#ifdef AMS
-  readColors();
-  Serial.print(" Violet: "); Serial.print(amsValues[AS726x_VIOLET]);
-  Serial.print(" Blue: "); Serial.print(amsValues[AS726x_BLUE]);
-  Serial.print(" Green: "); Serial.print(amsValues[AS726x_GREEN]);
-  Serial.print(" Yellow: "); Serial.print(amsValues[AS726x_YELLOW]);
-  Serial.print(" Orange: "); Serial.print(amsValues[AS726x_ORANGE]);
-  Serial.print(" Red: "); Serial.print(amsValues[AS726x_RED]);
-#endif
-#endif
 
-    UPDATE_BNO();
+#endif
 
   #ifdef TCS
+    UPDATE_BNO();
     for (int i = 0; i <= persistance_count; i++) {
 
       if (c >= 40 && abs((r / (double)g) * 100.0 - ((double)b/r) * 100.0) <= 10 && abs(BNO_Z) < 12) {
@@ -552,13 +545,8 @@ int returnColor(bool only_black = false){
       if(c <= 50 && (double) b/r >= 1.5 && abs(BNO_Z) < 12) {
         blue_detect++;
       }
-#endif
-#ifdef AMS
-    for (int i = 0; i <= persistance_count; i++) {
-      readColors();
-      Serial.println(amsValues[AS726x_BLUE]);
     }
-#endif
+
     if (blue_detect >= persistance_count && !only_black) {
       Serial.println(" blue detected");
       stopMotors();
@@ -574,6 +562,57 @@ int returnColor(bool only_black = false){
       Serial.println(" white detected");
       return 0;
     }
+#endif
+#ifdef AMS
+    UPDATE_BNO();
+
+    readColors();
+    Serial.print("Violet:"); Serial.print(amsValues[AS726x_VIOLET]);
+    Serial.print(",Blue:"); Serial.print(amsValues[AS726x_BLUE]);
+    Serial.print(",Green:"); Serial.print(amsValues[AS726x_GREEN]);
+    Serial.print(",Yellow:"); Serial.print(amsValues[AS726x_YELLOW]);
+    Serial.print(",Orange:"); Serial.print(amsValues[AS726x_ORANGE]);
+    Serial.print(",Red:"); Serial.print(amsValues[AS726x_RED]);
+    Serial.println();
+
+    bool violet_greatest = true;
+    int dark_count = 0;
+    int bright_count = 0;
+
+    for (int i = 0; i <= AS726x_RED; i++) {
+      if (amsValues[AS726x_VIOLET] < amsValues[i]) {
+        violet_greatest = false;
+      }
+
+      if (amsValues[i] < 1000) {
+        dark_count++;
+      }
+
+      if(amsValues[i] > 10000) {
+        bright_count++;
+      }
+    }
+
+    if (bright_count >= 2 && abs(BNO_Z) < 12) {
+      Serial.println(" silver detected");
+      return 2;
+    }
+    else if (violet_greatest && amsValues[AS726x_VIOLET]/amsValues[AS726x_YELLOW] > 3 && abs(BNO_Z) < 12) {
+      Serial.println(" blue detected");
+      stopMotors();
+      // delay(5000);
+      return 3;
+    }
+    else if (dark_count >= 4 && abs(BNO_Z) < 12) {
+      Serial.println(" black detected");
+      return 1;
+    }
+    else {
+      Serial.println(" white detected");
+      return 0;
+    }
+      
+#endif
 
     // if(b > (r * 2.5) && !only_black){ 
     //   // Serial.println("blue detected");
