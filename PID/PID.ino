@@ -1418,7 +1418,7 @@ bool handle_up_ramp(double start_pitch, int32_t end_encoders) {
         reading = BNO_X;
       }
 
-      double bno_error = (reading - new_angle) * (BNO_KP + abs(reading - new_angle) / 360);
+      double bno_error = (reading - new_angle) * (BNO_KP + abs(reading - new_angle) / 270.0);
 
       // if (bno_error > 80) {
       //   bno_error = 80;
@@ -1445,8 +1445,8 @@ bool handle_up_ramp(double start_pitch, int32_t end_encoders) {
       // calculate distance on a ramp
       double delta_x = abs(motorR.getTicks()) - abs(old_x);
       double delta_theta = abs(BNO_Z - start_pitch);
-      height += delta_x * sin(delta_theta * (PI / 180));
-      distance += delta_x * cos(delta_theta * (PI / 180));
+      height += delta_x * sin(delta_theta * (PI / 180.0));
+      distance += delta_x * cos(delta_theta * (PI / 180.0));
       old_x = motorR.getTicks();
     }
 
@@ -1480,15 +1480,15 @@ bool handle_up_ramp(double start_pitch, int32_t end_encoders) {
     while (abs(BNO_X - new_angle) > 1) {
       double reading;
       UPDATE_BNO();
-      if (BNO_X - new_angle > 180) {
+      if (BNO_X - new_angle > 180.0) {
         reading = BNO_X - 360;
-      } else if (BNO_X - new_angle < -180) {
+      } else if (BNO_X - new_angle < -180.0) {
         reading = BNO_X + 360;
       } else {
         reading = BNO_X;
       }
 
-      double bno_error = (reading - new_angle) * (BNO_STATIC_KP + abs(reading - new_angle) / 360);
+      double bno_error = (reading - new_angle) * (BNO_STATIC_KP + abs(reading - new_angle) / 270.0);
       forward(bno_error, -bno_error);
     }
 
@@ -1588,8 +1588,8 @@ bool handle_down_ramp(double start_pitch, double end_encoders) {
       // calculate distance on a ramp
       double delta_x = abs(motorR.getTicks()) - abs(old_x);
       double delta_theta = abs(BNO_Z - start_pitch);
-      distance += delta_x * cos(delta_theta * (PI / 180));
-      height += delta_x * sin(delta_theta * (PI / 180));
+      distance += delta_x * cos(delta_theta * (PI / 180.0));
+      height += delta_x * sin(delta_theta * (PI / 180.0));
       old_x = motorR.getTicks();
     }
 
@@ -1632,7 +1632,7 @@ bool handle_down_ramp(double start_pitch, double end_encoders) {
         reading = BNO_X;
       }
 
-      double bno_error = (reading - new_angle) * (BNO_STATIC_KP + abs(reading - new_angle) / 360);
+      double bno_error = (reading - new_angle) * (BNO_STATIC_KP + abs(reading - new_angle) / 270.0);
       forward(bno_error, -bno_error);
     }
 
@@ -1851,7 +1851,7 @@ void drive(int32_t encoders, int speed) {
       reading = BNO_X;
     }
 
-    double error = (reading - new_angle) * (BNO_KP + abs(reading - new_angle) / 360);
+    double error = (reading - new_angle) * (BNO_KP + abs(reading - new_angle) / 270.0);
     if (error > 100) {
       error = 100;
     } else if (error < -100) {
