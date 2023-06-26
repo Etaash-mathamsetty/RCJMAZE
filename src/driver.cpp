@@ -637,7 +637,8 @@ namespace driver
 		{ 
 			PythonScript::Exec(ser_py_file);
 			PythonScript::Exec(cv_py_file);
-			if(!bot->map[bot->index].vic && std::chrono::high_resolution_clock::now() - time_step >= std::chrono::milliseconds(600))
+			if(!bot->map[bot->index].vic && 
+			std::chrono::high_resolution_clock::now() - time_step >= std::chrono::milliseconds(1000))
 			{
 				for(int i = 0; i < 2; i++)
 				{
