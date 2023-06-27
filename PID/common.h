@@ -1,7 +1,11 @@
+#ifndef _COMMON_H_
+#define _COMMON_H_
+
 #include <VL53L0X.h>
 #include <Wire.h>
 #include <Adafruit_BNO055.h>
 #include "Adafruit_AS726x.h"
+#include "Motors.h"
 #ifdef DEBUG_DISPLAY
 #include <U8g2lib.h>
 #include <U8x8lib.h> 
@@ -82,11 +86,10 @@ const double KD_FORWARD = 0.01;
 const double SAMPLERATE_DELAY_MS = 10.0;
 const double TIMES_PER_SECOND = 1000.0 / SAMPLERATE_DELAY_MS;
 volatile int32_t global_angle = 0;
+volatile bool restart = false;
 
 const int SPEED = 105;
 const int ALIGN_SPEED = 90;
-
-const double TOF_DISTANCE = 58.64;
 
 enum type { Color,
             Distance };
@@ -122,3 +125,25 @@ char dir_to_char(uint8_t cur_dir)
   const char char_map[4] = {'n', 'e', 's', 'w'};
   return char_map[cur_dir];
 }
+
+void oled_display_walls(bool walls[4]) {
+  const char char_map[4] = { 'n', 'e', 's', 'w' };
+  String data = "    ";
+
+  for (int i = 0; i < 4; i++) {
+    if (walls[i])
+      data[i] = char_map[i];
+  }
+
+  oled_println(data.c_str());
+}
+
+int closestToDirection(double num) {
+  for (int i = 0; i <= 360; i += 90) {
+    if (abs(num - i) <= 45) {
+      return i;
+    }
+  }
+}
+
+#endif
