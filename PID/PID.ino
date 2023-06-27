@@ -1023,14 +1023,17 @@ void turn(char char_end_direction) {
   cur_direction = end_direction;
 }
 
-void alignAngle(bool, int x = 10);
+void alignAngle(bool, int tolerance = 10, int start_yaw = INT32_MAX);
 
 void driveCM(float cm, int speed = 200, int tolerance = 10) {
   //kitDrop(1);
+  double start_yaw;
   bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
   if (abs(orientationData.orientation.z) < 12) {
     //pi_read_data();
     alignAngle(true);
+    UPDATE_BNO();
+    start_yaw = BNO_X;
   }
 
   pi_send_data(true, true);
@@ -1235,7 +1238,7 @@ void driveCM(float cm, int speed = 200, int tolerance = 10) {
   bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
   if (abs(orientationData.orientation.z) < 12) {
     //pi_read_data();
-    alignAngle(true);
+    alignAngle(true, 10, start_yaw);
   }
 
   //pause for blue if detected
@@ -1806,7 +1809,7 @@ int closestToDirection(double num) {
   }
 }
 
-void alignAngle(bool reset, int tolerance = 10) {
+void alignAngle(bool reset, int tolerance = 10, int32_t start_yaw = INT32_MAX) {
   int tofR1, tofR2;
   int tofR3, tofR4;
   int lnum = 1, rnum = 0;
@@ -1838,6 +1841,9 @@ void alignAngle(bool reset, int tolerance = 10) {
     UPDATE_BNO();
 
     double new_angle = closestToDirection(BNO_X);
+    if (start_yaw != INT32_MAX) {
+      new_angle = start_yaw;
+    }
     // double new_angle = global_angle;
     double reading;
 
