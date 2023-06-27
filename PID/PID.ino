@@ -316,7 +316,6 @@ void pi_read_data() {
   }
 }
 
-//#define TEST
 #ifndef TEST
 
 int clear_oled_counter = 0;
