@@ -20,5 +20,4 @@ how to find raspberry pi (something like):
 
 ```
 
-WE WON NATIONALS LETS GOOOOOO
-time to start the grind again soon
+we are slowly losing sanity as internationals approach

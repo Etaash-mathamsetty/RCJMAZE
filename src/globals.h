@@ -6,7 +6,7 @@
 #include <sstream>
 #include <utility>
 
-//#define SIMULATION
+// #define SIMULATION
 #define DEBUG
 //#define SIM_MOV_DELAY
 
@@ -89,7 +89,7 @@ struct nearest_quad
 	}
 };
 
-const int horz_size = 40;
+const int horz_size = 80;
 const int vert_size = horz_size;
 const int default_index = (horz_size/2) - 1;
 

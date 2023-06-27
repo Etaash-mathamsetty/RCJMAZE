@@ -20,17 +20,15 @@
 bool quitable = false;
 
 //returns shortest possible path to the nearest unvisited tile
-std::list<int>& BFS()
+std::list<int> BFS()
 {
 	robot* bot = robot::get_instance();
 	//set everything to an obv invalid index
-	static int parent[horz_size * vert_size];
+	int parent[horz_size * vert_size];
 	for(int i = 0; i < horz_size * vert_size; i++)
 		parent[i] = -1;
-	static std::list<int> worker;
-	static std::list<int> path;
-	path.clear();
-	worker.clear();
+	std::list<int> worker;
+	std::list<int> path;
 	int cur_index = bot->index;
 	do
 	{
@@ -40,7 +38,7 @@ std::list<int>& BFS()
 		nearest_quad quad = helper::get_nearest(cur_index);
 		for(int i = 0; i < 4; i++)
 		{
-			if(quad[i] != -1 && parent[cur_index] != quad[i])
+			if(quad[i] != -1 && parent[cur_index] != quad[i] && parent[quad[i]] == -1)
 			{
 				worker.push_back(quad[i]);
 				parent[quad[i]] = cur_index;
@@ -64,9 +62,6 @@ std::list<int>& BFS()
 			break;
 		
 	} while(worker.size() > 0);
-
-
-	std::cout << "backtracking:" << std::endl;
 
 	//backtracking
 	path.push_front(cur_index);
@@ -156,7 +151,7 @@ int main(int argc, char* argv[]){
 					if(old_floor != floor_num)
 						break;
 				}
-				if(quitable && robot->index == helper::get_index(default_index, default_index) && floor_num == start_floor)
+				if(quitable && robot->index == robot->start_tile_floor[floor_num] && floor_num == start_floor)
 					break;
 			}
 		}
@@ -165,8 +160,8 @@ int main(int argc, char* argv[]){
 		//REAL CODE HERE
 		while(true)
 		{
-			std::cout << "running BFS()" << std::endl;
-			std::list<int>& path = BFS();
+			//std::cout << "running BFS()" << std::endl;
+			std::list<int> path = BFS();
 			debug::print_path(path);
 			int old_floor = floor_num;
 			for(int index : path)
@@ -192,7 +187,7 @@ int main(int argc, char* argv[]){
 					break;
 			}
 			//debug::print_node(robot->map[robot->index]);
-			if(quitable && robot->index == helper::get_index(default_index, default_index) && floor_num == start_floor)
+			if(quitable && robot->index == robot->start_tile_floor[floor_num] && floor_num == start_floor)
 				break;
 			#ifdef TEST_MODE
 				std::cout << "press any key to continue..." << std::endl;
