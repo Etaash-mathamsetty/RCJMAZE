@@ -6,7 +6,7 @@
 #include <sstream>
 #include <utility>
 
-//#define SIMULATION
+#define SIMULATION
 #define DEBUG
 //#define SIM_MOV_DELAY
 
