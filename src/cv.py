@@ -21,7 +21,7 @@
 #     cv2.imshow("frame", frame)
 #     cv2.imshow("frame2", frame2)
 #import numpy as np
-#import math
+#import math    
 
 rescue = 0
 camera_num = not camera_num
@@ -55,12 +55,14 @@ def label_img(frame):
         return ()
 
 
-green_low_hsv = [50,80, 70]
+green_low_hsv = [50,80, 40]
 green_high_hsv = [90, 239, 231]
 red_low_hsv = [120, 150, 70]
 red_high_hsv = [200, 239, 231]
-yellow_low_hsv = [7, 80, 100]
-yellow_high_hsv = [30, 239, 231]
+red_low_hsv2 = [0, 150, 115]
+red_high_hsv2 = [30, 255, 200]
+yellow_low_hsv = [30, 110, 100]
+yellow_high_hsv = [60, 247, 231]
 
 if True:
     
@@ -79,7 +81,17 @@ if True:
             lower = np.array([red_low_hsv, green_low_hsv, yellow_low_hsv])
             upper = np.array([red_high_hsv, green_high_hsv, yellow_high_hsv])
             
+
+            
             mask = cv2.inRange(frame, lower[i], upper[i])
+            
+            if i == 0:
+                lower2 = np.array([red_low_hsv2])
+                upper2 = np.array([red_high_hsv2])
+                mask2 = cv2.inRange(frame, lower2[i], upper2[i])
+                mask = cv2.bitwise_or(mask, mask2)
+                cv2.imshow("mask2", mask)
+            
             _,color_contours,_ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
             if len(color_contours) > 0:
                 color_cont = max(color_contours, key=cv2.contourArea)
