@@ -151,8 +151,8 @@ bool handle_up_ramp(double start_pitch, int32_t end_encoders) {
     UPDATE_BNO();
 
     double BNO_STATIC_KP = 30;
-    while (abs(BNO_X - new_angle) > 1) {
-      double reading;
+    double reading;
+    do {
       UPDATE_BNO();
       if (BNO_X - new_angle > 180.0) {
         reading = BNO_X - 360;
@@ -164,7 +164,7 @@ bool handle_up_ramp(double start_pitch, int32_t end_encoders) {
 
       double bno_error = (reading - new_angle) * (BNO_STATIC_KP + abs(reading - new_angle) / 270.0);
       forward(bno_error, -bno_error);
-    }
+    } while (abs(BNO_X - new_angle) > 1);
 
     stopMotors();
     alignAngle(true);
@@ -301,9 +301,9 @@ bool handle_down_ramp(double start_pitch, double end_encoders) {
     UPDATE_BNO();
 
     double BNO_STATIC_KP = 30.0;
-    while (abs(BNO_X - new_angle) > 1) {
+    double reading;
+    do {
       UPDATE_BNO();
-      double reading;
       if (BNO_X - new_angle > 180) {
         reading = BNO_X - 360;
       } else if (BNO_X - new_angle < -180) {
@@ -314,7 +314,7 @@ bool handle_down_ramp(double start_pitch, double end_encoders) {
 
       double bno_error = (reading - new_angle) * (BNO_STATIC_KP + abs(reading - new_angle) / 300.0);
       forward(bno_error, -bno_error);
-    }
+    } while (abs(reading - new_angle) > 1);
 
     stopMotors();
     alignAngle(true);
