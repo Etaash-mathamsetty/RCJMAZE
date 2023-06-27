@@ -175,10 +175,13 @@ void drive(int32_t encoders, int speed) {
 
 void driveCM(float cm, int speed = 200, int tolerance = 10) {
   //kitDrop(1);
-  bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
+  double start_yaw = 0.0;
+  UPDATE_BNO();
   if (abs(orientationData.orientation.z) < 12) {
     //pi_read_data();
     alignAngle(true);
+    UPDATE_BNO();
+    start_yaw = BNO_X;
   }
 
   pi_send_forward_status(true, true);
@@ -383,7 +386,7 @@ void driveCM(float cm, int speed = 200, int tolerance = 10) {
   UPDATE_BNO();
   if (abs(orientationData.orientation.z) < 12) {
     //pi_read_data();
-    alignAngle(true);
+    alignAngle(true, 10, start_yaw);
   }
 
   //pause for blue if detected

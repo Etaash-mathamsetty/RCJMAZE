@@ -441,7 +441,7 @@ int right_obstacle() {
   return abs(forward_ticks);
 }
 
-void alignAngle(bool reset, int tolerance = 10) {
+void alignAngle(bool reset, int tolerance = 10, double start_yaw = INFINITY) {
   int tofR1, tofR2;
   int tofR3, tofR4;
   int lnum = 1, rnum = 0;
@@ -473,6 +473,10 @@ void alignAngle(bool reset, int tolerance = 10) {
     UPDATE_BNO();
 
     double new_angle = closestToDirection(BNO_X);
+    if(start_yaw != INFINITY)
+    {
+      new_angle = start_yaw;
+    }
     // double new_angle = global_angle;
     double reading = 0.0;
 
