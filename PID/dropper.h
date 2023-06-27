@@ -25,6 +25,10 @@ void kitDrop(int num, char side) {
       return;
   }
 
+  analogWrite(3, 150);
+  delay(200);
+  analogWrite(3, 255);
+
   if (numDropped <= total) {
     myservo.attach(servopin);
     myservo2.attach(servopin2);

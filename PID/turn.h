@@ -8,41 +8,43 @@ using namespace std;
 
 void backup_align(int speed, int time) {
 
-  while (tofCalibrated(5) >= 60 || digitalRead(BACK_LEFT) || digitalRead(BACK_RIGHT)) {
-    forward(-speed);
+  while (tofCalibrated(5) >= 80 /*|| digitalRead(BACK_LEFT) || digitalRead(BACK_RIGHT) */) {
+    forward(-speed * 0.75);
   }
-
   stopMotors();
   delay(100);
 
-  int32_t tstart = millis();
+  // uint32_t tstart = millis();
+  // while((int32_t) millis() - (int32_t) tstart < 600) {
+  //   forward(-speed * 0.75);
+  // }
 
 #ifndef NO_LIMIT
-  while ((int32_t)millis() - tstart < time) {
-    if (!digitalRead(BACK_LEFT)) {
-      motorL.run(-SPEED * 0.7);
-    } else {
-      motorL.stop();
-    }
+  // while ((int32_t)millis() - tstart < time) {
+  //   if (!digitalRead(BACK_LEFT)) {
+  //     motorL.run(-SPEED * 0.7);
+  //   } else {
+  //     motorL.stop();
+  //   }
 
-    if (!digitalRead(BACK_RIGHT)) {
-      motorR.run(-SPEED * 0.7);
-    } else {
-      motorR.stop();
-    }
-  }
+  //   if (!digitalRead(BACK_RIGHT)) {
+  //     motorR.run(-SPEED * 0.7);
+  //   } else {
+  //     motorR.stop();
+  //   }
+  // }
 #else
-  while ((int32_t)millis() - tstart < time) {
-    forward(-SPEED * 0.7);
-  }
+  // while ((int32_t)millis() - tstart < time) {
+  //   forward(-SPEED * 0.7);
+  // }
 
 
 #endif
 
-  stopMotors();
-  bno.begin(OPERATION_MODE_IMUPLUS);
-  global_angle = 0;
-  delay(50);
+  // stopMotors();
+  // bno.begin(OPERATION_MODE_IMUPLUS);
+  // global_angle = 0;
+  // delay(50);
 }
 
 void raw_right(double relative_angle, int speed, bool alignment) {
@@ -93,7 +95,7 @@ void raw_right(double relative_angle, int speed, bool alignment) {
     // Serial.print("\t");
     // Serial.println(cross_over);
 
-    p = abs((orientation - angle) / relative_angle);
+    p = (angle - orientation) / relative_angle;
     //i = i + p;
     //d = p - last_error;
     PID = KP_TURN * p;
@@ -105,14 +107,15 @@ void raw_right(double relative_angle, int speed, bool alignment) {
     //   oled_println("detected");
     // }
 
-    if (digitalRead(BACK_LEFT) || digitalRead(BACK_RIGHT)) {
+    /*if (digitalRead(BACK_LEFT) || digitalRead(BACK_RIGHT)) {
       resetTicks();
       while (abs(motorR.getTicks()) < 4 * CM_TO_ENCODERS) {
         forward(SPEED * 0.75);
       }
-    } else if (digitalRead(FRONT_LEFT) || digitalRead(FRONT_RIGHT)) {
+    } else*/ 
+    if (digitalRead(FRONT_LEFT) || digitalRead(FRONT_RIGHT)) {
       resetTicks();
-      while (abs(motorR.getTicks()) < 4 * CM_TO_ENCODERS) {
+      while (abs(motorR.getTicks()) < 2.5 * CM_TO_ENCODERS) {
         forward(-SPEED * 0.75);
       }
     }
@@ -185,6 +188,7 @@ void right(int relative_angle, int speed, bool turn_status = true) {
     // {
     //   forward(-speed);
     // }
+
     while (tofCalibrated(5) <= 40) {
       forward(speed);
     }
@@ -241,7 +245,7 @@ void raw_left(double relative_angle, int speed, bool alignment) {
     // Serial.print("\t");
     // Serial.println(cross_over);
 
-    p = abs((orientation - angle) / relative_angle);
+    p = (orientation - angle) / relative_angle;
     //i = i + p;
     //d = p - last_error;
     PID = KP_TURN * p;
@@ -253,14 +257,15 @@ void raw_left(double relative_angle, int speed, bool alignment) {
     //   oled_println("detected");
     // }
 
-    if (digitalRead(BACK_LEFT) || digitalRead(BACK_RIGHT)) {
+   /* if (digitalRead(BACK_LEFT) || digitalRead(BACK_RIGHT)) {
       resetTicks();
       while (abs(motorR.getTicks()) < 4 * CM_TO_ENCODERS) {
         forward(SPEED * 0.75);
       }
-    } else if (digitalRead(FRONT_LEFT) || digitalRead(FRONT_RIGHT)) {
+    } else*/ 
+    if (digitalRead(FRONT_LEFT) || digitalRead(FRONT_RIGHT)) {
       resetTicks();
-      while (abs(motorR.getTicks()) < 4 * CM_TO_ENCODERS) {
+      while (abs(motorR.getTicks()) < 2.5 * CM_TO_ENCODERS) {
         forward(-SPEED * 0.75);
       }
     }
@@ -391,7 +396,7 @@ int left_obstacle() {
   while (abs(motorR.getTicks()) < forward_ticks) {
     forward(-SPEED * 0.7);
 
-    if (digitalRead(BACK_LEFT) || digitalRead(BACK_RIGHT) || tofCalibrated(5) <= 40) {
+    if (/*digitalRead(BACK_LEFT) || digitalRead(BACK_RIGHT) || */ tofCalibrated(5) <= 80) {
       break;
     }
   }
@@ -423,7 +428,7 @@ int right_obstacle() {
   while (abs(motorR.getTicks()) < forward_ticks) {
     forward(-SPEED * 0.7);
 
-    if (digitalRead(BACK_LEFT) || digitalRead(BACK_RIGHT) || tofCalibrated(5) <= 40) {
+    if (/*digitalRead(BACK_LEFT) || digitalRead(BACK_RIGHT) ||*/ tofCalibrated(5) <= 80) {
       break;
     }
   }

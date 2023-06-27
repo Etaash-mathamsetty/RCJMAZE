@@ -108,6 +108,12 @@ bool handle_up_ramp(double start_pitch, int32_t end_encoders) {
       else if (right <= wall_tresh)
         err = (right - 75) * wall_kp;
 
+      if (digitalRead(FRONT_RIGHT) == HIGH && digitalRead(FRONT_LEFT) == LOW && abs(BNO_Z) < 4) {
+        raw_left(10, SPEED * 0.75, true);
+      } else if (digitalRead(FRONT_LEFT) == HIGH && digitalRead(FRONT_RIGHT) == LOW && abs(BNO_Z) < 4) {
+        raw_right(10, SPEED * 0.75, true);
+      }
+
       forward(120.0 + bno_error + err, 120.0 - bno_error - err);
 
       // calculate distance on a ramp
@@ -190,7 +196,7 @@ bool handle_down_ramp(double start_pitch, double end_encoders) {
   double distance = 0;
   double height = 0;
   UPDATE_BNO();
-  double new_angle = 0;
+  double new_angle = closestToDirection(BNO_X);
 
   motorR.resetTicks();
   while (abs(motorR.getTicks()) < abs(ticks)) {
@@ -251,7 +257,13 @@ bool handle_down_ramp(double start_pitch, double end_encoders) {
       else if (right <= wall_tresh)
         err = (right - 75) * wall_kp;
 
-      forward(80.0 + err, 80.0 - err);
+      if (digitalRead(FRONT_RIGHT) == HIGH && digitalRead(FRONT_LEFT) == LOW && abs(BNO_Z) < 4) {
+        raw_left(10, SPEED * 0.75, true);
+      } else if (digitalRead(FRONT_LEFT) == HIGH && digitalRead(FRONT_RIGHT) == LOW && abs(BNO_Z) < 4) {
+        raw_right(10, SPEED * 0.75, true);
+      }
+
+      forward(80.0 + bno_error, 80.0 - bno_error);
 
       // calculate distance on a ramp
       double delta_x = abs(motorR.getTicks()) - abs(old_x);
@@ -300,7 +312,7 @@ bool handle_down_ramp(double start_pitch, double end_encoders) {
         reading = BNO_X;
       }
 
-      double bno_error = (reading - new_angle) * (BNO_STATIC_KP + abs(reading - new_angle) / 270.0);
+      double bno_error = (reading - new_angle) * (BNO_STATIC_KP + abs(reading - new_angle) / 300.0);
       forward(bno_error, -bno_error);
     }
 

@@ -83,7 +83,7 @@ void drive(int32_t encoders, int speed) {
     //Serial.println(PID);
 
     if (returnColor(true) == 1) {
-      while (/* motorR.getTicks() > 0 && */ motorL.getTicks() > 0 && tofCalibrated(5) >= 50) {
+      while (/* motorR.getTicks() > 0 && */ motorL.getTicks() > 0 && tofCalibrated(5) >= 80) {
         forward(-speed);
       }
       stopMotors();

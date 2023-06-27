@@ -81,7 +81,8 @@ int returnColor(bool only_black = false) {
     delay(5000);
     return 3;
   } else if (black_detect >= persistance_count) {
-    Serial.println(" black detected");
+    Serial.println(" black detected"); 
+   // delay(5000);
     // oled.clearDisplay();
     // oled.setCursor(0, 0);
     // oled_println(" black detected");
@@ -136,10 +137,10 @@ int returnColor(bool only_black = false) {
   }
 
   if (dark_count >= 5 && abs(BNO_Z) < 12) {
-    // stopMotors();
+    stopMotors ();
     oled_clear();
     oled_println(" black detected");
-    // delay(5000);
+    delay(200);
     Serial.println(" black detected");
     return 1;
   } else if (bright_count >= 3 && abs(BNO_Z) < 12 && !only_black) {

@@ -43,7 +43,10 @@ void setup() {
   pinMode(2, OUTPUT);
   pinMode(5, OUTPUT);
   pinMode(4, OUTPUT);
+  
   analogWrite(2, 50);
+
+  //buzzer pin 
 
   restart = false;
   PI_SERIAL.begin(115200);
@@ -68,8 +71,8 @@ void setup() {
 #ifndef NO_LIMIT
   pinMode(FRONT_RIGHT, INPUT_PULLUP);
   pinMode(FRONT_LEFT, INPUT_PULLUP);
-  pinMode(BACK_RIGHT, INPUT_PULLUP);
-  pinMode(BACK_LEFT, INPUT_PULLUP);
+  // pinMode(BACK_RIGHT, INPUT_PULLUP);
+  // pinMode(BACK_LEFT, INPUT_PULLUP);
 
   if (digitalRead(FRONT_LEFT)) {
     Serial.println("front left limit disconnected");
@@ -81,17 +84,17 @@ void setup() {
     oled_println("front right disconnect");
   }
 
-  if (digitalRead(BACK_LEFT)) {
-    Serial.println("back left limit disconnected");
-    oled_println("back left disconnect");
-  }
+  // if (digitalRead(BACK_LEFT)) {
+  //   Serial.println("back left limit disconnected");
+  //   oled_println("back left disconnect");
+  // }
 
-  if (digitalRead(BACK_RIGHT)) {
-    Serial.println("back right limit disconnected");
-    oled_println("back right disconnect");
-  }
+  // if (digitalRead(BACK_RIGHT)) {
+  //   Serial.println("back right limit disconnected");
+  //   oled_println("back right disconnect");
+  // }
 
-  if (!(digitalRead(FRONT_LEFT) || digitalRead(FRONT_RIGHT) || digitalRead(BACK_LEFT) || digitalRead(BACK_RIGHT))) {
+  if (!(digitalRead(FRONT_LEFT) || digitalRead(FRONT_RIGHT) )/*|| digitalRead(BACK_LEFT) || digitalRead(BACK_RIGHT))*/) {
     Serial.println("limit init successful");
     oled_println("limit init!");
   }
@@ -146,11 +149,16 @@ void setup() {
 
   Serial.println("TOF INIT SUCCEED!");
   oled_println("Startup Done!");
+
+  pinMode(3, OUTPUT); 
+  analogWrite(3, 255);
+
   delay(1000);
   oled_clear();
 
   analogWrite(2, 0);
   // delay(500);
+
 }
 
 void pi_read_data() {
@@ -362,9 +370,9 @@ void loop() {
 #ifndef NO_PI
 #ifndef ALIGN_ANGLE
 
-  //  drive(100 * CM_TO_ENCODERS, 110);
-  //  delay(1000);
-  returnColor();
+//  drive(100 * CM_TO_ENCODERS, 110);
+//  delay(1000);
+// returnColor();
 
 // int clear_oled_counter = 0;
 
