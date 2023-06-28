@@ -733,10 +733,10 @@ namespace driver
 		//failed = true when failed
 		if(failed || black_tile)
 		{
-			floor_num = org_floor;
 			bot->map = bot->floors[org_floor];
 			bot->map[org_index].bot = true;
-			bot->map[bot->index].bot = false;
+			bot->floors[floor_num][bot->index].bot = false;
+			floor_num = org_floor;
 			if(black_tile)
 			{
 				bot->map[bot->index].N = true;
