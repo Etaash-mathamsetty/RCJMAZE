@@ -404,6 +404,8 @@ void loop() {
 // Serial.println(motorR.getTicks());
 // right(90, SPEED);
 // delay(500);
+raw_left(15, SPEED, true);
+delay(250);
 
 // UPDATE_BNO();
 // Serial.println(BNO_Z);

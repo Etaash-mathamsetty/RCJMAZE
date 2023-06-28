@@ -27,6 +27,15 @@ void pi_send_forward_status(bool forward, bool black_tile, bool failed = false) 
   PI_SERIAL.println((double)failed);
 }
 
+void pi_send_ramp(float ramp_type, float length, float height) {
+  pi_send_tag("ramp");
+  PI_SERIAL.print(ramp_type);
+  PI_SERIAL.print(",");
+  PI_SERIAL.print(length);
+  PI_SERIAL.print(",");
+  PI_SERIAL.println(height);
+}
+
 void pi_send_walls(bool walls[4]) {
   pi_send_tag("W");
   PI_SERIAL.print(walls[math::wrapAround((int)n - (int)cur_direction, 4)]);

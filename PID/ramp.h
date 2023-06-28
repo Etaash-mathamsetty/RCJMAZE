@@ -40,14 +40,14 @@ bool handle_up_ramp(double start_pitch, int32_t end_encoders) {
   // bool* arr = get_tof_vals(wall_tresh);
 
   // n e s w
-  if ((tofCalibrated(1) >= wall_tresh || tofCalibrated(0) >= wall_tresh) && (tofCalibrated(2) >= wall_tresh || tofCalibrated(3) >= wall_tresh)) {
+  if ((tofCalibrated(1) >= wall_tresh || tofCalibrated(0) >= wall_tresh) || (tofCalibrated(2) >= wall_tresh || tofCalibrated(3) >= wall_tresh)) {
     // stopMotors();
     // oled.clearDisplay();
     // oled.setCursor(0, 0);
     // oled_println("no walls either side");
     // delay(5000);
-    motorR.getTicks() = old_ticks - ticks - 4 * CM_TO_ENCODERS;
-    motorL.getTicks() = -old_ticks - ticks + 4 * CM_TO_ENCODERS;
+    motorR.getTicks() = old_ticks + ticks + 4 * CM_TO_ENCODERS;
+    motorL.getTicks() = old_ticks + ticks + 4 * CM_TO_ENCODERS;
     return false;
   }
 
@@ -61,8 +61,8 @@ bool handle_up_ramp(double start_pitch, int32_t end_encoders) {
     // }
     // back_up = motorR.getTicks();
 
-    motorR.getTicks() = old_ticks - ticks - 4 * CM_TO_ENCODERS;
-    motorL.getTicks() = -old_ticks - ticks + 4 * CM_TO_ENCODERS;
+    motorR.getTicks() = old_ticks + ticks + 4 * CM_TO_ENCODERS;
+    motorL.getTicks() = old_ticks + ticks + 4 * CM_TO_ENCODERS;
 
     // stopMotors();
     // oled.clearDisplay();
@@ -74,7 +74,7 @@ bool handle_up_ramp(double start_pitch, int32_t end_encoders) {
     double old_x = motorR.getTicks();
     const float wall_kp = 0.10f;
 
-    while (BNO_Z - start_pitch <= -5.5 && tofCalibrated(4) >= 90) {
+    while (BNO_Z - start_pitch <= -6.5 && tofCalibrated(4) >= 90 && !digitalRead(FRONT_LEFT) && !digitalRead(FRONT_RIGHT)) {
       UPDATE_BNO();
       double reading;
 
@@ -115,6 +115,7 @@ bool handle_up_ramp(double start_pitch, int32_t end_encoders) {
       }
 
       forward(120.0 + bno_error + err, 120.0 - bno_error - err);
+      UPDATE_BNO();
 
       // calculate distance on a ramp
       double delta_x = abs(motorR.getTicks()) - abs(old_x);
@@ -122,10 +123,12 @@ bool handle_up_ramp(double start_pitch, int32_t end_encoders) {
       height += delta_x * sin(delta_theta * (PI / 180.0));
       distance += delta_x * cos(delta_theta * (PI / 180.0));
       old_x = motorR.getTicks();
+      Serial.print("Rampe distance: ");
+      Serial.println(distance);
     }
 
 
-    if ((distance / (30.0 * CM_TO_ENCODERS)) - 0.4 <= 0.65) {
+    if ((distance / (30.0 * CM_TO_ENCODERS)) - 0.25 <= 0.65) {
       motorR.getTicks() = - old_ticks - ticks - 4 * CM_TO_ENCODERS;
       motorL.resetTicks();
 
@@ -135,13 +138,14 @@ bool handle_up_ramp(double start_pitch, int32_t end_encoders) {
       // }
       oled_clear();
       oled_print("Fake Ramp: ");
-      oled_println((distance / (30.0 * CM_TO_ENCODERS)) - 0.4);
+      oled_println((distance / (30.0 * CM_TO_ENCODERS)) - 0.25);
       oled_print("Distance: ");
       oled_println(distance);
       oled_print("Height: ");
       oled_println(height);
       stopMotors();
       delay(5000);
+      pi_send_ramp(0.0, 0.0, 0.0);
       return true;
     }
 
@@ -170,14 +174,10 @@ bool handle_up_ramp(double start_pitch, int32_t end_encoders) {
     alignAngle(true);
     oled_clear();
     oled_print("Ramps: ");
-    oled_println((distance / (30.0 * CM_TO_ENCODERS)) - 0.4);
+    oled_println((distance / (30.0 * CM_TO_ENCODERS)) - 0.25);
     oled_print(height / (30.0 * CM_TO_ENCODERS));
     delay(5000);
-    pi_send_tag("ramp");
-    PI_SERIAL.print(1.0);
-    PI_SERIAL.print(",");
-    PI_SERIAL.print(round((distance / (30.0 * CM_TO_ENCODERS)) - 0.4));
-    PI_SERIAL.print(",");
+    pi_send_ramp(1.0, ((distance / (30.0 * CM_TO_ENCODERS)) - 0.25), (height / (30.0 * CM_TO_ENCODERS)));
     height = round(height / (30.0 * CM_TO_ENCODERS));
     if (height == 0) {
       height = 1;
@@ -210,14 +210,14 @@ bool handle_down_ramp(double start_pitch, double end_encoders) {
   // bool walls[4] = { arr[4], arr[2] || arr[3], arr[5], arr[0] || arr[1] };
 
 
-  if ((tofCalibrated(1) >= wall_tresh || tofCalibrated(0) >= wall_tresh) && (tofCalibrated(2) >= wall_tresh || tofCalibrated(3) >= wall_tresh)) {
+  if ((tofCalibrated(1) >= wall_tresh || tofCalibrated(0) >= wall_tresh) || (tofCalibrated(2) >= wall_tresh || tofCalibrated(3) >= wall_tresh)) {
     // stopMotors();
     // oled.clearDisplay();
     // oled.setCursor(0, 0);
     // oled_println("no walls either side");
     // delay(5000);
-    motorR.getTicks() = old_ticks - ticks - 4 * CM_TO_ENCODERS;
-    motorL.getTicks() = -old_ticks - ticks + 4 * CM_TO_ENCODERS;
+    motorR.getTicks() = old_ticks + ticks + 4 * CM_TO_ENCODERS;
+    motorL.getTicks() = old_ticks + ticks + 4 * CM_TO_ENCODERS;
     return false;
   }
 
@@ -230,8 +230,8 @@ bool handle_down_ramp(double start_pitch, double end_encoders) {
     // oled_println("not enough pitch");
     // delay(5000);
 
-    motorR.getTicks() = old_ticks - ticks - 4 * CM_TO_ENCODERS;
-    motorL.getTicks() = -old_ticks - ticks + 4 * CM_TO_ENCODERS;
+    motorR.getTicks() = old_ticks + ticks + 4 * CM_TO_ENCODERS;
+    motorL.getTicks() = old_ticks + ticks + 4 * CM_TO_ENCODERS;
     return false;
   } else {
     double old_x = motorR.getTicks();
@@ -257,25 +257,28 @@ bool handle_down_ramp(double start_pitch, double end_encoders) {
       else if (right <= wall_tresh)
         err = (right - 75) * wall_kp;
 
-      if (digitalRead(FRONT_RIGHT) == HIGH && digitalRead(FRONT_LEFT) == LOW && abs(BNO_Z) < 4) {
+      if (digitalRead(FRONT_RIGHT) && !digitalRead(FRONT_LEFT)&& abs(BNO_Z) < 4) {
         raw_left(15, SPEED * 0.75, true);
-      } else if (digitalRead(FRONT_LEFT) == HIGH && digitalRead(FRONT_RIGHT) == LOW && abs(BNO_Z) < 4) {
+      } else if (digitalRead(FRONT_LEFT) && !digitalRead(FRONT_RIGHT) && abs(BNO_Z) < 4) {
         raw_right(15, SPEED * 0.75, true);
       }
 
       forward(120.0 + bno_error + err, 120.0 - bno_error - err);
 
       // calculate distance on a ramp
+      UPDATE_BNO();
       double delta_x = abs(motorR.getTicks()) - abs(old_x);
       double delta_theta = abs(BNO_Z - start_pitch);
       distance += delta_x * cos(delta_theta * (PI / 180.0));
       height += delta_x * sin(delta_theta * (PI / 180.0));
       old_x = motorR.getTicks();
+      Serial.print("Ramp length: ");
+      Serial.println(distance);
     }
 
     // forwardTicks(SPEED, 7 * CM_TO_ENCODERS);
 
-    if ((distance / (30.0 * CM_TO_ENCODERS)) <= 0.65) {
+    if ((distance / (30.0 * CM_TO_ENCODERS)) <= 0.25 && (height / (30.0 * CM_TO_ENCODERS)) < 0.2) {
       motorR.getTicks() = old_ticks - ticks - 4 * CM_TO_ENCODERS;
       // motorL.resetTicks();
 
@@ -293,6 +296,7 @@ bool handle_down_ramp(double start_pitch, double end_encoders) {
       oled_println(height);
       stopMotors();
       delay(5000);
+      pi_send_ramp(0.0, 0.0, 0.0);
 
       return true;
     }
@@ -322,11 +326,7 @@ bool handle_down_ramp(double start_pitch, double end_encoders) {
     oled_println((distance / (30.0 * CM_TO_ENCODERS)));
     oled_print(height / (30.0 * CM_TO_ENCODERS));
     delay(5000);
-    pi_send_tag("ramp");
-    PI_SERIAL.print(10.0);
-    PI_SERIAL.print(",");
-    PI_SERIAL.print(round((distance / (30.0 * CM_TO_ENCODERS))));
-    PI_SERIAL.print(",");
+    pi_send_ramp(10.0, (distance / (30.0 * CM_TO_ENCODERS)), (height / (30.0 * CM_TO_ENCODERS)));
     height = round(height / (30.0 * CM_TO_ENCODERS));
     if (height == 0) {
       height = 1;

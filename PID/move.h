@@ -27,7 +27,7 @@ void drive(int32_t encoders, int speed) {
   // encoders = orig_encoders / cos(-orientationData.orientation.z * (2 * PI / 360));
 
 
-  while ((abs(motorR.getTicks()) < abs(encoders) && abs(motorL.getTicks()) < abs(encoders) && (tofCalibrated(4) >= 90)) || ramp_detect || down_ramp_detect) {
+  while ((abs(motorR.getTicks()) < abs(encoders) && abs(motorL.getTicks()) < abs(encoders) && (tofCalibrated(4) >= 90)) && !digitalRead(FRONT_LEFT) && !digitalRead(FRONT_RIGHT) || ramp_detect || down_ramp_detect) {
     UPDATE_BNO();
 
     if ((BNO_Z - start_pitch < -5.5 /* || BNO_Z < -5.5 */) && !down_ramp_detect) {
@@ -54,7 +54,7 @@ void drive(int32_t encoders, int speed) {
     if (digitalRead(FRONT_RIGHT) == HIGH && abs(BNO_Z) < 4) {
       ticks_before = abs(motorR.getTicks());
       int dist = left_obstacle();
-      motorR.setTicks(-(ticks_before - dist));
+      motorR.setTicks(ticks_before - dist);
       // encoders *= 1.0 / cos(15.0 * (PI/180));
       UPDATE_BNO();
       new_angle = BNO_X;
@@ -66,7 +66,7 @@ void drive(int32_t encoders, int speed) {
     if (digitalRead(FRONT_LEFT) == HIGH && abs(BNO_Z) < 4) {
       ticks_before = abs(motorR.getTicks());
       int dist = right_obstacle();
-      motorR.setTicks(-(ticks_before - dist));
+      motorR.setTicks(ticks_before - dist);
       UPDATE_BNO();
       new_angle = BNO_X;
       // encoders *= 1.0 / cos(15.0 * (PI/180));
@@ -110,6 +110,7 @@ void drive(int32_t encoders, int speed) {
 
     if (abs(BNO_Z) < 5) {
       while (PI_SERIAL.available()) {
+        tstart = millis();
         auto right_ticks = motorR.getTicks();
         auto left_ticks = motorL.getTicks();
         stopMotors();
@@ -213,7 +214,7 @@ void driveCM(float cm, int speed = 200, int tolerance = 10) {
   UPDATE_BNO();
 
   bool optimal_alignment = horizontalError >= tolerance && abs(orientationData.orientation.z) < 12;
-  if (optimal_alignment && left <= wall_tresh && right <= wall_tresh && abs(left - right) > 25) {
+  if (optimal_alignment && left <= wall_tresh && right <= wall_tresh && abs(left - right) > 35) {
 
     if (left < right) {
 

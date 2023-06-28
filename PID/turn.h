@@ -127,9 +127,9 @@ if (abs(relative_angle) < 1) {
       forward((PID * -speed), (PID * speed));
     } else {
       if (alignment) {
-        addBoost(ALIGN_TURN_BOOST + 70);
+        addBoost(ALIGN_TURN_BOOST + 150);
       } else {
-        addBoost(TURN_BOOST + 70);
+        addBoost(TURN_BOOST + 150);
       }
       forward((PID * -speed), (PID * speed));
     }
@@ -322,9 +322,9 @@ void raw_left(double relative_angle, int speed, bool alignment) {
       forward((PID * speed), (PID * -speed));
     } else {
       if (alignment) {
-        addBoost(ALIGN_TURN_BOOST + 70);
+        addBoost(ALIGN_TURN_BOOST + 150);
       } else {
-        addBoost(TURN_BOOST + 70);
+        addBoost(TURN_BOOST + 150);
       }
       forward((PID * speed), (PID * -speed));
     }
@@ -495,12 +495,12 @@ int left_obstacle() {
   forward_ticks = abs(motorR.getTicks());
 
   stopMotors();
-  delay(100);
+  delay(500);
 
   raw_right(15, SPEED, true);
 
   stopMotors();
-  delay(100);
+  delay(500);
 
   return abs(forward_ticks);
 }
@@ -528,12 +528,12 @@ int right_obstacle() {
   forward_ticks = abs(motorR.getTicks());
 
   stopMotors();
-  delay(100);
+  delay(500);
 
   raw_left(15, SPEED, true);
 
   stopMotors();
-  delay(100);
+  delay(500);
 
   return abs(forward_ticks);
 }
