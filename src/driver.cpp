@@ -541,7 +541,7 @@ namespace driver
 		robot* bot = robot::get_instance();
 		CHECK(bot);
 		CHECK(bot->map);
-		int org_index = bot->index;
+		//int org_index = bot->index;
 
 		bot->map[bot->index].bot = false;
 		bot->index += delta;
