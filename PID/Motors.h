@@ -22,8 +22,12 @@ class Motor{
     if(attachEnc)
       attachEncoder();
     mult = 1;
+    enc_mult[port] = 1;
     if(reverse)
+    {
       mult *= -1;
+      enc_mult[port] *= -1;
+    }
     boost = 0;
 
       //The PWM frequency is 976 Hz
@@ -122,8 +126,8 @@ void addBoost(int speed){
   
 private: 
 #define CREATE_INTERUPT2(x) static void interupt##x(){ \
-  if(dir[x]) ticks[x]++; \
-    else ticks[x]--; \
+  if(dir[x]) ticks[x] += 1 * enc_mult[x]; \
+    else ticks[x] -= 1 * enc_mult[x]; \
   }
 #define CREATE_INTERUPT(x) CREATE_INTERUPT2(x)
   
@@ -139,6 +143,7 @@ private:
   uint8_t boost;
   static inline int32_t ticks[4] = {0};
   static inline bool dir[4] = {true};
+  static inline int enc_mult[4] = {1};
   int mult;
 };
 #endif
