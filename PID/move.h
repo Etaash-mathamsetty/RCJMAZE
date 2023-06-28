@@ -376,6 +376,9 @@ void driveCM(float cm, int speed = 200, int tolerance = 10) {
     }
   }
 
+  pi_send_forward_status(false, !black_tile_detected);
+  black_tile_detected = false;
+
   if (tofCalibrated(4) <= wall_tresh) {
     while (tofCalibrated(4) >= 90) {
       forward(speed * 0.7);
@@ -391,8 +394,4 @@ void driveCM(float cm, int speed = 200, int tolerance = 10) {
 
   //pause for blue if detected
   returnColor();
-
-  //WARN: drive function can no longer be used on it's own (when communicating with stereo pi) !!!!!
-  pi_send_forward_status(false, !black_tile_detected);
-  black_tile_detected = false;
 }
