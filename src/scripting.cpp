@@ -61,6 +61,7 @@ void PythonScript::Exec(std::string file)
 {
     try
     {
+        //works around a weird bug with reading files over and over with python::exec_file
         if(file_data.count(file) == 0)
         {
             std::ifstream t(file);
