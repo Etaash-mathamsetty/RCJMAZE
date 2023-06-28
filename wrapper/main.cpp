@@ -206,6 +206,10 @@ int main(int argc, char **argv)
     while(true)
     {
         run_parent_and_child(path_to_bfs, parent_path);
+
+        //wait until button is pressed again for program to start
+        while(!button_pressed());
+        while(!button_released());
     }
 
     
