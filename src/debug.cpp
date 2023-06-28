@@ -92,48 +92,48 @@ namespace debug
     putchar(cur_node.S ? '-' : ' ');
     puts("+\n");
     
-    std::ofstream out("debug_field.txt");
-    node* nodes = bot->map; 
+    // std::ofstream out("debug_field.txt");
+    // node* nodes = bot->map; 
     
-    for(int i = 0; i < vert_size; i++)
-		{
-            for(int l = 0; l < horz_size; l++)
-			{
-                out << '+';
-                if(nodes[helper::get_index(i,l)].N)
-                    out << '-';
-                else
-                    out << ' ';
-            }
-            out << '\n';
-            for(int l = 0; l < horz_size; l++)
-			{
-                if(nodes[helper::get_index(i,l)].W)
-                    out << '|';
-                else
-                    out << ' ';
-                if(nodes[helper::get_index(i,l)].bot)
-                    out << 'x';
-                if(nodes[helper::get_index(i,l)].vic)
-                    out << 'v';
-                if(nodes[helper::get_index(i,l)].checkpoint)
-                    out << 'c';
-                if(nodes[helper::get_index(i, l)].ramp)
-                    out << 'r';
-                if(!nodes[helper::get_index(i,l)].bot && !nodes[helper::get_index(i,l)].vic && !nodes[helper::get_index(i,l)].checkpoint && !nodes[helper::get_index(i, l)].ramp)
-                    out << ' ';
-            }
-            out << '\n';
-        }
-        for(int l = 0; l < horz_size; l++)
-		{
-            out << '+';
-            if(nodes[helper::get_index(vert_size-1,l)].S)
-                out << '-';
-            else
-                out << ' ';
-        }
-        out << '\n';
+    // for(int i = 0; i < vert_size; i++)
+	// 	{
+    //         for(int l = 0; l < horz_size; l++)
+	// 		{
+    //             out << '+';
+    //             if(nodes[helper::get_index(i,l)].N)
+    //                 out << '-';
+    //             else
+    //                 out << ' ';
+    //         }
+    //         out << '\n';
+    //         for(int l = 0; l < horz_size; l++)
+	// 		{
+    //             if(nodes[helper::get_index(i,l)].W)
+    //                 out << '|';
+    //             else
+    //                 out << ' ';
+    //             if(nodes[helper::get_index(i,l)].bot)
+    //                 out << 'x';
+    //             if(nodes[helper::get_index(i,l)].vic)
+    //                 out << 'v';
+    //             if(nodes[helper::get_index(i,l)].checkpoint)
+    //                 out << 'c';
+    //             if(nodes[helper::get_index(i, l)].ramp)
+    //                 out << 'r';
+    //             if(!nodes[helper::get_index(i,l)].bot && !nodes[helper::get_index(i,l)].vic && !nodes[helper::get_index(i,l)].checkpoint && !nodes[helper::get_index(i, l)].ramp)
+    //                 out << ' ';
+    //         }
+    //         out << '\n';
+    //     }
+    //     for(int l = 0; l < horz_size; l++)
+	// 	{
+    //         out << '+';
+    //         if(nodes[helper::get_index(vert_size-1,l)].S)
+    //             out << '-';
+    //         else
+    //             out << ' ';
+    //     }
+    //     out << '\n';
 #endif
 #endif
     }
