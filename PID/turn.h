@@ -164,6 +164,15 @@ if (abs(relative_angle) < 1) {
 #endif
 #else 
 
+  if (!alignment) {
+    motorL.addBoost(TURN_BOOST);
+    motorR.addBoost(TURN_BOOST);
+  } else {
+    motorL.addBoost(ALIGN_TURN_BOOST);
+    motorR.addBoost(ALIGN_TURN_BOOST);
+    speed = ALIGN_SPEED;
+  }
+
   UPDATE_BNO();
   int32_t new_angle = BNO_X + relative_angle;
   if (new_angle < 0) {
@@ -173,6 +182,8 @@ if (abs(relative_angle) < 1) {
   }
 
   double reading;
+  int32_t tstart = millis();
+  const double BNO_STATIC_KP = 30;
 
   do {
     UPDATE_BNO();
@@ -185,8 +196,13 @@ if (abs(relative_angle) < 1) {
     }
 
     double bno_error = (reading - new_angle) * (BNO_STATIC_KP + abs(reading - new_angle) / 300.0);
+    if ((int32_t) millis() - (int32_t) tstart > 5000) {
+      addBoost(TURN_BOOST + 80);
+    }
     forward(bno_error, -bno_error);
   } while (abs(reading - new_angle) > 1);
+
+  resetBoost();
 
 #endif
 }
@@ -231,9 +247,9 @@ void right(int relative_angle, int speed, bool turn_status = true) {
 
 void raw_left(double relative_angle, int speed, bool alignment) {
 
-if (abs(relative_angle) < 1) {
-  return;
-}
+  if (abs(relative_angle) < 1) {
+    return;
+  }
 
 #ifndef TURN_TEST
 #ifndef MOTORSOFF
@@ -340,6 +356,15 @@ if (abs(relative_angle) < 1) {
 #endif
 #else
 
+  if (!alignment) {
+    motorL.addBoost(TURN_BOOST);
+    motorR.addBoost(TURN_BOOST);
+  } else {
+    motorL.addBoost(ALIGN_TURN_BOOST);
+    motorR.addBoost(ALIGN_TURN_BOOST);
+    speed = ALIGN_SPEED;
+  }
+
   UPDATE_BNO();
   int32_t new_angle = BNO_X - relative_angle;
   if (new_angle < 0) {
@@ -349,6 +374,8 @@ if (abs(relative_angle) < 1) {
   }
 
   double reading;
+  int32_t tstart = millis();
+  const double BNO_STATIC_KP = 30;
 
   do {
     UPDATE_BNO();
@@ -361,9 +388,15 @@ if (abs(relative_angle) < 1) {
     }
 
     double bno_error = (reading - new_angle) * (BNO_STATIC_KP + abs(reading - new_angle) / 300.0);
+
+    if ((int32_t) millis() - (int32_t) tstart > 5000) {
+      addBoost(TURN_BOOST + 80);
+    }
+
     forward(bno_error, -bno_error);
   } while (abs(reading - new_angle) > 1);
 
+  resetBoost();
 
 #endif
 }
@@ -464,7 +497,7 @@ int left_obstacle() {
   stopMotors();
   delay(100);
 
-  raw_right(10, SPEED, true);
+  raw_right(15, SPEED, true);
 
   stopMotors();
   delay(100);
@@ -497,7 +530,7 @@ int right_obstacle() {
   stopMotors();
   delay(100);
 
-  raw_left(10, SPEED, true);
+  raw_left(15, SPEED, true);
 
   stopMotors();
   delay(100);
