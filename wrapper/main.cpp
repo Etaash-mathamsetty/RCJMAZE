@@ -45,6 +45,8 @@ bool button_released()
     return true;
 }
 
+bool printed = false;
+
 bool has_child_exited(pid_t pid)
 {
     int status = 0;
@@ -52,7 +54,9 @@ bool has_child_exited(pid_t pid)
     if(ret == -1)
     {
         //can happen when program SEGV
-        //std::cerr << "error with waitpid" << std::endl;
+        if(!printed)
+            std::cerr << "error with waitpid (probably SEGV on child)" << std::endl;
+        printed = true;
         return false;
     }
     if(ret == 0)
@@ -206,6 +210,8 @@ int main(int argc, char **argv)
     while(true)
     {
         run_parent_and_child(path_to_bfs, parent_path);
+
+        printed = false;
 
         //wait until button is pressed again for program to start
         while(!button_pressed());
