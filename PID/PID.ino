@@ -8,6 +8,7 @@
 // #define NO_LIMIT
 // #define NO_PID
 // #define TCS
+#define TURN_TEST
 #define AMS
 
 //define: debug display, motorsoff, test, comment out all others if you want to calibrate tofs

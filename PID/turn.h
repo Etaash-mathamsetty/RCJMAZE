@@ -49,10 +49,11 @@ void backup_align(int speed, int time) {
 
 void raw_right(double relative_angle, int speed, bool alignment) {
 
-  if (abs(relative_angle) < 1) {
-    return;
-  }
+if (abs(relative_angle) < 1) {
+  return;
+}
 
+#ifndef TURN_TEST
 #ifndef MOTORSOFF
   if (alignment) {
     motorL.addBoost(ALIGN_TURN_BOOST);
@@ -161,6 +162,33 @@ void raw_right(double relative_angle, int speed, bool alignment) {
   resetBoost();
   stopMotors();
 #endif
+#else 
+
+  UPDATE_BNO();
+  int32_t new_angle = BNO_X + relative_angle;
+  if (new_angle < 0) {
+    new_angle += 360;
+  } else if (new_angle >= 360) {
+    new_angle -= 360;
+  }
+
+  double reading;
+
+  do {
+    UPDATE_BNO();
+    if (BNO_X - new_angle > 180) {
+      reading = BNO_X - 360;
+    } else if (BNO_X - new_angle < -180) {
+      reading = BNO_X + 360;
+    } else {
+      reading = BNO_X;
+    }
+
+    double bno_error = (reading - new_angle) * (BNO_STATIC_KP + abs(reading - new_angle) / 300.0);
+    forward(bno_error, -bno_error);
+  } while (abs(reading - new_angle) > 1);
+
+#endif
 }
 
 void right(int relative_angle, int speed, bool turn_status = true) {
@@ -202,11 +230,13 @@ void right(int relative_angle, int speed, bool turn_status = true) {
 }
 
 void raw_left(double relative_angle, int speed, bool alignment) {
-#ifndef MOTORSOFF
 
-  if (abs(relative_angle) < 1) {
-    return;
-  }
+if (abs(relative_angle) < 1) {
+  return;
+}
+
+#ifndef TURN_TEST
+#ifndef MOTORSOFF
 
   if (!alignment) {
     motorL.addBoost(TURN_BOOST);
@@ -225,6 +255,7 @@ void raw_left(double relative_angle, int speed, bool alignment) {
   if (orientationData.orientation.x - relative_angle < 0) {
     cross_over = true;
   }
+
 
   const double initial_angle = orientationData.orientation.x;
   double orientation = cross_over ? orientationData.orientation.x + relative_angle : orientationData.orientation.x;
@@ -306,6 +337,34 @@ void raw_left(double relative_angle, int speed, bool alignment) {
   }
   resetBoost();
   stopMotors();
+#endif
+#else
+
+  UPDATE_BNO();
+  int32_t new_angle = BNO_X - relative_angle;
+  if (new_angle < 0) {
+    new_angle += 360;
+  } else if (new_angle >= 360) {
+    new_angle -= 360;
+  }
+
+  double reading;
+
+  do {
+    UPDATE_BNO();
+    if (BNO_X - new_angle > 180) {
+      reading = BNO_X - 360;
+    } else if (BNO_X - new_angle < -180) {
+      reading = BNO_X + 360;
+    } else {
+      reading = BNO_X;
+    }
+
+    double bno_error = (reading - new_angle) * (BNO_STATIC_KP + abs(reading - new_angle) / 300.0);
+    forward(bno_error, -bno_error);
+  } while (abs(reading - new_angle) > 1);
+
+
 #endif
 }
 
@@ -405,7 +464,7 @@ int left_obstacle() {
   stopMotors();
   delay(100);
 
-  raw_right(10, SPEED * 0.7, true);
+  raw_right(10, SPEED, true);
 
   stopMotors();
   delay(100);
@@ -438,7 +497,7 @@ int right_obstacle() {
   stopMotors();
   delay(100);
 
-  raw_left(10, SPEED * 0.7, true);
+  raw_left(10, SPEED, true);
 
   stopMotors();
   delay(100);
