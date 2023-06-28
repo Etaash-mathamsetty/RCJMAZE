@@ -556,6 +556,8 @@ namespace driver
 			set_ramp_wall();
 			bot->map[bot->index].bot = false;
             bot->map[bot->index].ramp = 0b01;
+			bot->map[bot->index].vis = true;
+
 			floor_num += ramp_height;
 			bot->map = bot->floors[floor_num];
 
@@ -578,6 +580,8 @@ namespace driver
 			set_ramp_wall();
 			bot->map[bot->index].bot = false;
             bot->map[bot->index].ramp = 0b10;
+			bot->map[bot->index].vis = true;
+
 			floor_num -= ramp_height;
 			bot->map = bot->floors[floor_num];
 
