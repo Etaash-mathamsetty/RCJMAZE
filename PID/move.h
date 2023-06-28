@@ -210,7 +210,7 @@ void driveCM(float cm, int speed = 200, int tolerance = 10) {
 
   //angle = max(angle, 90 - 30);
   oled_println(angle * mult_factor);
-  bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
+  UPDATE_BNO();
 
   bool optimal_alignment = horizontalError >= tolerance && abs(orientationData.orientation.z) < 12;
   if (optimal_alignment && left <= wall_tresh && right <= wall_tresh && abs(left - right) > 25) {
