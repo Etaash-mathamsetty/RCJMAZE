@@ -641,7 +641,7 @@ namespace driver
 		{ 
 			PythonScript::Exec(ser_py_file);
 			PythonScript::Exec(cv_py_file);
-			if(!bot->map[bot->index].vic)
+			if(!bot->map[bot->index].vic && !bot->map[bot->index].checkpoint)
 			{
 				for(int i = 0; i < 2; i++)
 				{
