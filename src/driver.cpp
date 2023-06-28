@@ -545,7 +545,7 @@ namespace driver
 
 		bot->map[bot->index].bot = false;
 		bot->index += delta;
-		if(!down_ramp && !up_ramp && bot->map[org_index].vic && victim)
+		if(victim)
 		{
 			bot->map[bot->index].vic = true;
 		}
