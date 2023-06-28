@@ -388,13 +388,13 @@ namespace driver
 		std::cout << "saving state" << std::endl;
 		//out << helper::dir_to_char(bot->dir) << std::endl;
 		for(int l = 0; l < max_num_floors; l++)
-		for(int i = 0; i < horz_size * vert_size; i++)
-		{
-			node n = bot->floors[l][i];
-			out << n.N << " " << n.E << " " << n.S << " " << n.W << " ";
-			out << n.vic << " " << n.bot << " " << n.vis << " " << n.ramp << " ";
-			out << n.checkpoint << std::endl;
-		}
+			for(int i = 0; i < horz_size * vert_size; i++)
+			{
+				node n = bot->floors[l][i];
+				out << n.N << " " << n.E << " " << n.S << " " << n.W << " ";
+				out << n.vic << " " << n.bot << " " << n.vis << " " << n.ramp << " ";
+				out << n.checkpoint << std::endl;
+			}
 	}
 
 	CREATE_DRIVER(void, load_state)
@@ -808,6 +808,10 @@ namespace driver
 	{
 		robot* bot = robot::get_instance();
 		CHECK(bot);
+		if(bot->dir == dir)
+		{
+			return;
+		}
 		bot->dir = dir;
 		std::string turn_cmd = "";
 		turn_cmd += com::turn;
