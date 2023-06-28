@@ -773,10 +773,12 @@ namespace driver
 			else
 			{
 				std::cout << "drive::forward: WARN: Failed to move forward, returning false" << std::endl;
+				bot->map[bot->index].bot = false;
 				bot->index = org_index;
 				floor_num = org_floor;
 				bot->map = bot->floors[org_floor];
 				bot->map[bot->index].vis = false;
+				bot->map[bot->index].bot = true;
 				get_sensor_data();
 			}
 
