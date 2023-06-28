@@ -2,7 +2,7 @@
 //#define FAKE_SERIAL
 #define DEBUG_DISPLAY
 // #define MOTORSOFF
-// #define TEST
+#define TEST
 // #define ALIGN_ANGLE
 // #define NO_PI //basic auto when no raspberry pi (brain stem mode)
 // #define NO_LIMIT
@@ -404,8 +404,9 @@ void loop() {
 // Serial.println(motorR.getTicks());
 // right(90, SPEED);
 // delay(500);
-raw_left(15, SPEED, true);
-delay(250);
+Serial.println(tofCalibrated(6));
+// raw_left(15, SPEED, true);
+// delay(250);
 
 // UPDATE_BNO();
 // Serial.println(BNO_Z);

@@ -27,7 +27,7 @@ void drive(int32_t encoders, int speed) {
   // encoders = orig_encoders / cos(-orientationData.orientation.z * (2 * PI / 360));
 
 
-  while ((abs(motorR.getTicks()) < abs(encoders) && abs(motorL.getTicks()) < abs(encoders) && (tofCalibrated(4) >= 90)) && !digitalRead(FRONT_LEFT) && !digitalRead(FRONT_RIGHT) || ramp_detect || down_ramp_detect) {
+  while ((abs(motorR.getTicks()) < abs(encoders) && abs(motorL.getTicks()) < abs(encoders) && (tofCalibrated(4) >= 90)) || ramp_detect || down_ramp_detect) {
     UPDATE_BNO();
 
     if ((BNO_Z - start_pitch < -5.5 /* || BNO_Z < -5.5 */) && !down_ramp_detect) {
@@ -39,23 +39,23 @@ void drive(int32_t encoders, int speed) {
         return;
     }
 
-    if ((BNO_Z - start_pitch > 5.5 /* || BNO_Z > 5.5 */) && !ramp_detect) {
-      // stopMotors();
-      oled_println("down ramp detect!!");
-      bool res = handle_down_ramp(start_pitch, encoders);
-      down_ramp_detect = res;
-      tstart = millis();
+    // if ((BNO_Z - start_pitch > 5.5 /* || BNO_Z > 5.5 */) && !ramp_detect) {
+    //   // stopMotors();
+    //   oled_println("down ramp detect!!");
+    //   bool res = handle_down_ramp(start_pitch, encoders);
+    //   down_ramp_detect = res;
+    //   tstart = millis();
 
-      if (res)
-        return;
-    }
+    //   if (res)
+    //     return;
+    // }
 
 #ifndef NO_LIMIT
     if (digitalRead(FRONT_RIGHT) == HIGH && abs(BNO_Z) < 4) {
       ticks_before = abs(motorR.getTicks());
       int dist = left_obstacle();
       motorR.setTicks(ticks_before - dist);
-      // encoders *= 1.0 / cos(15.0 * (PI/180));
+      // encoders *= 1.0 / cos(10.0 * (PI/180.0));
       UPDATE_BNO();
       new_angle = BNO_X;
       tstart = millis();
@@ -69,7 +69,7 @@ void drive(int32_t encoders, int speed) {
       motorR.setTicks(ticks_before - dist);
       UPDATE_BNO();
       new_angle = BNO_X;
-      // encoders *= 1.0 / cos(15.0 * (PI/180));
+      // encoders *= 1.0 / cos(10.0 * (PI/180.0));
       tstart = millis();
       limit_detected = true;
       Serial.println("obstacle is done");
@@ -214,7 +214,7 @@ void driveCM(float cm, int speed = 200, int tolerance = 10) {
   UPDATE_BNO();
 
   bool optimal_alignment = horizontalError >= tolerance && abs(orientationData.orientation.z) < 12;
-  if (optimal_alignment && left <= wall_tresh && right <= wall_tresh && abs(left - right) > 35) {
+  if (optimal_alignment && left <= wall_tresh && right <= wall_tresh && abs(left - right) > 25) {
 
     if (left < right) {
 
@@ -270,7 +270,8 @@ void driveCM(float cm, int speed = 200, int tolerance = 10) {
       // bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
       // raw_right(360-orientationData.orientation.x, SPEED);
     }
-  } else if (optimal_alignment && left <= wall_tresh && right >= wall_tresh && abs(left - target_dist_from_wall) > 30.0) {
+  } else if (optimal_alignment && tofCalibrated(0) <= wall_tresh && tofCalibrated(1) <= wall_tresh && 
+            right >= wall_tresh && abs(left - target_dist_from_wall) > 30.0) {
     oled_println("single left wall");
 
     double angle = 90.0;
@@ -313,7 +314,8 @@ void driveCM(float cm, int speed = 200, int tolerance = 10) {
       raw_left(90.0 - angle, SPEED, true);
     }
 
-  } else if (optimal_alignment && left >= wall_tresh && right <= wall_tresh && abs(right - target_dist_from_wall) > 30.0) {
+  } else if (optimal_alignment && left >= wall_tresh && tofCalibrated(2) <= wall_tresh
+            && tofCalibrated(3) <= wall_tresh && abs(right - target_dist_from_wall) > 30.0) {
     oled_println("single right wall");
     oled_print("Angle: ");
 

@@ -72,9 +72,9 @@ bool handle_up_ramp(double start_pitch, int32_t end_encoders) {
     return false;
   } else {
     double old_x = motorR.getTicks();
-    const float wall_kp = 0.10f;
+    const float wall_kp = 0.40f;
 
-    while (BNO_Z - start_pitch <= -6.5 && tofCalibrated(4) >= 90 && !digitalRead(FRONT_LEFT) && !digitalRead(FRONT_RIGHT)) {
+    while (BNO_Z - start_pitch <= -6.5 && tofCalibrated(4) >= 90) {
       UPDATE_BNO();
       double reading;
 
@@ -108,21 +108,21 @@ bool handle_up_ramp(double start_pitch, int32_t end_encoders) {
       else if (right <= wall_tresh)
         err = (right - 75) * wall_kp;
 
-      if (digitalRead(FRONT_RIGHT) == HIGH && digitalRead(FRONT_LEFT) == LOW && abs(BNO_Z) < 4) {
-        raw_left(15, SPEED * 0.75, true);
-      } else if (digitalRead(FRONT_LEFT) == HIGH && digitalRead(FRONT_RIGHT) == LOW && abs(BNO_Z) < 4) {
-        raw_right(15, SPEED * 0.75, true);
-      }
+      // if (digitalRead(FRONT_RIGHT) == HIGH && digitalRead(FRONT_LEFT) == LOW && abs(BNO_Z) < 4) {
+      //   raw_left(15, SPEED * 0.75, true);
+      // } else if (digitalRead(FRONT_LEFT) == HIGH && digitalRead(FRONT_RIGHT) == LOW && abs(BNO_Z) < 4) {
+      //   raw_right(15, SPEED * 0.75, true);
+      // }
 
       forward(120.0 + bno_error + err, 120.0 - bno_error - err);
       UPDATE_BNO();
 
       // calculate distance on a ramp
       double delta_x = abs(motorR.getTicks()) - abs(old_x);
+      old_x = motorR.getTicks();
       double delta_theta = abs(BNO_Z - start_pitch);
       height += delta_x * sin(delta_theta * (PI / 180.0));
       distance += delta_x * cos(delta_theta * (PI / 180.0));
-      old_x = motorR.getTicks();
       Serial.print("Rampe distance: ");
       Serial.println(distance);
     }
@@ -199,8 +199,15 @@ bool handle_down_ramp(double start_pitch, double end_encoders) {
   double new_angle = closestToDirection(BNO_X);
 
   motorR.resetTicks();
+  double max_angle = 0;
   while (abs(motorR.getTicks()) < abs(ticks)) {
-    forward(SPEED + 50);
+    UPDATE_BNO();
+    double delta_angle = abs(BNO_Z - start_pitch);
+    if(delta_angle > max_angle)
+    {
+      max_angle = delta_angle * 1.7;
+    }
+    forward(70 + max_angle);
   }
   UPDATE_BNO();
 
@@ -221,6 +228,8 @@ bool handle_down_ramp(double start_pitch, double end_encoders) {
     return false;
   }
 
+  max_angle = 0;
+
   if (abs(BNO_Z - start_pitch) <= 3 || BNO_Z - start_pitch < -3) {
     //not a ramp
 
@@ -235,7 +244,7 @@ bool handle_down_ramp(double start_pitch, double end_encoders) {
     return false;
   } else {
     double old_x = motorR.getTicks();
-    const float wall_kp = 0.15f;
+    const float wall_kp = 0.4f;
     const double BNO_KP = 5;
     while (BNO_Z - start_pitch >= 4 && tofCalibrated(4) >= 90) {
       UPDATE_BNO();
@@ -257,21 +266,26 @@ bool handle_down_ramp(double start_pitch, double end_encoders) {
       else if (right <= wall_tresh)
         err = (right - 75) * wall_kp;
 
-      if (digitalRead(FRONT_RIGHT) && !digitalRead(FRONT_LEFT)&& abs(BNO_Z) < 4) {
-        raw_left(15, SPEED * 0.75, true);
-      } else if (digitalRead(FRONT_LEFT) && !digitalRead(FRONT_RIGHT) && abs(BNO_Z) < 4) {
-        raw_right(15, SPEED * 0.75, true);
-      }
+      // if (digitalRead(FRONT_RIGHT) && !digitalRead(FRONT_LEFT)&& abs(BNO_Z) < 4) {
+      //   raw_left(15, SPEED * 0.75, true);
+      // } else if (digitalRead(FRONT_LEFT) && !digitalRead(FRONT_RIGHT) && abs(BNO_Z) < 4) {
+      //   raw_right(15, SPEED * 0.75, true);
+      // }
 
-      forward(120.0 + bno_error + err, 120.0 - bno_error - err);
 
       // calculate distance on a ramp
       UPDATE_BNO();
-      double delta_x = abs(motorR.getTicks()) - abs(old_x);
       double delta_theta = abs(BNO_Z - start_pitch);
+
+      if(delta_theta > max_angle)
+        max_angle = delta_theta * 1.7;
+
+      forward(70.0 + bno_error + err + max_angle, 70.0 - bno_error - err + max_angle);
+
+      double delta_x = abs(motorR.getTicks()) - abs(old_x);
+      old_x = motorR.getTicks();
       distance += delta_x * cos(delta_theta * (PI / 180.0));
       height += delta_x * sin(delta_theta * (PI / 180.0));
-      old_x = motorR.getTicks();
       Serial.print("Ramp length: ");
       Serial.println(distance);
     }
