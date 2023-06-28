@@ -376,7 +376,6 @@ void driveCM(float cm, int speed = 200, int tolerance = 10) {
     }
   }
 
-
   if (tofCalibrated(4) <= wall_tresh) {
     while (tofCalibrated(4) >= 90) {
       forward(speed * 0.7);

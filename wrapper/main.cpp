@@ -210,6 +210,9 @@ int main(int argc, char **argv)
         //wait until button is pressed again for program to start
         while(!button_pressed());
         while(!button_released());
+
+        send_restart_command();
+        sleep(5);
     }
 
     
