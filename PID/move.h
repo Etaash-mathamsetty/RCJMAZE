@@ -392,6 +392,6 @@ void driveCM(float cm, int speed = 200, int tolerance = 10) {
     alignAngle(true, 10, start_yaw);
   }
 
-  //pause for blue if detected
-  returnColor();
+  //pause for blue if detected (no longer needed)
+  //returnColor();
 }
