@@ -376,8 +376,6 @@ void driveCM(float cm, int speed = 200, int tolerance = 10) {
     }
   }
 
-  pi_send_forward_status(false, !black_tile_detected);
-  black_tile_detected = false;
 
   if (tofCalibrated(4) <= wall_tresh) {
     while (tofCalibrated(4) >= 90) {
@@ -385,6 +383,9 @@ void driveCM(float cm, int speed = 200, int tolerance = 10) {
     }
     stopMotors();
   }
+
+  pi_send_forward_status(false, !black_tile_detected);
+  black_tile_detected = false;
 
   UPDATE_BNO();
   if (abs(orientationData.orientation.z) < 12) {
