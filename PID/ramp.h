@@ -11,7 +11,7 @@ bool handle_up_ramp(double start_pitch) {
   int32_t delta_x = 0;
   int32_t delta_theta = 0;
   int32_t delta_time = 10;
-  const double BNO_KP = 3;
+  const double BNO_KP = 5;
 
   UPDATE_BNO();
   double new_angle = closestToDirection(BNO_X);
@@ -21,13 +21,21 @@ bool handle_up_ramp(double start_pitch) {
   auto old_ticks = motorR.getTicks();
   resetTicks();
 
-  while (abs(motorR.getTicks()) < abs(ticks)) {
-    forward(110);
+  // while (abs(motorR.getTicks()) < abs(ticks)) {
+  //   forward(SPEED + 25);
+  // }
+
+  //move until ramp
+  while (BNO_Z - start_pitch >= -6.7 && tofCalibrated(4) >= 45) {
+    UPDATE_BNO();
+    forward(SPEED + 25);
   }
 
   double old_x = motorR.getTicks();
-  const float wall_kp = 0.40f;
+  const float wall_kp = 0.15f;
+  UPDATE_BNO();
 
+  //move until not ramp
   while (BNO_Z - start_pitch <= -6.5 && tofCalibrated(4) >= 90) {
     UPDATE_BNO();
     double reading;
@@ -95,11 +103,12 @@ bool handle_up_ramp(double start_pitch) {
   UPDATE_BNO();
 
   stopMotors();
-  alignAngle(true);
   oled_clear();
   oled_print("Ramps: ");
   oled_println((distance / (30.0 * CM_TO_ENCODERS)) - 0.25);
-  oled_print(height / (30.0 * CM_TO_ENCODERS));
+  oled_println(height / (30.0 * CM_TO_ENCODERS));
+  oled_print("Delta Angle");
+  oled_print(BNO_Z - start_pitch);
   delay(5000);
   pi_send_ramp(1.0, ((distance / (30.0 * CM_TO_ENCODERS)) - 0.25), (height / (30.0 * CM_TO_ENCODERS)));
   height = round(height / (30.0 * CM_TO_ENCODERS));
@@ -108,6 +117,20 @@ bool handle_up_ramp(double start_pitch) {
   }
   PI_SERIAL.println(height);
   alignAngle(true);
+
+  if (tofCalibrated(4) <= wall_tresh) {
+    while (tofCalibrated(4) >= 90) {
+      forward(SPEED * 0.7);
+    }
+    stopMotors();
+  } else {
+    resetTicks();
+    while(abs(motorR.getTicks()) < 5 * CM_TO_ENCODERS) {
+      forward(SPEED * 0.7);
+    }
+    stopMotors();
+  }
+
   return true;
 }
 
@@ -122,18 +145,38 @@ bool handle_down_ramp(double start_pitch) {
   double new_angle = closestToDirection(BNO_X);
 
   motorR.resetTicks();
-  double max_angle = 0;
-  while (abs(motorR.getTicks()) < abs(ticks)) {
-    forward(70);
+  // while (abs(motorR.getTicks()) < abs(ticks)) {
+  //   forward(70);
+  // }
+
+  // move until ramp
+
+  while (BNO_Z - start_pitch <= 6.7 && tofCalibrated(4) >= 45) {
+    UPDATE_BNO();
+    forward(50);
   }
+
   UPDATE_BNO();
 
   double old_x = motorR.getTicks();
-  const float wall_kp = 0.4f;
+  const float wall_kp = 0.15f;
   const double BNO_KP = 5;
-  while (BNO_Z - start_pitch >= 4 && tofCalibrated(4) >= 90) {
+
+  // move until not ramp
+
+  while (BNO_Z - start_pitch >= 6.5 && tofCalibrated(4) >= 90) {
     UPDATE_BNO();
-    double reading = abs(BNO_X - new_angle > 180) ? BNO_X - 360 : BNO_X;
+
+    double reading;
+
+    if (BNO_X - new_angle > 180) {
+      reading = BNO_X - 360;
+    } else if (BNO_X - new_angle < -180) {
+      reading = BNO_X + 360;
+    } else {
+      reading = BNO_X;
+    }
+
     double bno_error = (reading - new_angle) * BNO_KP;
 
     bno_error = min(bno_error, 30);
@@ -155,10 +198,7 @@ bool handle_down_ramp(double start_pitch) {
     UPDATE_BNO();
     double delta_theta = abs(BNO_Z - start_pitch);
 
-    if(delta_theta > max_angle)
-      max_angle = delta_theta * 1.7;
-
-    forward(70.0 + bno_error + err + max_angle, 70.0 - bno_error - err + max_angle);
+    forward(70.0 + bno_error + err, 70.0 - bno_error - err);
 
     double delta_x = abs(motorR.getTicks()) - abs(old_x);
     old_x = motorR.getTicks();
@@ -191,7 +231,6 @@ bool handle_down_ramp(double start_pitch) {
   }
 
   stopMotors();
-  alignAngle(true);
   oled_clear();
   oled_print("Ramps: ");
   oled_println((distance / (30.0 * CM_TO_ENCODERS)));
@@ -204,6 +243,20 @@ bool handle_down_ramp(double start_pitch) {
   }
   PI_SERIAL.println(height);
   alignAngle(true);
+
+  if (tofCalibrated(4) <= wall_tresh) {
+    while (tofCalibrated(4) >= 90) {
+      forward(SPEED * 0.7);
+    }
+    stopMotors();
+  } else {
+    resetTicks();
+    while(abs(motorR.getTicks()) < 5 * CM_TO_ENCODERS) {
+      forward(SPEED * 0.7);
+    }
+    stopMotors();
+  }
+
   return true;
 
 }

@@ -165,10 +165,11 @@ void driveCM(float cm, int speed = 200, int tolerance = 10) {
     start_yaw = BNO_X;
   }
 
-  // ramp detection
+ 
   pi_send_forward_status(true, true);
-
-  if (tofCalibrated(4) > wall_tresh && tofCalibrated(6) < 300) {
+  UPDATE_BNO();
+  // ramp detection
+  if (tofCalibrated(4) > 220 && _tofCalibrated(4) <= 420 && _tofCalibrated(6) < 305 && _tofCalibrated(6) > 190 && abs(BNO_Z) < 5) {
     oled_clear();
     oled_println("up ramp detected!");
     delay(500);
@@ -179,7 +180,7 @@ void driveCM(float cm, int speed = 200, int tolerance = 10) {
     return;
   }
 
-  if (tofCalibrated(4) > wall_tresh && tofCalibrated(6) >= 500) {
+  if (tofCalibrated(4) >= 220 && _tofCalibrated(6) >= 500) {
     oled_clear();
     oled_println("down ramp detected!");
     delay(500);

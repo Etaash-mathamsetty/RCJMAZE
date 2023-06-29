@@ -53,7 +53,7 @@ uint _tofCalibrated(int select) {
       {
         tcaselect(4);
         cal = tof.readRangeSingleMillimeters();
-        cal = min(cal, max_dist);
+        // cal = min(cal, max_dist);
         return cal;
         //not in need of calibration 6/14
       }
@@ -70,7 +70,7 @@ uint _tofCalibrated(int select) {
       {
         tcaselect(6);
         cal = tof.readRangeSingleMillimeters();
-        cal = min(cal, 500);
+        // cal = min(cal, 500);
         return cal;
       }
     default:
