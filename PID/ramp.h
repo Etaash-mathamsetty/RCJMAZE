@@ -5,8 +5,8 @@
 
 using namespace utils;
 
-bool handle_up_ramp(double start_pitch, int32_t end_encoders) {
-  int32_t ticks = 7 * CM_TO_ENCODERS;
+bool handle_up_ramp(double start_pitch) {
+  int32_t ticks = 15 * CM_TO_ENCODERS;
   int32_t back_up = 0;
   int32_t delta_x = 0;
   int32_t delta_theta = 0;
@@ -14,182 +14,105 @@ bool handle_up_ramp(double start_pitch, int32_t end_encoders) {
   const double BNO_KP = 3;
 
   UPDATE_BNO();
-  //delay(20);
   double new_angle = closestToDirection(BNO_X);
 
   double distance = 0;
   double height = 0;
   auto old_ticks = motorR.getTicks();
   resetTicks();
-  // stopMotors();
-  // oled.clearDisplay();
-  // oled.setCursor(0,0);
-  // oled_println("start forward ramp");
-  // delay(1000);
-
 
   while (abs(motorR.getTicks()) < abs(ticks)) {
-    forward(100);
+    forward(110);
   }
 
-  // stopMotors();
-  // oled.clearDisplay();
-  // oled.setCursor(0,0);
-  // oled_println("end forward ramp");
-  // delay(1000);
-  // bool* arr = get_tof_vals(wall_tresh);
+  double old_x = motorR.getTicks();
+  const float wall_kp = 0.40f;
 
-  // n e s w
-  if ((tofCalibrated(1) >= wall_tresh || tofCalibrated(0) >= wall_tresh) || (tofCalibrated(2) >= wall_tresh || tofCalibrated(3) >= wall_tresh)) {
-    // stopMotors();
-    // oled.clearDisplay();
-    // oled.setCursor(0, 0);
-    // oled_println("no walls either side");
-    // delay(5000);
-    motorR.getTicks() = old_ticks + ticks + 4 * CM_TO_ENCODERS;
-    motorL.getTicks() = old_ticks + ticks + 4 * CM_TO_ENCODERS;
-    return false;
-  }
+  while (BNO_Z - start_pitch <= -6.5 && tofCalibrated(4) >= 90) {
+    UPDATE_BNO();
+    double reading;
 
-  UPDATE_BNO();
-  if (abs(BNO_Z - start_pitch) <= 3 || BNO_Z - start_pitch > 3) {
-    // not a ramp
-    // int32_t dist = abs(motorL.getTicks()) - end_encoders;
-    // motorR.resetTicks();
-    // while (abs(motorR.getTicks()) < dist) {
-    //   forward(-100);
-    // }
-    // back_up = motorR.getTicks();
-
-    motorR.getTicks() = old_ticks + ticks + 4 * CM_TO_ENCODERS;
-    motorL.getTicks() = old_ticks + ticks + 4 * CM_TO_ENCODERS;
-
-    // stopMotors();
-    // oled.clearDisplay();
-    // oled.setCursor(0,0);
-    // oled_println("not enough pitch");
-    // delay(5000);
-    return false;
-  } else {
-    double old_x = motorR.getTicks();
-    const float wall_kp = 0.40f;
-
-    while (BNO_Z - start_pitch <= -6.5 && tofCalibrated(4) >= 90) {
-      UPDATE_BNO();
-      double reading;
-
-      if (BNO_X - new_angle > 180) {
-        reading = BNO_X - 360;
-      } else if (BNO_X - new_angle < -180) {
-        reading = BNO_X + 360;
-      } else {
-        reading = BNO_X;
-      }
-
-      double bno_error = (reading - new_angle) * (BNO_KP + abs(reading - new_angle) / 270.0);
-
-      // if (bno_error > 80) {
-      //   bno_error = 80;
-      // } else if (bno_error < -80) {
-      //   bno_error = -80;
-      // }
-
-      bno_error = min(bno_error, 50);
-      bno_error = max(bno_error, -50);
-
-      int32_t right = (_tofCalibrated(0) + _tofCalibrated(1)) / 2;
-      int32_t left = (_tofCalibrated(2) + _tofCalibrated(3)) / 2;
-      float err = 0.0f;
-
-      if (left <= wall_tresh && right <= wall_tresh)
-        err = (right - left) * wall_kp;
-      else if (left <= wall_tresh)
-        err = (75 - left) * wall_kp;
-      else if (right <= wall_tresh)
-        err = (right - 75) * wall_kp;
-
-      // if (digitalRead(FRONT_RIGHT) == HIGH && digitalRead(FRONT_LEFT) == LOW && abs(BNO_Z) < 4) {
-      //   raw_left(15, SPEED * 0.75, true);
-      // } else if (digitalRead(FRONT_LEFT) == HIGH && digitalRead(FRONT_RIGHT) == LOW && abs(BNO_Z) < 4) {
-      //   raw_right(15, SPEED * 0.75, true);
-      // }
-
-      forward(120.0 + bno_error + err, 120.0 - bno_error - err);
-      UPDATE_BNO();
-
-      // calculate distance on a ramp
-      double delta_x = abs(motorR.getTicks()) - abs(old_x);
-      old_x = motorR.getTicks();
-      double delta_theta = abs(BNO_Z - start_pitch);
-      height += delta_x * sin(delta_theta * (PI / 180.0));
-      distance += delta_x * cos(delta_theta * (PI / 180.0));
-      Serial.print("Rampe distance: ");
-      Serial.println(distance);
+    if (BNO_X - new_angle > 180) {
+      reading = BNO_X - 360;
+    } else if (BNO_X - new_angle < -180) {
+      reading = BNO_X + 360;
+    } else {
+      reading = BNO_X;
     }
 
+    double bno_error = (reading - new_angle) * (BNO_KP + abs(reading - new_angle) / 270.0);
 
-    if ((distance / (30.0 * CM_TO_ENCODERS)) - 0.25 <= 0.65) {
-      motorR.getTicks() = - old_ticks - ticks - 4 * CM_TO_ENCODERS;
-      motorL.resetTicks();
+    bno_error = min(bno_error, 50);
+    bno_error = max(bno_error, -50);
 
+    int32_t right = (_tofCalibrated(0) + _tofCalibrated(1)) / 2;
+    int32_t left = (_tofCalibrated(2) + _tofCalibrated(3)) / 2;
+    float err = 0.0f;
 
-      // while (abs(motorL.getTicks()) < ticks) {
-      //   forward(SPEED * -0.75);
-      // }
-      oled_clear();
-      oled_print("Fake Ramp: ");
-      oled_println((distance / (30.0 * CM_TO_ENCODERS)) - 0.25);
-      oled_print("Distance: ");
-      oled_println(distance);
-      oled_print("Height: ");
-      oled_println(height);
-      stopMotors();
-      delay(5000);
-      pi_send_ramp(0.0, 0.0, 0.0);
-      return true;
-    }
+    if (left <= wall_tresh && right <= wall_tresh)
+      err = (right - left) * wall_kp;
+    else if (left <= wall_tresh)
+      err = (75 - left) * wall_kp;
+    else if (right <= wall_tresh)
+      err = (right - 75) * wall_kp;
 
-    stopMotors();
-    delay(100);
-
+    forward(120.0 + bno_error + err, 120.0 - bno_error - err);
     UPDATE_BNO();
 
-    // double BNO_STATIC_KP = 30;
-    // double reading;
-    // do {
-    //   UPDATE_BNO();
-    //   if (BNO_X - new_angle > 180.0) {
-    //     reading = BNO_X - 360;
-    //   } else if (BNO_X - new_angle < -180.0) {
-    //     reading = BNO_X + 360;
-    //   } else {
-    //     reading = BNO_X;
-    //   }
+    // calculate distance on a ramp
+    double delta_x = abs(motorR.getTicks()) - abs(old_x);
+    old_x = motorR.getTicks();
+    double delta_theta = abs(BNO_Z - start_pitch);
+    height += delta_x * sin(delta_theta * (PI / 180.0));
+    distance += delta_x * cos(delta_theta * (PI / 180.0));
+    Serial.print("Rampe distance: ");
+    Serial.println(distance);
+  }
 
-    //   double bno_error = (reading - new_angle) * (BNO_STATIC_KP + abs(reading - new_angle) / 270.0);
-    //   forward(bno_error, -bno_error);
-    // } while (abs(BNO_X - new_angle) > 1);
 
-    stopMotors();
-    alignAngle(true);
+  if ((distance / (30.0 * CM_TO_ENCODERS)) - 0.25 <= 0.65) {
+    motorR.getTicks() = - old_ticks - ticks - 4 * CM_TO_ENCODERS;
+    motorL.resetTicks();
+
     oled_clear();
-    oled_print("Ramps: ");
+    oled_print("Fake Ramp: ");
     oled_println((distance / (30.0 * CM_TO_ENCODERS)) - 0.25);
-    oled_print(height / (30.0 * CM_TO_ENCODERS));
+    oled_print("Distance: ");
+    oled_println(distance);
+    oled_print("Height: ");
+    oled_println(height);
+    stopMotors();
     delay(5000);
-    pi_send_ramp(1.0, ((distance / (30.0 * CM_TO_ENCODERS)) - 0.25), (height / (30.0 * CM_TO_ENCODERS)));
-    height = round(height / (30.0 * CM_TO_ENCODERS));
-    if (height == 0) {
-      height = 1;
-    }
-    PI_SERIAL.println(height);
-    alignAngle(true);
+    pi_send_ramp(0.0, 0.0, 0.0);
+    pi_send_forward_status(false, !black_tile_detected);
+    black_tile_detected = false;
     return true;
   }
+
+  stopMotors();
+  delay(100);
+
+  UPDATE_BNO();
+
+  stopMotors();
+  alignAngle(true);
+  oled_clear();
+  oled_print("Ramps: ");
+  oled_println((distance / (30.0 * CM_TO_ENCODERS)) - 0.25);
+  oled_print(height / (30.0 * CM_TO_ENCODERS));
+  delay(5000);
+  pi_send_ramp(1.0, ((distance / (30.0 * CM_TO_ENCODERS)) - 0.25), (height / (30.0 * CM_TO_ENCODERS)));
+  height = round(height / (30.0 * CM_TO_ENCODERS));
+  if (height == 0) {
+    height = 1;
+  }
+  PI_SERIAL.println(height);
+  alignAngle(true);
+  return true;
 }
 
-bool handle_down_ramp(double start_pitch, double end_encoders) {
-  int32_t ticks = 7 * CM_TO_ENCODERS;
+bool handle_down_ramp(double start_pitch) {
+  int32_t ticks = 15 * CM_TO_ENCODERS;
   int32_t back_up = 0;
   auto old_ticks = motorR.getTicks();
   int32_t delta_time = 10;
@@ -201,152 +124,86 @@ bool handle_down_ramp(double start_pitch, double end_encoders) {
   motorR.resetTicks();
   double max_angle = 0;
   while (abs(motorR.getTicks()) < abs(ticks)) {
-    UPDATE_BNO();
-    double delta_angle = abs(BNO_Z - start_pitch);
-    if(delta_angle > max_angle)
-    {
-      max_angle = delta_angle * 1.7;
-    }
-    forward(70 + max_angle);
+    forward(70);
   }
   UPDATE_BNO();
 
-  // bool* arr = get_tof_vals(wall_tresh);
+  double old_x = motorR.getTicks();
+  const float wall_kp = 0.4f;
+  const double BNO_KP = 5;
+  while (BNO_Z - start_pitch >= 4 && tofCalibrated(4) >= 90) {
+    UPDATE_BNO();
+    double reading = abs(BNO_X - new_angle > 180) ? BNO_X - 360 : BNO_X;
+    double bno_error = (reading - new_angle) * BNO_KP;
 
-  //   // n e s w
-  // bool walls[4] = { arr[4], arr[2] || arr[3], arr[5], arr[0] || arr[1] };
+    bno_error = min(bno_error, 30);
+    bno_error = max(bno_error, -30);
 
+    int32_t right = (_tofCalibrated(0) + _tofCalibrated(1)) / 2;
+    int32_t left = (_tofCalibrated(2) + _tofCalibrated(3)) / 2;
+    float err = 0.0f;
 
-  if ((tofCalibrated(1) >= wall_tresh || tofCalibrated(0) >= wall_tresh) || (tofCalibrated(2) >= wall_tresh || tofCalibrated(3) >= wall_tresh)) {
-    // stopMotors();
-    // oled.clearDisplay();
-    // oled.setCursor(0, 0);
-    // oled_println("no walls either side");
-    // delay(5000);
-    motorR.getTicks() = old_ticks + ticks + 4 * CM_TO_ENCODERS;
-    motorL.getTicks() = old_ticks + ticks + 4 * CM_TO_ENCODERS;
-    return false;
+    if (left <= wall_tresh && right <= wall_tresh)
+      err = (right - left) * wall_kp;
+    //at the end of the ramp there will only be 1 wall
+    else if (left <= wall_tresh)
+      err = (75 - left) * wall_kp;
+    else if (right <= wall_tresh)
+      err = (right - 75) * wall_kp;
+
+    // calculate distance on a ramp
+    UPDATE_BNO();
+    double delta_theta = abs(BNO_Z - start_pitch);
+
+    if(delta_theta > max_angle)
+      max_angle = delta_theta * 1.7;
+
+    forward(70.0 + bno_error + err + max_angle, 70.0 - bno_error - err + max_angle);
+
+    double delta_x = abs(motorR.getTicks()) - abs(old_x);
+    old_x = motorR.getTicks();
+    distance += delta_x * cos(delta_theta * (PI / 180.0));
+    height += delta_x * sin(delta_theta * (PI / 180.0));
+    Serial.print("Ramp length: ");
+    Serial.println(distance);
   }
 
-  max_angle = 0;
+  // forwardTicks(SPEED, 7 * CM_TO_ENCODERS);
 
-  if (abs(BNO_Z - start_pitch) <= 3 || BNO_Z - start_pitch < -3) {
-    //not a ramp
-
-    // stopMotors();
-    // oled.clearDisplay();
-    // oled.setCursor(0,0);
-    // oled_println("not enough pitch");
-    // delay(5000);
-
-    motorR.getTicks() = old_ticks + ticks + 4 * CM_TO_ENCODERS;
-    motorL.getTicks() = old_ticks + ticks + 4 * CM_TO_ENCODERS;
-    return false;
-  } else {
-    double old_x = motorR.getTicks();
-    const float wall_kp = 0.4f;
-    const double BNO_KP = 5;
-    while (BNO_Z - start_pitch >= 4 && tofCalibrated(4) >= 90) {
-      UPDATE_BNO();
-      double reading = abs(BNO_X - new_angle > 180) ? BNO_X - 360 : BNO_X;
-      double bno_error = (reading - new_angle) * BNO_KP;
-
-      bno_error = min(bno_error, 30);
-      bno_error = max(bno_error, -30);
-
-      int32_t right = (_tofCalibrated(0) + _tofCalibrated(1)) / 2;
-      int32_t left = (_tofCalibrated(2) + _tofCalibrated(3)) / 2;
-      float err = 0.0f;
-
-      if (left <= wall_tresh && right <= wall_tresh)
-        err = (right - left) * wall_kp;
-      //at the end of the ramp there will only be 1 wall
-      else if (left <= wall_tresh)
-        err = (75 - left) * wall_kp;
-      else if (right <= wall_tresh)
-        err = (right - 75) * wall_kp;
-
-      // if (digitalRead(FRONT_RIGHT) && !digitalRead(FRONT_LEFT)&& abs(BNO_Z) < 4) {
-      //   raw_left(15, SPEED * 0.75, true);
-      // } else if (digitalRead(FRONT_LEFT) && !digitalRead(FRONT_RIGHT) && abs(BNO_Z) < 4) {
-      //   raw_right(15, SPEED * 0.75, true);
-      // }
-
-
-      // calculate distance on a ramp
-      UPDATE_BNO();
-      double delta_theta = abs(BNO_Z - start_pitch);
-
-      if(delta_theta > max_angle)
-        max_angle = delta_theta * 1.7;
-
-      forward(70.0 + bno_error + err + max_angle, 70.0 - bno_error - err + max_angle);
-
-      double delta_x = abs(motorR.getTicks()) - abs(old_x);
-      old_x = motorR.getTicks();
-      distance += delta_x * cos(delta_theta * (PI / 180.0));
-      height += delta_x * sin(delta_theta * (PI / 180.0));
-      Serial.print("Ramp length: ");
-      Serial.println(distance);
-    }
-
-    // forwardTicks(SPEED, 7 * CM_TO_ENCODERS);
-
-    if ((distance / (30.0 * CM_TO_ENCODERS)) <= 0.25 && (height / (30.0 * CM_TO_ENCODERS)) < 0.2) {
-      motorR.getTicks() = old_ticks - ticks - 4 * CM_TO_ENCODERS;
-      // motorL.resetTicks();
-
-      // while (abs(motorL.getTicks()) < 6 * CM_TO_ENCODERS) {
-      //   forward(SPEED * -0.75);
-      // }
-
-      stopMotors();
-      oled_clear();
-      oled_print("Fake Ramp: ");
-      oled_println((distance / (30.0 * CM_TO_ENCODERS)));
-      oled_print("Distance: ");
-      oled_println(distance);
-      oled_print("Height: ");
-      oled_println(height);
-      stopMotors();
-      delay(5000);
-      pi_send_ramp(0.0, 0.0, 0.0);
-
-      return true;
-    }
-
-    // UPDATE_BNO();
-
-    // double BNO_STATIC_KP = 30.0;
-    // double reading;
-    // do {
-    //   UPDATE_BNO();
-    //   if (BNO_X - new_angle > 180) {
-    //     reading = BNO_X - 360;
-    //   } else if (BNO_X - new_angle < -180) {
-    //     reading = BNO_X + 360;
-    //   } else {
-    //     reading = BNO_X;
-    //   }
-
-    //   double bno_error = (reading - new_angle) * (BNO_STATIC_KP + abs(reading - new_angle) / 300.0);
-    //   forward(bno_error, -bno_error);
-    // } while (abs(reading - new_angle) > 1);
+  if ((distance / (30.0 * CM_TO_ENCODERS)) <= 0.25 && (height / (30.0 * CM_TO_ENCODERS)) < 0.2) {
+    motorR.getTicks() = old_ticks - ticks - 4 * CM_TO_ENCODERS;
 
     stopMotors();
-    alignAngle(true);
     oled_clear();
-    oled_print("Ramps: ");
+    oled_print("Fake Ramp: ");
     oled_println((distance / (30.0 * CM_TO_ENCODERS)));
-    oled_print(height / (30.0 * CM_TO_ENCODERS));
+    oled_print("Distance: ");
+    oled_println(distance);
+    oled_print("Height: ");
+    oled_println(height);
+    stopMotors();
     delay(5000);
-    pi_send_ramp(10.0, (distance / (30.0 * CM_TO_ENCODERS)), (height / (30.0 * CM_TO_ENCODERS)));
-    height = round(height / (30.0 * CM_TO_ENCODERS));
-    if (height == 0) {
-      height = 1;
-    }
-    PI_SERIAL.println(height);
-    alignAngle(true);
+    pi_send_ramp(0.0, 0.0, 0.0);
+    pi_send_forward_status(false, !black_tile_detected);
+    black_tile_detected = false;
+
     return true;
   }
+
+  stopMotors();
+  alignAngle(true);
+  oled_clear();
+  oled_print("Ramps: ");
+  oled_println((distance / (30.0 * CM_TO_ENCODERS)));
+  oled_print(height / (30.0 * CM_TO_ENCODERS));
+  delay(5000);
+  pi_send_ramp(10.0, (distance / (30.0 * CM_TO_ENCODERS)), (height / (30.0 * CM_TO_ENCODERS)));
+  height = round(height / (30.0 * CM_TO_ENCODERS));
+  if (height == 0) {
+    height = 1;
+  }
+  PI_SERIAL.println(height);
+  alignAngle(true);
+  return true;
+
 }

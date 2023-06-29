@@ -30,26 +30,6 @@ void drive(int32_t encoders, int speed) {
   while ((abs(motorR.getTicks()) < abs(encoders) && abs(motorL.getTicks()) < abs(encoders) && (tofCalibrated(4) >= 90)) || ramp_detect || down_ramp_detect) {
     UPDATE_BNO();
 
-    if ((BNO_Z - start_pitch < -5.5 /* || BNO_Z < -5.5 */) && !down_ramp_detect) {
-      oled_println("down ramp detect!!");
-      bool res = handle_up_ramp(start_pitch, encoders);
-      ramp_detect = res;
-
-      if (res)
-        return;
-    }
-
-    // if ((BNO_Z - start_pitch > 5.5 /* || BNO_Z > 5.5 */) && !ramp_detect) {
-    //   // stopMotors();
-    //   oled_println("down ramp detect!!");
-    //   bool res = handle_down_ramp(start_pitch, encoders);
-    //   down_ramp_detect = res;
-    //   tstart = millis();
-
-    //   if (res)
-    //     return;
-    // }
-
 #ifndef NO_LIMIT
     if (digitalRead(FRONT_RIGHT) == HIGH && abs(BNO_Z) < 4) {
       ticks_before = abs(motorR.getTicks());
@@ -185,7 +165,31 @@ void driveCM(float cm, int speed = 200, int tolerance = 10) {
     start_yaw = BNO_X;
   }
 
+  // ramp detection
   pi_send_forward_status(true, true);
+
+  if (tofCalibrated(4) > wall_tresh && tofCalibrated(6) < 300) {
+    oled_clear();
+    oled_println("up ramp detected!");
+    delay(500);
+    UPDATE_BNO();
+    handle_up_ramp(BNO_Z);
+    // pi_send_forward_status(false, !black_tile_detected);
+    // black_tile_detected = false;
+    return;
+  }
+
+  if (tofCalibrated(4) > wall_tresh && tofCalibrated(6) >= 500) {
+    oled_clear();
+    oled_println("down ramp detected!");
+    delay(500);
+    UPDATE_BNO();
+    handle_down_ramp(BNO_Z);
+    // pi_send_forward_status(false, !black_tile_detected);
+    // black_tile_detected = false;
+    return;
+  }
+
 #if 1
   const float mult_factor = 1.0;
   uint right = (tofCalibrated(2) + tofCalibrated(3)) / 2;
