@@ -11,7 +11,7 @@ bool handle_up_ramp(double start_pitch) {
   int32_t delta_x = 0;
   int32_t delta_theta = 0;
   int32_t delta_time = 10;
-  const double BNO_KP = 5;
+  const double BNO_KP = 2;
 
   UPDATE_BNO();
   double new_angle = closestToDirection(BNO_X);
@@ -32,7 +32,7 @@ bool handle_up_ramp(double start_pitch) {
   }
 
   double old_x = motorR.getTicks();
-  const float wall_kp = 0.15f;
+  const float wall_kp = 0.4f;
   UPDATE_BNO();
 
   //move until not ramp
@@ -110,12 +110,12 @@ bool handle_up_ramp(double start_pitch) {
   oled_print("Delta Angle");
   oled_print(BNO_Z - start_pitch);
   delay(5000);
-  pi_send_ramp(1.0, ((distance / (30.0 * CM_TO_ENCODERS)) - 0.25), (height / (30.0 * CM_TO_ENCODERS)));
   height = round(height / (30.0 * CM_TO_ENCODERS));
   if (height == 0) {
     height = 1;
   }
-  PI_SERIAL.println(height);
+  pi_send_ramp(1.0, round((distance / (30.0 * CM_TO_ENCODERS)) - 0.25), height);
+  pi_send_forward_status(false, true);
   alignAngle(true);
 
   if (tofCalibrated(4) <= wall_tresh) {
@@ -159,8 +159,8 @@ bool handle_down_ramp(double start_pitch) {
   UPDATE_BNO();
 
   double old_x = motorR.getTicks();
-  const float wall_kp = 0.15f;
-  const double BNO_KP = 5;
+  const float wall_kp = 0.4f;
+  const double BNO_KP = 2;
 
   // move until not ramp
 
@@ -236,12 +236,12 @@ bool handle_down_ramp(double start_pitch) {
   oled_println((distance / (30.0 * CM_TO_ENCODERS)));
   oled_print(height / (30.0 * CM_TO_ENCODERS));
   delay(5000);
-  pi_send_ramp(10.0, (distance / (30.0 * CM_TO_ENCODERS)), (height / (30.0 * CM_TO_ENCODERS)));
   height = round(height / (30.0 * CM_TO_ENCODERS));
   if (height == 0) {
     height = 1;
   }
-  PI_SERIAL.println(height);
+  pi_send_ramp(10.0, round(distance / (30.0 * CM_TO_ENCODERS)), height);
+  pi_send_forward_status(false, true);
   alignAngle(true);
 
   if (tofCalibrated(4) <= wall_tresh) {
@@ -251,7 +251,7 @@ bool handle_down_ramp(double start_pitch) {
     stopMotors();
   } else {
     resetTicks();
-    while(abs(motorR.getTicks()) < 5 * CM_TO_ENCODERS) {
+    while(abs(motorR.getTicks()) < 8 * CM_TO_ENCODERS) {
       forward(SPEED * 0.7);
     }
     stopMotors();

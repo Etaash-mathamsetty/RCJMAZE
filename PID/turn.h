@@ -116,10 +116,15 @@ if (abs(relative_angle) < 1) {
     } else*/ 
     if (digitalRead(FRONT_LEFT) || digitalRead(FRONT_RIGHT)) {
       resetTicks();
-      while (abs(motorR.getTicks()) < 2.5 * CM_TO_ENCODERS) {
+      while (abs(motorR.getTicks()) < 1.5 * CM_TO_ENCODERS) {
         forward(-SPEED * 0.75);
       }
-    }
+    } 
+    // else if (tofCalibrated(5) < 60) {
+    //   while (tofCalibrated(5) < 60) {
+    //     forward(SPEED * 0.75);
+    //   }
+    // }
 
 #ifndef NO_PID
 
@@ -233,7 +238,7 @@ void right(int relative_angle, int speed, bool turn_status = true) {
     //   forward(-speed);
     // }
 
-    while (tofCalibrated(5) <= 40) {
+    while (tofCalibrated(5) <= 80) {
       forward(speed);
     }
     stopMotors();
@@ -312,10 +317,15 @@ void raw_left(double relative_angle, int speed, bool alignment) {
     } else*/ 
     if (digitalRead(FRONT_LEFT) || digitalRead(FRONT_RIGHT)) {
       resetTicks();
-      while (abs(motorR.getTicks()) < 2.5 * CM_TO_ENCODERS) {
+      while (abs(motorR.getTicks()) < 1.5 * CM_TO_ENCODERS) {
         forward(-SPEED * 0.75);
       }
-    }
+    } 
+    // else if (tofCalibrated(5) < 60) {
+    //   while (tofCalibrated(5) < 60) {
+    //     forward(SPEED * 0.75);
+    //   }
+    // }
 
 #ifndef NO_PID
     if (millis() - tstart < 3000) {
@@ -423,7 +433,7 @@ void left(int relative_angle, int speed, bool turn_status = true) {
     // {
     //   forward(-speed);
     // }
-    while (tofCalibrated(5) <= 40) {
+    while (tofCalibrated(5) <= 80) {
       forward(speed);
     }
     stopMotors();

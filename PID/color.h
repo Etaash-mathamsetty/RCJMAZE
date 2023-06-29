@@ -137,11 +137,10 @@ int returnColor(bool only_black = false) {
   }
 
   if (dark_count >= 5 && abs(BNO_Z) < 12) {
-    stopMotors ();
-    oled_clear();
-    oled_println(" black detected");
-    delay(200);
-    Serial.println(" black detected");
+    // stopMotors ();
+    // oled_clear();
+    // oled_println(" black detected");
+    // Serial.println(" black detected");
     return 1;
   } else if (bright_count >= 3 && abs(BNO_Z) < 12 && !only_black) {
     // stopMotors();

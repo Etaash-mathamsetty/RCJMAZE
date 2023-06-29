@@ -2,9 +2,9 @@
 //#define FAKE_SERIAL
 #define DEBUG_DISPLAY
 // #define MOTORSOFF
-//#define TEST
+// #define TEST
 // #define ALIGN_ANGLE
-//#define NO_PI //basic auto when no raspberry pi (brain stem mode)
+// #define NO_PI //basic auto when no raspberry pi (brain stem mode)
 // #define NO_LIMIT
 // #define NO_PID
 // #define TCS
@@ -112,6 +112,7 @@ void setup() {
       Serial.print(i);
       Serial.println(" is init");
     }
+    delay(10);
 
     //tof.setTimeout(500);
     //tof.startContinuous();
@@ -377,12 +378,17 @@ void loop() {
 
 // int clear_oled_counter = 0;
 
-// for (int i = 0; i <= 5; i++) {
-//   Serial.print(i);
-//   Serial.print(": ");
-//   Serial.print(_tofCalibrated(i));
-//   Serial.print(", ");
-// }
+UPDATE_BNO();
+
+for (int i = 0; i <= TOF_NUMBER; i++) {
+  Serial.print(i);
+  Serial.print(": ");
+  Serial.print(_tofCalibrated(i));
+  Serial.print(", ");
+}
+Serial.print(" ");
+Serial.println(BNO_X);
+Serial.println();
 
 // drive(30 * CM_TO_ENCODERS, SPEED);
 // delay(1000);
@@ -404,9 +410,9 @@ void loop() {
 // Serial.println(motorR.getTicks());
 // right(90, SPEED);
 // delay(500);
-Serial.print(tofCalibrated(6));
-Serial.print(" ");
-Serial.println(tofCalibrated(4));
+// Serial.print(tofCalibrated(6));
+// Serial.print(" ");
+// Serial.println(tofCalibrated(4));
 // raw_left(15, SPEED, true);
 // delay(250);
 

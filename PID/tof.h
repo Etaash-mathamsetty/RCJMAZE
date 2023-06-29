@@ -16,7 +16,8 @@ uint _tofCalibrated(int select) {
     case 0:
       {
         tcaselect(0);
-        cal = tof.readRangeSingleMillimeters();
+        dist = tof.readRangeSingleMillimeters();
+        cal = dist - 17;
         cal = min(cal, max_dist);
         return cal;
       }
@@ -36,7 +37,7 @@ uint _tofCalibrated(int select) {
         } else {
           cal = (0.925 * dist) - 22.5;
         }
-
+        cal -= 4;
         cal = min(cal, max_dist);
         return cal;
         //calibrated 6/14
@@ -70,6 +71,9 @@ uint _tofCalibrated(int select) {
       {
         tcaselect(6);
         cal = tof.readRangeSingleMillimeters();
+        // while (cal > 2000) {
+        //   cal = tof.readRangeSingleMillimeters();
+        // }
         // cal = min(cal, 500);
         return cal;
       }

@@ -32,6 +32,17 @@ void drive(int32_t encoders, int speed) {
 
 #ifndef NO_LIMIT
     if (digitalRead(FRONT_RIGHT) == HIGH && abs(BNO_Z) < 4) {
+
+      if (abs(encoders - abs(motorR.getTicks())) < 1.25 * CM_TO_ENCODERS) {
+        pi_send_tag("ramp");
+        PI_SERIAL.print(0.0);
+        PI_SERIAL.print(",");
+        PI_SERIAL.print(0.0);
+        PI_SERIAL.print(",");
+        PI_SERIAL.println(0.0);
+        return;
+      } 
+
       ticks_before = abs(motorR.getTicks());
       int dist = left_obstacle();
       motorR.setTicks(ticks_before - dist);
@@ -44,6 +55,17 @@ void drive(int32_t encoders, int speed) {
     }
 
     if (digitalRead(FRONT_LEFT) == HIGH && abs(BNO_Z) < 4) {
+
+      if (abs(encoders - abs(motorR.getTicks())) < 1.25 * CM_TO_ENCODERS) {
+        pi_send_tag("ramp");
+        PI_SERIAL.print(0.0);
+        PI_SERIAL.print(",");
+        PI_SERIAL.print(0.0);
+        PI_SERIAL.print(",");
+        PI_SERIAL.println(0.0);
+        return;
+      } 
+
       ticks_before = abs(motorR.getTicks());
       int dist = right_obstacle();
       motorR.setTicks(ticks_before - dist);
@@ -66,7 +88,7 @@ void drive(int32_t encoders, int speed) {
       while (/* motorR.getTicks() > 0 && */ motorL.getTicks() > 0 && tofCalibrated(5) >= 80) {
         forward(-speed);
       }
-      stopMotors();
+      // stopMotors();
       //pi_send_data(false, false);
       black_tile_detected = true;
       pi_send_tag("ramp");
@@ -90,7 +112,6 @@ void drive(int32_t encoders, int speed) {
 
     if (abs(BNO_Z) < 5) {
       while (PI_SERIAL.available()) {
-        tstart = millis();
         auto right_ticks = motorR.getTicks();
         auto left_ticks = motorL.getTicks();
         stopMotors();
@@ -100,6 +121,7 @@ void drive(int32_t encoders, int speed) {
         oled_println("detected");
         motorR.getTicks() = right_ticks;
         motorL.getTicks() = left_ticks;
+        tstart = millis();
       }
     }
 
@@ -169,7 +191,7 @@ void driveCM(float cm, int speed = 200, int tolerance = 10) {
   pi_send_forward_status(true, true);
   UPDATE_BNO();
   // ramp detection
-  if (tofCalibrated(4) > 220 && _tofCalibrated(4) <= 420 && _tofCalibrated(6) < 305 && _tofCalibrated(6) > 190 && abs(BNO_Z) < 5) {
+  if (tofCalibrated(4) > 220 && _tofCalibrated(4) <= 470 && _tofCalibrated(6) < 255  && _tofCalibrated(6) > 190 && abs(BNO_Z) < 5) {
     oled_clear();
     oled_println("up ramp detected!");
     delay(500);
@@ -180,7 +202,7 @@ void driveCM(float cm, int speed = 200, int tolerance = 10) {
     return;
   }
 
-  if (tofCalibrated(4) >= 220 && _tofCalibrated(6) >= 500) {
+  if (tofCalibrated(4) >= 490 && _tofCalibrated(6) >= 470 && _tofCalibrated(6) <= 2000) {
     oled_clear();
     oled_println("down ramp detected!");
     delay(500);
@@ -226,7 +248,7 @@ void driveCM(float cm, int speed = 200, int tolerance = 10) {
       raw_right(90 - min(90, angle * mult_factor), SPEED, true);
 
       if (tofCalibrated(4) > wall_tresh - 50)
-        drive((cm * CM_TO_ENCODERS) / abs(sin(angle * (PI / 180))), speed);
+        drive((cm * CM_TO_ENCODERS) / abs(sin(angle * (PI / 180))) - forward_offset, speed);
       else {
         Serial.println("achievement unlocked! How did we get here?");
         oled_clear();
@@ -238,6 +260,8 @@ void driveCM(float cm, int speed = 200, int tolerance = 10) {
         stopMotors();
 
         raw_left(90 - min(90, angle * mult_factor), SPEED, true);
+
+        pi_send_ramp(0.0, 0.0, 0.0);
         pi_send_forward_status(false, true, true);
         return;
       }
@@ -252,7 +276,7 @@ void driveCM(float cm, int speed = 200, int tolerance = 10) {
       raw_left(90 - min(90, angle * mult_factor), SPEED, true);
 
       if (tofCalibrated(4) > wall_tresh - 50)
-        drive((cm * CM_TO_ENCODERS) / abs(sin(angle * (PI / 180))), speed);
+        drive((cm * CM_TO_ENCODERS) / abs(sin(angle * (PI / 180))) - forward_offset, speed);
       else {
         Serial.println("achievement unlocked! How did we get here?");
         oled_clear();
@@ -265,6 +289,8 @@ void driveCM(float cm, int speed = 200, int tolerance = 10) {
         stopMotors();
         raw_right(90 - min(90, angle * mult_factor), SPEED, true);
 
+
+        pi_send_ramp(0.0, 0.0, 0.0);
         pi_send_forward_status(false, true, true);
         return;
       }
@@ -294,7 +320,7 @@ void driveCM(float cm, int speed = 200, int tolerance = 10) {
     // oled_print(atan((cm * 10)/(150 - (half_chassis + left))));
 
     if (tofCalibrated(4) > wall_tresh - 50)
-      drive(cm / sin(angle * (PI / 180)) * CM_TO_ENCODERS, speed);
+      drive(cm / sin(angle * (PI / 180)) * CM_TO_ENCODERS - forward_offset, speed);
     else {
       Serial.println("achievement unlocked! How did we get here?");
       oled_clear();
@@ -310,6 +336,8 @@ void driveCM(float cm, int speed = 200, int tolerance = 10) {
       } else if (left - target_dist_from_wall < 0.0) {
         raw_left(90.0 - angle, SPEED, true);
       }
+
+      pi_send_ramp(0.0, 0.0, 0.0);
       pi_send_forward_status(false, true, true);
       return;
     }
@@ -338,7 +366,7 @@ void driveCM(float cm, int speed = 200, int tolerance = 10) {
     }
 
     if (tofCalibrated(4) > wall_tresh - 50)
-      drive(cm / sin(angle * (PI / 180)) * CM_TO_ENCODERS, speed);
+      drive(cm / sin(angle * (PI / 180)) * CM_TO_ENCODERS - forward_offset, speed);
     else {
       Serial.println("achievement unlocked! How did we get here?");
       oled_clear();
@@ -354,6 +382,8 @@ void driveCM(float cm, int speed = 200, int tolerance = 10) {
       } else if (right - target_dist_from_wall < 0.0) {
         raw_right(90.0 - angle, SPEED, true);
       }
+
+      pi_send_ramp(0.0, 0.0, 0.0);
       pi_send_forward_status(false, true, true);
       return;
     }
@@ -379,6 +409,7 @@ void driveCM(float cm, int speed = 200, int tolerance = 10) {
       }
       stopMotors();
 
+      pi_send_ramp(0.0, 0.0, 0.0);
       pi_send_forward_status(false, true, true);
       return;
     }
