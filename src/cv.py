@@ -135,7 +135,7 @@ if True:
         
 #        cv2.imshow("contours", frame2)
         while(len(candidate_conts) > 0):
-            cont = max(candidate_conts, key=cv2.contourArea)
+            cont = candidate_conts[0]
             frame3 = frame2.copy()
             if(cv2.contourArea(cont) >= 420):
                 x,y,w,h = cv2.boundingRect(cont)
@@ -202,7 +202,7 @@ if True:
                 #print(chr(int(result)))
                 #end of the if statement
             #in while loop
-            candidate_conts.remove(cont)
+            candidate_conts.pop(0)
         for i in range(3):
             if len(bounding_rect[i]) > 0:
                 x = bounding_rect[i][0]
