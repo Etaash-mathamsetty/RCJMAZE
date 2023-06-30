@@ -247,7 +247,7 @@ void pi_read_data() {
         // Serial.println(vals);
 
         // //n e s w
-        bool walls[4] = { arr[4], arr[2] || arr[3], arr[5], arr[0] || arr[1] };
+        bool walls[4] = { arr[4], arr[2] && arr[3], arr[5], arr[0] && arr[1] };
         // not wrapped around and stuff
         //oled_display_walls(walls);
         //  this is wrapped
@@ -332,7 +332,7 @@ void loop() {
   bool* arr = get_tof_vals(wall_tresh);
 
   // //n e s w
-  bool walls[4] = { arr[4], arr[2] || arr[3], arr[5], arr[0] || arr[1] };
+  bool walls[4] = { arr[4], arr[2] && arr[3], arr[5], arr[0] && arr[1] };
   // not wrapped around and stuff
   oled_display_walls(walls);
   //acceleration_position();
