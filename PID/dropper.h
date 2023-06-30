@@ -7,7 +7,7 @@
 
 using namespace utils;
 
-void kitDrop(int num, char side) {
+bool kitDrop(int num, char side) {
   static int columnNum = 1;
   static int numDropped = 0;
   const int offset_for_stack[3] = { 10, 7, 0 };
@@ -18,11 +18,11 @@ void kitDrop(int num, char side) {
 
   if (side == 'r') {
     if (!walls[1])
-      return;
+      return false;
   }
   if (side == 'l') {
     if (!walls[3])
-      return;
+      return false;
   }
 
   analogWrite(3, 150);
@@ -67,8 +67,15 @@ void kitDrop(int num, char side) {
 
   myservo.detach();
   myservo2.detach();
-  delay(1000);
+  
+  if(numDropped <= total && num > 0)
+    delay(1000);
+  else
+    //required by rules
+    delay(3000);
   analogWrite(5, 0);
+
+  return true;
 }
 
 #endif
