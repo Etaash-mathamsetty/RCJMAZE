@@ -49,9 +49,14 @@ bool kitDrop(int num, char side) {
 
     if (numDropped > total) {
       myservo.write(0);
-      delay(200);
+      delay(50);
+      myservo2.write(25);
+      delay(50);
+      myservo2.detach();
+      myservo.detach();
+      delay(max(0, 3000 - 2000*i - 100));
       analogWrite(5, 0);
-      return;
+      return true;
     }
 
     myservo.write(180 - (60 * columnNum + offset_for_stack[columnNum - 1]));
@@ -68,7 +73,7 @@ bool kitDrop(int num, char side) {
   myservo.detach();
   myservo2.detach();
   
-  if(numDropped <= total && num > 0)
+  if(num > 0)
     delay(1000);
   else
     //required by rules
