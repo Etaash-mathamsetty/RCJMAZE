@@ -121,13 +121,18 @@ if True:
         frame2 = cv2.adaptiveThreshold(frame2, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY_INV, 11, 2)
         _,contours,_ = cv2.findContours(frame2, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
-        
+        candidate_conts = []
+
+        for cont in contours:
+            _,_,w,h = cv2.boundingRect(cont)
+            if cv2.contourArea(cont) >= 420 and w/h <= 2.0 and w/h >= 0.5: #letters should have almost square shape
+                candidate_conts.append(cont)
         
 #         frame2 = cv2.drawContours(frame2, contours, -1, (0,255,0), 3)
         
 #        cv2.imshow("contours", frame2)
-        if(len(contours) > 0):
-            cont = max(contours, key=cv2.contourArea)
+        while(len(candidate_conts) > 0):
+            cont = max(candidate_conts, key=cv2.contourArea)
             frame3 = frame2.copy()
             if(cv2.contourArea(cont) >= 420):
                 x,y,w,h = cv2.boundingRect(cont)
@@ -192,6 +197,9 @@ if True:
                 #print(nears)
                 #print(dists)
                 #print(chr(int(result)))
+                #end of the if statement
+            #in while loop
+            candidate_conts.remove(cont)
         for i in range(3):
             if len(bounding_rect[i]) > 0:
                 x = bounding_rect[i][0]
