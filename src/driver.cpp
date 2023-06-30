@@ -587,13 +587,13 @@ namespace driver
 		robot* bot = robot::get_instance();
 		CHECK(bot);
 		CHECK(bot->map);
-		//int org_index = bot->index;
+		int org_index = bot->index;
 
 		bot->map[bot->index].bot = false;
 		bot->index += delta;
 		if(victim)
 		{
-			bot->map[bot->index].vic = true;
+			bot->map[bot->index].vic = bot->map[org_index].vic;
 		}
 		bot->map[bot->index].bot = true;
 
