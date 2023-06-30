@@ -691,7 +691,7 @@ namespace driver
 			PythonScript::Exec(cv_py_file);
 			if(!Bridge::get_data_value("dist_percent").has_value())
 			{
-				std::this_thread::sleep_for(std::chrono::milliseconds(20));
+				std::this_thread::sleep_for(std::chrono::milliseconds(10));
 				continue;
 			}
 			double dist_percent = (double)(*Bridge::get_data_value("dist_percent"))[0];
@@ -726,7 +726,7 @@ namespace driver
 					}
 				}
 			}
-			std::this_thread::sleep_for(std::chrono::milliseconds(20));
+			std::this_thread::sleep_for(std::chrono::milliseconds(10));
 		}
 
 		int ramp = 0;
