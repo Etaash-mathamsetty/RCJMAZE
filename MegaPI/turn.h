@@ -248,6 +248,9 @@ void right(int relative_angle, int speed, bool turn_status = true) {
     pi_send_tag("turn_status");
     PI_SERIAL.println(0.0);
   }
+
+  stopMotors();
+  delay(300);
 }
 
 void raw_left(double relative_angle, int speed, bool alignment) {
@@ -443,6 +446,9 @@ void left(int relative_angle, int speed, bool turn_status = true) {
     pi_send_tag("turn_status");
     PI_SERIAL.println(0.0);
   }
+
+  stopMotors();
+  delay(300);
 }
 
 void turn(char char_end_direction) {

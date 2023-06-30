@@ -520,15 +520,15 @@ namespace driver
 			if(bot->map[bot->index].checkpoint)
 				save_state();
 
-			
-			for(int i = 0; i < 20; i++)
+			bool dropped = false;
+			for(int i = 0; i < 40; i++)
 			{
 				PythonScript::Exec(cv_py_file);
 				bool victim = (*Bridge::get_data_value("victim"))[0];
 				bool left = (*Bridge::get_data_value("left"))[0];
 				int nrk = (*Bridge::get_data_value("NRK"))[0];
 
-				if(victim)
+				if(victim && !dropped)
 				{
 					if(left)
 					{
@@ -536,7 +536,10 @@ namespace driver
 						int dir = (int)helper::prev_dir(bot->dir);
 						bool ret = drop_vic(nrk, left);
 						if(ret)
+						{
 							bot->map[bot->index].vic |= (1 << dir) & 0b1111;
+							dropped = true;
+						}
 					}
 					else
 					{
@@ -544,7 +547,10 @@ namespace driver
 						int dir = (int)helper::next_dir(bot->dir);
 						bool ret = drop_vic(nrk, left);
 						if(ret)
+						{
 							bot->map[bot->index].vic |= (1 << dir) & 0b1111;
+							dropped = true;
+						}
 
 					}					
 				}
@@ -552,14 +558,15 @@ namespace driver
 		}
 		else
 		{
-			for(int i = 0; i < 20; i++)
+			bool dropped = false;
+			for(int i = 0; i < 40; i++)
 			{
 				PythonScript::Exec(cv_py_file);
 				bool victim = (*Bridge::get_data_value("victim"))[0];
 				bool left = (*Bridge::get_data_value("left"))[0];
 				int nrk = (*Bridge::get_data_value("NRK"))[0];
 
-				if(victim)
+				if(victim && !dropped)
 				{
 					int dir_left = (int)helper::prev_dir(bot->dir);
 					int dir_right = (int)helper::next_dir(bot->dir);
@@ -570,7 +577,10 @@ namespace driver
 						int dir = (int)helper::prev_dir(bot->dir);
 						bool ret = drop_vic(nrk, left);
 						if(ret)
+						{
 							bot->map[bot->index].vic |= (1 << dir) & 0b1111;
+							dropped = true;
+						}
 						
 					}
 					else if(!(bot->map[bot->index].vic & (1 << dir_right)))
@@ -579,7 +589,10 @@ namespace driver
 						int dir = (int)helper::next_dir(bot->dir);
 						bool ret = drop_vic(nrk, left);
 						if(ret)
+						{
 							bot->map[bot->index].vic |= (1 << dir) & 0b1111;
+							dropped = true;
+						}
 					}
 				}
 			}

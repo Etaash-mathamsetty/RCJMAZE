@@ -55,7 +55,7 @@ void forwardTicks(int speed, int ticks, bool reset = true){
       forward(speed);
     }
   }
-  
+
   stopMotors();
 }
 
@@ -74,6 +74,7 @@ void resetServo() {
   myservo.write(175);
   delay(200);
   myservo2.write(25); 
+  delay(200);
 }
 
 namespace logger{

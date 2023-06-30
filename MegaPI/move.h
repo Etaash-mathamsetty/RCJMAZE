@@ -20,6 +20,7 @@ void drive(int32_t encoders, int speed) {
   bool ramp_detect = false;
   bool down_ramp_detect = false;
   uint32_t tstart = millis();
+  uint32_t time_dist_percent = 0;
   int32_t ticks_before = 0;
   bool limit_detected = false;
   double BNO_KP = 7;
@@ -80,8 +81,12 @@ void drive(int32_t encoders, int speed) {
       dist_percent = (double)abs(motorR.getTicks()) / (double)abs(encoders);
     //otherwise, just assume 0
 
-    pi_send_tag("dist_percent");
-    PI_SERIAL.println(dist_percent);
+    if((int32_t)millis() - (int32_t)time_dist_percent > 20)
+    {
+      pi_send_tag("dist_percent");
+      PI_SERIAL.println(dist_percent);
+      time_dist_percent = millis();
+    }
 
     if (returnColor(true) == 1) {
       while (/* motorR.getTicks() > 0 && */ motorL.getTicks() > 0 && tofCalibrated(5) >= 80) {
@@ -226,8 +231,8 @@ void driveCM(float cm, int speed = 200, int tolerance = 10) {
 
 #if 1
   const float mult_factor = 1.0;
-  uint right = (tofCalibrated(2, 10) + tofCalibrated(3, 10)) / 2;
-  uint left = (tofCalibrated(0, 10) + tofCalibrated(1, 10)) / 2;
+  uint right = (tofCalibrated(2, 5) + tofCalibrated(3, 5)) / 2;
+  uint left = (tofCalibrated(0, 5) + tofCalibrated(1, 5)) / 2;
   const float half_chassis = 75;
   const double target_dist_from_wall = (300.0 - half_chassis * 2) / 2.0;
 
