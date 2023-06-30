@@ -593,7 +593,7 @@ namespace driver
 		bot->index += delta;
 		if(victim)
 		{
-			bot->map[bot->index].vic = bot->map[org_index].vic;
+			bot->map[bot->index].vic |= bot->map[org_index].vic;
 		}
 		bot->map[bot->index].bot = true;
 
@@ -685,6 +685,7 @@ namespace driver
 		//wait for it to finish running
 		//auto time_step = std::chrono::high_resolution_clock::now();
 		bool victim = false;
+		double prev_vic_dist = 0.0;
 		while((bool)(*Bridge::get_data_value("forward_status"))[0]) 
 		{ 
 			PythonScript::Exec(ser_py_file);
@@ -705,7 +706,8 @@ namespace driver
 					victim = (*Bridge::get_data_value("victim"))[0];
 					bool left = (*Bridge::get_data_value("left"))[0];
 					int nrk = (*Bridge::get_data_value("NRK"))[0];
-					if(victim)
+					//TODO: Tune this value
+					if(victim && dist_percent - prev_vic_dist >= 0.1)
 					{
 						int dir_left = (int)helper::prev_dir(bot->dir);
 						int dir_right = (int)helper::next_dir(bot->dir);
@@ -714,14 +716,20 @@ namespace driver
 							int dir = (int)helper::prev_dir(bot->dir);
 							bool ret = drop_vic(nrk, left);
 							if(ret)
+							{
 								bot->map[bot->index].vic |= (1 << dir) & 0b1111;
+								prev_vic_dist = dist_percent;
+							}
 						}
 						else if(!(bot->map[bot->index].vic & (1 << dir_right)) || !bot->map[bot->index].vis)
 						{
 							int dir = (int)helper::next_dir(bot->dir);
 							bool ret = drop_vic(nrk, left);
 							if(ret)
+							{
 								bot->map[bot->index].vic |= (1 << dir) & 0b1111;
+								prev_vic_dist = dist_percent;
+							}
 						}
 					}
 				}

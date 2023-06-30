@@ -99,7 +99,7 @@ void pi_read_vision() {
 
         cur_cmd.remove(0);
 
-        pi_send_drop_status(false, ret)
+        pi_send_drop_status(false, ret);
       }
     } else if (c >= '0' && c <= '9') {
       if (cur_cmd.length() > 0 && cur_cmd[0] == 'd') {

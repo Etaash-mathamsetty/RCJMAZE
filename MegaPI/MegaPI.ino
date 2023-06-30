@@ -1,6 +1,6 @@
 //#define FAKE_ROBOT
 //#define FAKE_SERIAL
-#define DEBUG_DISPLAY
+// #define DEBUG_DISPLAY
 // #define MOTORSOFF
 // #define TEST
 // #define ALIGN_ANGLE
@@ -28,8 +28,8 @@ using namespace utils;
 
 void setup() {
   if (restart) {
-    oled_clear();
-    oled_println("Reinit...");
+    oled.clear();
+    oled.println("Reinit...");
     delay(200);
     //reinit all variables here:
     resetBoost();
@@ -57,17 +57,17 @@ void setup() {
   Serial.println("starting the code!");
   //Wire.begin();
   //Wire.setClockStretchLimit(200000L);
-#ifdef DEBUG_DISPLAY
+// #ifdef DEBUG_DISPLAY
   oled.begin();
   oled.setFlipMode(0);
   oled.setFont(u8x8_font_chroma48medium8_r);
   oled.setCursor(0, 0);
-  oled_println("Starting...");
-#endif
+  oled.println("Starting...");
+// #endif
 
   bno.begin(OPERATION_MODE_IMUPLUS);
   global_angle = 0;
-  oled_println("BNO init done!");
+  oled.println("BNO init done!");
 
 #ifndef NO_LIMIT
   pinMode(FRONT_RIGHT, INPUT_PULLUP);
@@ -77,12 +77,12 @@ void setup() {
 
   if (digitalRead(FRONT_LEFT)) {
     Serial.println("front left limit disconnected");
-    oled_println("front left disconnect");
+    oled.println("front left disconnect");
   }
 
   if (digitalRead(FRONT_RIGHT)) {
     Serial.println("front right limit disconnected");
-    oled_println("front right disconnect");
+    oled.println("front right disconnect");
   }
 
   // if (digitalRead(BACK_LEFT)) {
@@ -95,9 +95,9 @@ void setup() {
   //   oled_println("back right disconnect");
   // }
 
-  if (!(digitalRead(FRONT_LEFT) || digitalRead(FRONT_RIGHT) )/*|| digitalRead(BACK_LEFT) || digitalRead(BACK_RIGHT))*/) {
+  if (!(digitalRead(FRONT_LEFT) && digitalRead(FRONT_RIGHT) )/*|| digitalRead(BACK_LEFT) || digitalRead(BACK_RIGHT))*/) {
     Serial.println("limit init successful");
-    oled_println("limit init!");
+    oled.println("limit init!");
   }
 #endif
 
@@ -117,7 +117,7 @@ void setup() {
     //tof.setTimeout(500);
     //tof.startContinuous();
   }
-  oled_println("TOF init done!");
+  oled.println("TOF init done!");
   myservo.attach(servopin);
   myservo2.attach(servopin2);
   resetServo();
@@ -129,13 +129,13 @@ void setup() {
   delay(50);
   myservo.detach();
   myservo2.detach();
-  oled_println("Servo reset");
+  oled.println("Servo reset");
 
 #ifdef AMS
   while (!ams.begin()) {
 
     // Serial.println("could not connect to sensor! Please check your wiring.");
-    oled_println("AMS init fail!!!!!");
+    oled.println("AMS init fail!!!!!");
     delay(100);
   }
   ams.drvOn();
@@ -145,20 +145,25 @@ void setup() {
   tcaselect(6);
   if (!tcs.begin()) {
     Serial.println("color sensor init fail!");
-    oled_println("TCS init fail!");
+    oled.println("TCS init fail!");
   }
 #endif
 
   Serial.println("TOF INIT SUCCEED!");
-  oled_println("Startup Done!");
+  oled.println("Startup Done!");
 
   pinMode(3, OUTPUT); 
   analogWrite(3, 255);
 
   delay(1000);
-  oled_clear();
+  oled.clear();
 
   analogWrite(2, 0);
+
+#ifdef TEST
+  oled.println("TEST MODE!!");
+  delay(1000);
+#endif
   // delay(500);
 
 }
@@ -370,17 +375,21 @@ void loop() {
 
 // int clear_oled_counter = 0;
 
-UPDATE_BNO();
+// UPDATE_BNO();
+// returnColor();
 
-for (int i = 0; i <= TOF_NUMBER; i++) {
-  Serial.print(i);
-  Serial.print(": ");
-  Serial.print(_tofCalibrated(i));
-  Serial.print(", ");
-}
+// for (int i = 0; i <= TOF_NUMBER; i++) {
+//   Serial.print(i);
+//   Serial.print(": ");
+//   Serial.print(_tofCalibrated(i));
+//   Serial.print(", ");
+// }
+// Serial.print(" ");
+// Serial.println(BNO_Z);
+// Serial.println();
+Serial.print(tofCalibrated(6));
 Serial.print(" ");
-Serial.println(BNO_X);
-Serial.println();
+Serial.println(tofCalibrated(4));
 
 // drive(30 * CM_TO_ENCODERS, SPEED);
 // delay(1000);
