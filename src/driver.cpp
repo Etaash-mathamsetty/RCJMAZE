@@ -685,7 +685,8 @@ namespace driver
 		//wait for it to finish running
 		//auto time_step = std::chrono::high_resolution_clock::now();
 		bool victim = false;
-		double prev_vic_dist = 0.0;
+		double prev_vic_dist_left = 0.0;
+		double prev_vic_dist_right = 0.0;
 		while((bool)(*Bridge::get_data_value("forward_status"))[0]) 
 		{ 
 			PythonScript::Exec(ser_py_file);
@@ -707,34 +708,36 @@ namespace driver
 					bool left = (*Bridge::get_data_value("left"))[0];
 					int nrk = (*Bridge::get_data_value("NRK"))[0];
 					//TODO: Tune this value
-					if(victim && dist_percent - prev_vic_dist >= 0.16)
+					if(victim)
 					{
 						int dir_left = (int)helper::prev_dir(bot->dir);
 						int dir_right = (int)helper::next_dir(bot->dir);
-						if(left && (!(bot->map[bot->index].vic & (1 << dir_left)) || !bot->map[bot->index].vis))
+						if(left && (!(bot->map[bot->index].vic & (1 << dir_left)) || !bot->map[bot->index].vis) && dist_percent - prev_vic_dist_left >= 0.16)
 						{
 							int dir = (int)helper::prev_dir(bot->dir);
 							bool ret = drop_vic(nrk, left);
 							if(ret)
 							{
 								bot->map[bot->index].vic |= (1 << dir) & 0b1111;
-								prev_vic_dist = dist_percent;
+								prev_vic_dist_left = dist_percent;
 							}
+							std::this_thread::sleep_for(std::chrono::milliseconds(10));
 						}
-						else if(!(bot->map[bot->index].vic & (1 << dir_right)) || !bot->map[bot->index].vis)
+						else if((!(bot->map[bot->index].vic & (1 << dir_right)) || !bot->map[bot->index].vis) && dist_percent - prev_vic_dist_right >= 0.16)
 						{
 							int dir = (int)helper::next_dir(bot->dir);
 							bool ret = drop_vic(nrk, left);
 							if(ret)
 							{
 								bot->map[bot->index].vic |= (1 << dir) & 0b1111;
-								prev_vic_dist = dist_percent;
+								prev_vic_dist_right = dist_percent;
 							}
+							std::this_thread::sleep_for(std::chrono::milliseconds(10));
 						}
 					}
 				}
 			}
-			std::this_thread::sleep_for(std::chrono::milliseconds(10));
+			std::this_thread::sleep_for(std::chrono::milliseconds(5));
 		}
 
 		int ramp = 0;
