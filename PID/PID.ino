@@ -257,7 +257,7 @@ void pi_read_data() {
           PI_SERIAL.println("1.0");
           oled_clear();
           stopMotors();
-          delay(4000);
+          delay(200);
         } else {
           pi_send_tag("CP");
           PI_SERIAL.println("0.0");
