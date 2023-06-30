@@ -103,7 +103,10 @@ int main(int argc, char* argv[]){
 
 	driver::init_robot();
 	robot* robot = robot::get_instance();
+//#define DEBUG_CV
+#ifndef DEBUG_CV
 	driver::get_sensor_data();
+#endif
 	printf("node[%d]:\n", robot->index);
 	debug::print_node(robot->map[robot->index]);
 	//print_node(nodes[robot.index]);
@@ -191,7 +194,7 @@ int main(int argc, char* argv[]){
 			if(quitable && robot->index == robot->start_tile_floor[floor_num] && floor_num == start_floor)
 				break;
 			#else
-			PythonScript::Exec(cv_py_script);
+			PythonScript::Exec(cv_py_file);
 		
 			#endif
 			#ifdef TEST_MODE
