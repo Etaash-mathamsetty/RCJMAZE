@@ -318,6 +318,7 @@ void pi_read_data() {
           Serial.println("restarting");
           delay(200);
           restart = true;
+          empty_serial_buffer();
           return;
         }
       }

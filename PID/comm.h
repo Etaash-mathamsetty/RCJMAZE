@@ -4,6 +4,12 @@
 #include "common.h"
 #include "dropper.h"
 
+inline void empty_serial_buffer()
+{
+  while(PI_SERIAL.available())
+    PI_SERIAL.read();
+}
+
 inline void pi_send_tag(const char* tag) {
   PI_SERIAL.print(tag);
   PI_SERIAL.print("::");
@@ -72,30 +78,28 @@ void pi_read_vision() {
         pi_send_tag("drop_status");
         PI_SERIAL.println("1.0");
 
-        kitDrop(num, 'l');
+        bool ret = kitDrop(num, 'l');
 
         cur_cmd.remove(0);
 
-        if (num == 0)
-          delay(1000);
-
         pi_send_tag("drop_status");
         PI_SERIAL.println("0.0");
+        PI_SERIAL.print(",");
+        PI_SERIAL.println((double)ret);
       }
     } else if (c == 'r') {
       if (cur_cmd.length() > 0 && cur_cmd[0] == 'd') {
         pi_send_tag("drop_status");
         PI_SERIAL.println("1.0");
 
-        kitDrop(num, 'r');
+        bool ret = kitDrop(num, 'r');
 
         cur_cmd.remove(0);
 
-        if (num == 0)
-          delay(1000);
-
         pi_send_tag("drop_status");
-        PI_SERIAL.println("0.0");
+        PI_SERIAL.print("0.0");
+        PI_SERIAL.print(",");
+        PI_SERIAL.println((double)ret);
       }
     } else if (c >= '0' && c <= '9') {
       if (cur_cmd.length() > 0 && cur_cmd[0] == 'd') {
@@ -105,6 +109,7 @@ void pi_read_vision() {
       Serial.println("Restarting...");
       delay(200);
       restart = true;
+      empty_serial_buffer();
       return;
     }
   }
