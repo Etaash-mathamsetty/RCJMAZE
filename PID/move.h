@@ -57,12 +57,7 @@ void drive(int32_t encoders, int speed) {
     if (digitalRead(FRONT_LEFT) == HIGH && abs(BNO_Z) < 4) {
 
       if (abs(encoders - abs(motorR.getTicks())) < 1.25 * CM_TO_ENCODERS) {
-        pi_send_tag("ramp");
-        PI_SERIAL.print(0.0);
-        PI_SERIAL.print(",");
-        PI_SERIAL.print(0.0);
-        PI_SERIAL.print(",");
-        PI_SERIAL.println(0.0);
+        pi_send_ramp(0.0, 0.0, 0.0);
         return;
       } 
 
@@ -91,12 +86,7 @@ void drive(int32_t encoders, int speed) {
       // stopMotors();
       //pi_send_data(false, false);
       black_tile_detected = true;
-      pi_send_tag("ramp");
-      PI_SERIAL.print(0.0);
-      PI_SERIAL.print(',');
-      PI_SERIAL.print(0.0);
-      PI_SERIAL.print(',');
-      PI_SERIAL.println(0.0);
+      pi_send_ramp(0.0, 0.0, 0.0);
       resetBoost();
       return;
     }
@@ -163,12 +153,7 @@ void drive(int32_t encoders, int speed) {
   stopMotors();
   resetBoost();
 
-  pi_send_tag("ramp");
-  PI_SERIAL.print(0.0);
-  PI_SERIAL.print(",");
-  PI_SERIAL.print(0.0);
-  PI_SERIAL.print(",");
-  PI_SERIAL.println(0.0);
+  pi_send_ramp(0.0, 0.0, 0.0);
 #else
   pi_send_forward_status(true, true);
   delay(100);
@@ -186,7 +171,6 @@ void driveCM(float cm, int speed = 200, int tolerance = 10) {
     UPDATE_BNO();
     start_yaw = BNO_X;
   }
-
  
   pi_send_forward_status(true, true);
   UPDATE_BNO();
@@ -431,6 +415,10 @@ void driveCM(float cm, int speed = 200, int tolerance = 10) {
     alignAngle(true, 10, start_yaw);
   }
 
-  //pause for blue if detected (no longer needed)
-  //returnColor();
+  //pause for blue
+  if(returnColor() == 3)
+  {
+    stopMotors();
+    delay(5000);
+  }
 }

@@ -150,11 +150,11 @@ int returnColor(bool only_black = false) {
     Serial.println(" silver detected");
     return 2;
   } else if (violet_greatest && !only_black && amsValues[AS726x_VIOLET] > 40 && amsValues[AS726x_RED] <= 18 && amsValues[AS726x_BLUE] >= 18 && abs(BNO_Z) < 12) {
-    stopMotors();
+    //stopMotors();
     Serial.println(" blue detected");
     oled_clear();
     oled_println(" blue detected");
-    delay(5000);
+    //delay(5000);
     return 3;
   }
 #endif
