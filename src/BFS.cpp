@@ -195,7 +195,6 @@ int main(int argc, char* argv[]){
 				break;
 			#else
 			PythonScript::Exec(cv_py_file);
-		
 			#endif
 			#ifdef TEST_MODE
 				std::cout << "press any key to continue..." << std::endl;

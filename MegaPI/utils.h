@@ -37,6 +37,11 @@ void resetTicks(){
 	motor2->resetTicks();
 }
 
+void stopMotors(){
+	motor->stop();
+	motor2->stop();
+}
+
 void forwardTicks(int speed, int ticks, bool reset = true){
   if(reset)
   resetTicks();
@@ -50,11 +55,8 @@ void forwardTicks(int speed, int ticks, bool reset = true){
       forward(speed);
     }
   }
-}
-
-void stopMotors(){
-	motor->stop();
-	motor2->stop();
+  
+  stopMotors();
 }
 
 void addBoost(int boost)

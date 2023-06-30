@@ -34,12 +34,7 @@ void drive(int32_t encoders, int speed) {
     if (digitalRead(FRONT_RIGHT) == HIGH && abs(BNO_Z) < 4) {
 
       if (abs(encoders - abs(motorR.getTicks())) < 1.25 * CM_TO_ENCODERS) {
-        pi_send_tag("ramp");
-        PI_SERIAL.print(0.0);
-        PI_SERIAL.print(",");
-        PI_SERIAL.print(0.0);
-        PI_SERIAL.print(",");
-        PI_SERIAL.println(0.0);
+        pi_send_ramp(0.0,0.0,0.0);
         return;
       } 
 
@@ -112,7 +107,7 @@ void drive(int32_t encoders, int speed) {
     if (abs(BNO_Z) < 5) {
 
       //TODO: find correct values
-      if(dist_percent <= 0.1 || dist_percent >= 0.9)
+      if(dist_percent < 0.16 || dist_percent > 1 - 0.16)
       {
         empty_serial_buffer();
         pi_send_drop_status(false, false);
