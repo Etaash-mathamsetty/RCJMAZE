@@ -160,6 +160,7 @@ int main(int argc, char* argv[]){
 		//REAL CODE HERE
 		while(true)
 		{
+			#ifndef DEBUG_CV
 			//std::cout << "running BFS()" << std::endl;
 			std::list<int> path = BFS();
 			debug::print_path(path);
@@ -189,6 +190,10 @@ int main(int argc, char* argv[]){
 			//debug::print_node(robot->map[robot->index]);
 			if(quitable && robot->index == robot->start_tile_floor[floor_num] && floor_num == start_floor)
 				break;
+			#else
+			PythonScript::Exec(cv_py_script);
+		
+			#endif
 			#ifdef TEST_MODE
 				std::cout << "press any key to continue..." << std::endl;
 				getchar();
