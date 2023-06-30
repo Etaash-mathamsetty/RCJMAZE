@@ -698,7 +698,7 @@ namespace driver
 			double dist_percent = (double)(*Bridge::get_data_value("dist_percent"))[0];
 
 			//TODO: determine the correct value!
-			if(dist_percent >= 0.1 && dist_percent <= 0.9)
+			if(dist_percent >= 0.16 && dist_percent <= 1 - 0.16)
 			{
 				for(int i = 0; i < 2; i++)
 				{
@@ -707,7 +707,7 @@ namespace driver
 					bool left = (*Bridge::get_data_value("left"))[0];
 					int nrk = (*Bridge::get_data_value("NRK"))[0];
 					//TODO: Tune this value
-					if(victim && dist_percent - prev_vic_dist >= 0.1)
+					if(victim && dist_percent - prev_vic_dist >= 0.16)
 					{
 						int dir_left = (int)helper::prev_dir(bot->dir);
 						int dir_right = (int)helper::next_dir(bot->dir);
