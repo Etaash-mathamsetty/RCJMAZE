@@ -2,7 +2,7 @@
 //#define FAKE_SERIAL
 // #define DEBUG_DISPLAY
 // #define MOTORSOFF
-//#define TEST
+// #define TEST
 // #define ALIGN_ANGLE
 // #define NO_PI //basic auto when no raspberry pi (brain stem mode)
 // #define NO_LIMIT
@@ -387,14 +387,14 @@ void loop() {
 // Serial.print(" ");
 // Serial.println(BNO_Z);
 // Serial.println();
-// Serial.print(tofCalibrated(6));
-// Serial.print(" ");
-// Serial.println(tofCalibrated(4));
+Serial.print(tofCalibrated(6));
+Serial.print(" ");
+Serial.println(tofCalibrated(4));
 
-forwardTicks(100, 5 * CM_TO_ENCODERS);
-oled.print("Ticks: ");
-oled.println(abs(motorR.getTicks()));
-delay(10000);
+// forwardTicks(100, 5 * CM_TO_ENCODERS);
+// oled.print("Ticks: ");
+// oled.println(abs(motorR.getTicks()));
+// delay(10000);
 
 // drive(30 * CM_TO_ENCODERS, SPEED);
 // delay(1000);

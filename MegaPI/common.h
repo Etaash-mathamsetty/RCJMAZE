@@ -90,7 +90,7 @@ volatile int32_t global_angle = 0;
 volatile bool restart = false;
 
 const int SPEED = 105;
-const int ALIGN_SPEED = 90;
+const int ALIGN_SPEED = 75;
 
 enum type { Color,
             Distance };
@@ -105,7 +105,7 @@ double ACCEL_VEL_TRANSITION = (double)(BNO055_SAMPLERATE_DELAY_MS) / 1000.0;
 double ACCEL_POS_TRANSITION = 0.5 * ACCEL_VEL_TRANSITION * ACCEL_VEL_TRANSITION;
 
 const int wall_tresh = 175;
-const float tile_dist = 31;
+const float tile_dist = 31.2;
 const float forward_offset = 1.5 * CM_TO_ENCODERS;
 
 bool black_tile_detected = false;

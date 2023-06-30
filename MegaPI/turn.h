@@ -476,6 +476,7 @@ void turn(char char_end_direction) {
     case -2:
       left(90, SPEED, false);
       global_angle = math::wrapAround(global_angle - 90, 360);
+      delay(200);
       left(90, SPEED);
       global_angle = math::wrapAround(global_angle - 90, 360);
       break;
@@ -570,7 +571,7 @@ void alignAngle(bool reset, int tolerance = 10, double start_yaw = INFINITY) {
   int tofR3, tofR4;
   int lnum = 1, rnum = 0;
   float kP = 0.7;
-  float BNO_KP = 1.4;
+  float BNO_KP = 2;
   addBoost(ALIGN_TURN_BOOST);
 
   tofR1 = tofCalibrated(0, 5);
@@ -629,7 +630,7 @@ void alignAngle(bool reset, int tolerance = 10, double start_yaw = INFINITY) {
 
       forward(error * BNO_KP, -error * BNO_KP);
 
-      if (abs(error * BNO_KP) < 10) {
+      if (abs(error * BNO_KP) < 1) {
         break;
       }
 

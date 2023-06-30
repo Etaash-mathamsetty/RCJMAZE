@@ -158,6 +158,14 @@ bool handle_down_ramp(double start_pitch) {
   while (BNO_Z - start_pitch >= -6.9 && tofCalibrated(4) >= 45) {
     UPDATE_BNO();
     forward(50);
+
+    if (returnColor(true) == 1) {
+      
+      forwardTicks(SPEED * 0.75, -10 * CM_TO_ENCODERS);
+      pi_send_forward_status(false, false);
+      pi_send_ramp(0.0,0.0,0.0);
+      return;
+    }
   }
 
   UPDATE_BNO();
@@ -169,6 +177,14 @@ bool handle_down_ramp(double start_pitch) {
   // move until not ramp
 
   while (BNO_Z - start_pitch <= -6.7 && tofCalibrated(4) >= 90) {
+    if (returnColor(true) == 1) {
+      
+      forwardTicks(SPEED * 0.75, -10 * CM_TO_ENCODERS);
+      pi_send_forward_status(false, false);
+      pi_send_ramp(0.0,0.0,0.0);
+      return;
+    }
+
     UPDATE_BNO();
 
     double reading;
