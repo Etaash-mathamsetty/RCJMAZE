@@ -18,15 +18,15 @@ struct simulation_node {
 		bool S : 1;
 		bool E : 1;
 		bool W : 1;
-		bool vic : 1;
 		bool bot : 1;
 		bool vis : 1;
 		//ramp up is first bit, ramp down is second bit
-		uint8_t ramp : 2;
+		uint8_t ramp : 2; // 1 byte
 		bool checkpoint : 1;
 		bool black : 1;
+		uint8_t vic : 4; //vic for all 4 dirs
 	private:
-		uint8_t garbage : 5;
+		uint8_t garbage : 2; // 1 byte
 
 };
 #endif
@@ -55,13 +55,14 @@ struct node {
 		bool S : 1;
 		bool E : 1;
 		bool W : 1;
-		bool vic : 1; //have we already seen a victim on this tile
 		bool bot : 1;
 		bool vis : 1;
 		uint8_t ramp : 2;
 		bool checkpoint : 1;
+		uint8_t reserved : 1; //prevents memcpy from causing mass destruction
+		uint8_t vic : 4; //vic for all 4 dirs
 	private:
-		uint8_t garbage : 6;
+		uint8_t garbage : 2;
 };
 
 enum class DIR

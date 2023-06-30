@@ -483,6 +483,7 @@ void turn(char char_end_direction) {
   cur_direction = end_direction;
 }
 
+//DO NOT USE IN ANYTHING OTHER THAN drive()
 int left_obstacle() {
   oled_println("Left");
 
@@ -496,6 +497,7 @@ int left_obstacle() {
   forward_obstacle = false;
 
   while (abs(motorR.getTicks()) < forward_ticks) {
+
     forward(-SPEED * 0.7);
 
     if (/*digitalRead(BACK_LEFT) || digitalRead(BACK_RIGHT) || */ tofCalibrated(5) <= 80) {
@@ -512,9 +514,14 @@ int left_obstacle() {
   stopMotors();
   delay(500);
 
+  empty_serial_buffer();
+  //ignore any commands if pi saw something
+  pi_send_drop_status(false, false);
+
   return abs(forward_ticks);
 }
 
+//DO NOT USE IN ANYTHING OTHER THAN drive()
 int right_obstacle() {
   oled_println("Right");
 
@@ -544,6 +551,10 @@ int right_obstacle() {
 
   stopMotors();
   delay(500);
+
+  empty_serial_buffer();
+  //ignore any commands if pi saw something
+  pi_send_drop_status(false, false);
 
   return abs(forward_ticks);
 }

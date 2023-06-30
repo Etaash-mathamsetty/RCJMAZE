@@ -404,8 +404,8 @@ namespace driver
 		CHECK(bot->map);
 		std::ifstream in;
 		in.open("save.txt");
-		bool n, e, s, w, vic, vis, checkpoint, bot_here;
-		uint8_t ramp;
+		bool n, e, s, w, vis, checkpoint, bot_here;
+		uint8_t ramp, vic;
 		//char dir;
 		//in >> dir;
 		//wtf happens with directions, I think we can only restart the raspberry pi
@@ -514,13 +514,72 @@ namespace driver
 			bot->map[bot->index].checkpoint = wait_for_data<bool>("CP");
 			if(bot->map[bot->index].checkpoint)
 				save_state();
+
+			
+			for(int i = 0; i < 2; i++)
+			{
+				PythonScript::Exec(cv_py_file);
+				bool victim = (*Bridge::get_data_value("victim"))[0];
+				bool left = (*Bridge::get_data_value("left"))[0];
+				int nrk = (*Bridge::get_data_value("NRK"))[0];
+
+				if(victim)
+				{
+					if(left)
+					{
+						//west relative
+						int dir = (int)helper::prev_dir(bot->dir);
+						bool ret = drop_vic(nrk, left);
+						if(ret)
+							bot->map[bot->index].vic |= (1 << dir) & 0b1111;
+					}
+					else
+					{
+						//east relative
+						int dir = (int)helper::next_dir(bot->dir);
+						bool ret = drop_vic(nrk, left);
+						if(ret)
+							bot->map[bot->index].vic |= (1 << dir) & 0b1111;
+
+					}					
+				}
+			}
+		}
+		else
+		{
+			for(int i = 0; i < 2; i++)
+			{
+				PythonScript::Exec(cv_py_file);
+				bool victim = (*Bridge::get_data_value("victim"))[0];
+				bool left = (*Bridge::get_data_value("left"))[0];
+				int nrk = (*Bridge::get_data_value("NRK"))[0];
+
+				if(victim)
+				{
+					int dir_left = (int)helper::prev_dir(bot->dir);
+					int dir_right = (int)helper::next_dir(bot->dir);
+
+					if(left && !(bot->map[bot->index].vic & (1 << dir_left)))
+					{
+						//west relative
+						int dir = (int)helper::prev_dir(bot->dir);
+						bool ret = drop_vic(nrk, left);
+						if(ret)
+							bot->map[bot->index].vic |= (1 << dir) & 0b1111;
+						
+					}
+					else if(!(bot->map[bot->index].vic & (1 << dir_right)))
+					{
+						//east relative
+						int dir = (int)helper::next_dir(bot->dir);
+						bool ret = drop_vic(nrk, left);
+						if(ret)
+							bot->map[bot->index].vic |= (1 << dir) & 0b1111;
+					}
+				}
+			}
 		}
 
-		for(int i = 0; i < 20; i++)
-		{
-			//prevent camera from desyncing
-			PythonScript::Exec(cv_py_file);
-		}
 	}
 
 	void set_mov_indexes(int delta, bool up_ramp, bool down_ramp, int ramp_len, int ramp_height, bool victim)
@@ -624,13 +683,21 @@ namespace driver
 		Bridge::remove_data_value("victim");
 		
 		//wait for it to finish running
-		auto time_step = std::chrono::high_resolution_clock::now();
+		//auto time_step = std::chrono::high_resolution_clock::now();
 		bool victim = false;
 		while((bool)(*Bridge::get_data_value("forward_status"))[0]) 
 		{ 
 			PythonScript::Exec(ser_py_file);
 			PythonScript::Exec(cv_py_file);
-			if(!bot->map[bot->index].vic && !bot->map[bot->index].checkpoint)
+			if(!Bridge::get_data_value("dist_percent").has_value())
+			{
+				std::this_thread::sleep_for(std::chrono::milliseconds(20));
+				continue;
+			}
+			double dist_percent = (double)(*Bridge::get_data_value("dist_percent"))[0];
+
+			//TODO: determine the correct value!
+			if(dist_percent >= 0.1 && dist_percent <= 0.9)
 			{
 				for(int i = 0; i < 2; i++)
 				{
@@ -640,17 +707,40 @@ namespace driver
 					int nrk = (*Bridge::get_data_value("NRK"))[0];
 					if(victim)
 					{
-						bool ret = drop_vic(nrk, left);
-						bot->map[bot->index].vic |= ret;
+						int dir_left = (int)helper::prev_dir(bot->dir);
+						int dir_right = (int)helper::next_dir(bot->dir);
+						if(left && (!(bot->map[bot->index].vic & (1 << dir_left)) || !bot->map[bot->index].vis))
+						{
+							int dir = (int)helper::prev_dir(bot->dir);
+							bool ret = drop_vic(nrk, left);
+							if(ret)
+								bot->map[bot->index].vic |= (1 << dir) & 0b1111;
+						}
+						else if(!(bot->map[bot->index].vic & (1 << dir_right)) || !bot->map[bot->index].vis)
+						{
+							int dir = (int)helper::next_dir(bot->dir);
+							bool ret = drop_vic(nrk, left);
+							if(ret)
+								bot->map[bot->index].vic |= (1 << dir) & 0b1111;
+						}
 					}
 				}
 			}
 			std::this_thread::sleep_for(std::chrono::milliseconds(20));
 		}
 
-		int ramp = (int)(*Bridge::get_data_value("ramp"))[0];
-		int ramp_len = (int)(*Bridge::get_data_value("ramp"))[1];
-		int ramp_height = (int)(*Bridge::get_data_value("ramp"))[2];
+		int ramp = 0;
+		int ramp_len = 0;
+		int ramp_height = 0;
+
+		//help stop dem crashes bru
+		if(Bridge::get_data_value("ramp").has_value())
+		{
+			ramp = (int)(*Bridge::get_data_value("ramp"))[0];
+			ramp_len = (int)(*Bridge::get_data_value("ramp"))[1];
+			ramp_height = (int)(*Bridge::get_data_value("ramp"))[2];
+		}
+		
 		//works since it can't be both :)
 		bool up_ramp = ramp == 1;
 		bool down_ramp = ramp == 10;
@@ -814,12 +904,14 @@ namespace driver
 		while(!Bridge::get_data_value("turn_status").has_value())
 		{
 			PythonScript::Exec(ser_py_file);
+			PythonScript::Exec(cv_py_file);
 			std::this_thread::sleep_for(std::chrono::milliseconds(20));
 		}
 
 		while((bool)(*Bridge::get_data_value("turn_status"))[0])
 		{
 			PythonScript::Exec(ser_py_file);
+			PythonScript::Exec(cv_py_file);
 			std::this_thread::sleep_for(std::chrono::milliseconds(20));
 		}
 	}

@@ -79,6 +79,15 @@ void drive(int32_t encoders, int speed) {
     PID = p * KP_FORWARD;
     //Serial.println(PID);
 
+    double dist_percent = 0.0;
+
+    if(ticks_before <= motorR.getTicks())
+      dist_percent = (double)abs(motorR.getTicks()) / (double)abs(encoders);
+    //otherwise, just assume 0
+
+    pi_send_tag("dist_percent");
+    PI_SERIAL.println(dist_percent);
+
     if (returnColor(true) == 1) {
       while (/* motorR.getTicks() > 0 && */ motorL.getTicks() > 0 && tofCalibrated(5) >= 80) {
         forward(-speed);
@@ -98,21 +107,39 @@ void drive(int32_t encoders, int speed) {
     // speed = speed * (abs(encoders) - abs(motor1.getTicks()))/abs(encoders);
 
     // Serial.println(speed * (double)(abs(encoders) - abs(motor1.getTicks()))/abs(encoders));
-    bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
+    UPDATE_BNO();
 
     if (abs(BNO_Z) < 5) {
-      while (PI_SERIAL.available()) {
-        auto right_ticks = motorR.getTicks();
-        auto left_ticks = motorL.getTicks();
-        stopMotors();
-        pi_read_vision();
-        if (restart)
-          return;
-        oled_println("detected");
-        motorR.getTicks() = right_ticks;
-        motorL.getTicks() = left_ticks;
-        tstart = millis();
+
+      //TODO: find correct values
+      if(dist_percent <= 0.1 || dist_percent >= 0.9)
+      {
+        empty_serial_buffer();
+        pi_send_drop_status(false, false);
       }
+      else
+      {
+        while (PI_SERIAL.available()) {
+          auto right_ticks = motorR.getTicks();
+          auto left_ticks = motorL.getTicks();
+          stopMotors();
+          pi_read_vision();
+          if (restart)
+            return;
+          oled_println("detected");
+          motorR.getTicks() = right_ticks;
+          motorL.getTicks() = left_ticks;
+          tstart = millis();
+        }
+      }
+    }
+    else
+    {
+      //litterally impossible, ramp code is handled above
+      oled_clear();
+      oled_println("impossible!");
+      empty_serial_buffer();
+      pi_send_drop_status(false, false);
     }
 
     // double new_angle = global_angle;

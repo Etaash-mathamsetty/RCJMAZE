@@ -90,7 +90,7 @@ if True:
                 upper2 = np.array([red_high_hsv2])
                 mask2 = cv2.inRange(frame, lower2[i], upper2[i])
                 mask = cv2.bitwise_or(mask, mask2)
-                cv2.imshow("mask2", mask)
+                #cv2.imshow("mask2", mask)
             
             _,color_contours,_ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
             if len(color_contours) > 0:
