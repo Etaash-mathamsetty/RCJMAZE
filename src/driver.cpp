@@ -450,7 +450,7 @@ namespace driver
 		PythonScript::Exec(cleanup_py_file);
 	}
 
-	CREATE_DRIVER(void, drop_vic, int num, bool left)
+	CREATE_DRIVER(bool, drop_vic, int num, bool left)
 	{
 		//d [drop] N [number of kits, single digit only, can be 0 which will trigger the led] l/r [direction] \n
 		std::string direction = left ? "l" : "r";
@@ -468,6 +468,8 @@ namespace driver
 			PythonScript::Exec(ser_py_file);
 			std::this_thread::sleep_for(std::chrono::milliseconds(20));
 		}
+
+		return (bool)(*Bridge::get_data_value("drop_status"))[1];
 	}
 
 	void notify_wall_read()
@@ -513,27 +515,12 @@ namespace driver
 			if(bot->map[bot->index].checkpoint)
 				save_state();
 		}
-		//debug::print_node(bot->map[bot->index]);
-		
-		// Bridge::remove_data_value("victim");
-		// Bridge::remove_data_value("NRK");
-		// Bridge::remove_data_value("left");
-	
-		// if(!bot->map[bot->index].vic)
-		// {
-		// 	for(int i = 0; i < 2; i++) 
-		// 	{
-		// 		PythonScript::Exec(cv_py_file);
-		// 		bool victim = (bool)(*Bridge::get_data_value("victim"))[0];
-		// 		bool left = (bool)(*Bridge::get_data_value("left"))[0];
-		// 		int num_rescue = (int)(*Bridge::get_data_value("NRK"))[0];
-		// 		if(victim)
-		// 		{
-		// 			drop_vic(num_rescue, left);
-		// 			bot->map[bot->index].vic = true;
-		// 		}
-		// 	}
-		// }
+
+		for(int i = 0; i < 20; i++)
+		{
+			//prevent camera from desyncing
+			PythonScript::Exec(cv_py_file);
+		}
 	}
 
 	void set_mov_indexes(int delta, bool up_ramp, bool down_ramp, int ramp_len, int ramp_height, bool victim)
@@ -628,7 +615,9 @@ namespace driver
 		//wait for it to start running, increase update rate for forward :D
 		while(!Bridge::get_data_value("forward_status").has_value()) 
 		{ 
-			PythonScript::Exec(ser_py_file); 
+			PythonScript::Exec(ser_py_file);
+			//prevent camera from getting desynced
+			PythonScript::Exec(cv_py_file);
 			std::this_thread::sleep_for(std::chrono::milliseconds(20));
 		}
 		
@@ -651,8 +640,8 @@ namespace driver
 					int nrk = (*Bridge::get_data_value("NRK"))[0];
 					if(victim)
 					{
-						drop_vic(nrk, left);
-						bot->map[bot->index].vic = true;
+						bool ret = drop_vic(nrk, left);
+						bot->map[bot->index].vic |= ret;
 					}
 				}
 			}
