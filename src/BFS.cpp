@@ -191,8 +191,7 @@ int main(int argc, char* argv[]){
 			if(quitable && robot->index == robot->start_tile_floor[floor_num] && floor_num == start_floor)
 				break;
 			#else
-			PythonScript::Exec(cv_py_script);
-		
+			PythonScript::Exec(cv_py_file);
 			#endif
 			#ifdef TEST_MODE
 				std::cout << "press any key to continue..." << std::endl;
