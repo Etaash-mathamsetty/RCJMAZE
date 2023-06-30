@@ -53,6 +53,14 @@ void pi_send_walls(bool walls[4]) {
   PI_SERIAL.println(walls[math::wrapAround((int)w - (int)cur_direction, 4)]);
 }
 
+void pi_send_drop_status(bool status, bool success)
+{
+  pi_send_tag("drop_status");
+  PI_SERIAL.print((double)status);
+  PI_SERIAL.print(",");
+  PI_SERIAL.println((double)success);
+}
+
 void pi_read_vision() {
   String data = "";
   char ch = 0;
@@ -75,31 +83,23 @@ void pi_read_vision() {
       cur_cmd += c;
     } else if (c == 'l') {
       if (cur_cmd.length() > 0 && cur_cmd[0] == 'd') {
-        pi_send_tag("drop_status");
-        PI_SERIAL.println("1.0");
+        pi_send_drop_status(true, false);
 
         bool ret = kitDrop(num, 'l');
 
         cur_cmd.remove(0);
 
-        pi_send_tag("drop_status");
-        PI_SERIAL.println("0.0");
-        PI_SERIAL.print(",");
-        PI_SERIAL.println((double)ret);
+        pi_send_drop_status(false, ret);
       }
     } else if (c == 'r') {
       if (cur_cmd.length() > 0 && cur_cmd[0] == 'd') {
-        pi_send_tag("drop_status");
-        PI_SERIAL.println("1.0");
+        pi_send_drop_status(true, false);
 
         bool ret = kitDrop(num, 'r');
 
         cur_cmd.remove(0);
 
-        pi_send_tag("drop_status");
-        PI_SERIAL.print("0.0");
-        PI_SERIAL.print(",");
-        PI_SERIAL.println((double)ret);
+        pi_send_drop_status(false, ret)
       }
     } else if (c >= '0' && c <= '9') {
       if (cur_cmd.length() > 0 && cur_cmd[0] == 'd') {

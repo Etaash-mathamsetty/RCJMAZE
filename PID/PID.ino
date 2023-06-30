@@ -216,32 +216,23 @@ void pi_read_data() {
     }
     if (c == 'l') {
       if (cur_cmd.length() > 0 && cur_cmd[0] == 'd') {
-        pi_send_tag("drop_status");
-        PI_SERIAL.println("1.0");
+        pi_send_drop_status(true, false);
 
-        kitDrop(num, 'l');
+        bool ret = kitDrop(num, 'l');
 
         cur_cmd.remove(0);
 
-        if (num == 0)
-          delay(1000);
-
-        pi_send_tag("drop_status");
-        PI_SERIAL.println("0.0");
+        pi_send_drop_status(false, ret);
       }
     } else if (c == 'r') {
       if (cur_cmd.length() > 0 && cur_cmd[0] == 'd') {
-        pi_send_tag("drop_status");
-        PI_SERIAL.println("1.0");
+        pi_send_drop_status(true, false);
 
-        kitDrop(num, 'r');
+        bool ret = kitDrop(num, 'r');
+        
         cur_cmd.remove(0);
 
-        if (num == 0)
-          delay(1000);
-
-        pi_send_tag("drop_status");
-        PI_SERIAL.println("0.0");
+        pi_send_drop_status(false, ret);
       } else {
         bool* arr = get_tof_vals(wall_tresh);
 
