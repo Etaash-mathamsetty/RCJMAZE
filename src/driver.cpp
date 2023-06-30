@@ -685,7 +685,7 @@ namespace driver
 		//wait for it to finish running
 		//auto time_step = std::chrono::high_resolution_clock::now();
 		bool victim = false;
-		double prev_vic_dist = bot->map[bot->index].vic ? 0.0 : -0.1;
+		double prev_vic_dist = 0.0;
 		while((bool)(*Bridge::get_data_value("forward_status"))[0]) 
 		{ 
 			PythonScript::Exec(ser_py_file);
@@ -698,7 +698,7 @@ namespace driver
 			double dist_percent = (double)(*Bridge::get_data_value("dist_percent"))[0];
 
 			//TODO: determine the correct value!
-			if(dist_percent >= 0.0 && dist_percent <= 0.9)
+			if(dist_percent >= 0.1 && dist_percent <= 0.9)
 			{
 				for(int i = 0; i < 2; i++)
 				{
