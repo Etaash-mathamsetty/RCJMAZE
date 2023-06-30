@@ -175,7 +175,7 @@ void driveCM(float cm, int speed = 200, int tolerance = 10) {
   pi_send_forward_status(true, true);
   UPDATE_BNO();
   // ramp detection
-  if (tofCalibrated(4) > 220 && _tofCalibrated(4) <= 470 && _tofCalibrated(6) < 255  && _tofCalibrated(6) > 190 && abs(BNO_Z) < 5) {
+  if (_tofCalibrated(4) > 220 && _tofCalibrated(4) <= 470 && _tofCalibrated(6) < 255  && _tofCalibrated(6) > 190 && abs(BNO_Z) < 5) {
     oled_clear();
     oled_println("up ramp detected!");
     delay(500);
@@ -186,7 +186,7 @@ void driveCM(float cm, int speed = 200, int tolerance = 10) {
     return;
   }
 
-  if (tofCalibrated(4) >= 490 && _tofCalibrated(6) >= 470 && _tofCalibrated(6) <= 2000) {
+  if (_tofCalibrated(4) >= 490 && _tofCalibrated(6) >= 470 && _tofCalibrated(6) <= 2000) {
     oled_clear();
     oled_println("down ramp detected!");
     delay(500);
@@ -199,8 +199,8 @@ void driveCM(float cm, int speed = 200, int tolerance = 10) {
 
 #if 1
   const float mult_factor = 1.0;
-  uint right = (tofCalibrated(2) + tofCalibrated(3)) / 2;
-  uint left = (tofCalibrated(0) + tofCalibrated(1)) / 2;
+  uint right = (tofCalibrated(2, 10) + tofCalibrated(3, 10)) / 2;
+  uint left = (tofCalibrated(0, 10) + tofCalibrated(1, 10)) / 2;
   const float half_chassis = 75;
   const double target_dist_from_wall = (300.0 - half_chassis * 2) / 2.0;
 

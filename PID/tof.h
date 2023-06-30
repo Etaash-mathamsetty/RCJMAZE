@@ -86,13 +86,12 @@ uint _tofCalibrated(int select) {
   }
 }
 
-uint tofCalibrated(int select) {
-  uint32_t dist = 0;
-  const int samples = 2;
+uint tofCalibrated(int select, int samples = 1) {
+  uint64_t dist = 0;
   for (int n = 0; n < samples; n++) {
     dist += _tofCalibrated(select);
   }
-  dist /= 2;
+  dist /= samples;
   //oled_println(dist);
   return dist;
 }
