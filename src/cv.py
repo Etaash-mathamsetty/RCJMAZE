@@ -76,7 +76,8 @@ if True:
              
         # width: 320 height: 240
         # params : [y1:y2, x1:x2]
-        org = org[0 : 240, 100 : 220]
+        if(victim_strip):
+            org = org[0 : 240, 100 : 220]
         frame = cv2.cvtColor(org, cv2.COLOR_BGR2HSV)
         
         bounding_rect = []
