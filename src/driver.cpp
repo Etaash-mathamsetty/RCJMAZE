@@ -887,7 +887,7 @@ namespace driver
 				if(fail_count == 3)
 				{
 					if(std::filesystem::exists("save.txt"))
-						std::filesystem::remove("save.txt")
+						std::filesystem::remove("save.txt");
 					
 					exit(EXIT_FAILURE);
 				}
