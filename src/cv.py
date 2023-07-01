@@ -102,7 +102,7 @@ if True:
                 color_cont = max(color_contours, key=cv2.contourArea)
                 org = cv2.drawContours(org, [color_cont], -1, (0,255,0), 3)
                 _,_,w,h = cv2.boundingRect(color_cont)
-                if cv2.contourArea(color_cont) >= 1400 and w/h <= 2.5 and w/h >= 0.25:
+                if cv2.contourArea(color_cont) >= 2000 and w/h <= 2.5 and w/h >= 0.25:
                     bounding_rect.append(cv2.boundingRect(color_cont))
                 else:
                     bounding_rect.append([])
