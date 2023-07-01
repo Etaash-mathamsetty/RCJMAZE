@@ -668,6 +668,7 @@ namespace driver
 		CHECK(bot->map);
 		auto org_index = bot->index;
 		auto org_floor = floor_num;
+		static int fail_count = 0;
 		/*
 		 *
 		 * aysnc call using serial: PythonScript::CallPythonFunction("SendSerialCommand", "f\n");
@@ -883,6 +884,16 @@ namespace driver
 				bot->map[bot->index].bot = true;
 				get_sensor_data();
 				
+				if(fail_count == 3)
+				{
+					if(std::filesystem::exists("save.txt"))
+						std::filesystem::remove("save.txt")
+					
+					exit(EXIT_FAILURE);
+				}
+
+				fail_count++;
+
 				return false;
 			}
 
@@ -891,6 +902,8 @@ namespace driver
 			//don't read wall data only when black tile
 			return false;
 		}
+
+		fail_count = 0;
 
 		return true;
 	}
