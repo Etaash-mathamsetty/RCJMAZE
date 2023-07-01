@@ -515,7 +515,7 @@ namespace driver
 			if(bot->map[bot->index].checkpoint)
 				save_state();
 
-			bool dropped = false;
+			//bool dropped = false;
 			for(int i = 0; i < 2; i++)
 			{
 				PythonScript::Exec(cv_py_file);
@@ -523,7 +523,7 @@ namespace driver
 				bool left = (*Bridge::get_data_value("left"))[0];
 				int nrk = (*Bridge::get_data_value("NRK"))[0];
 
-				if(victim && !dropped)
+				if(victim)
 				{
 					if(left)
 					{
@@ -533,7 +533,7 @@ namespace driver
 						if(ret)
 						{
 							bot->map[bot->index].vic |= (1 << dir) & 0b1111;
-							dropped = true;
+							//dropped = true;
 						}
 					}
 					else
@@ -544,7 +544,7 @@ namespace driver
 						if(ret)
 						{
 							bot->map[bot->index].vic |= (1 << dir) & 0b1111;
-							dropped = true;
+							//dropped = true;
 						}
 					}					
 				}
@@ -552,7 +552,7 @@ namespace driver
 		}
 		else
 		{
-			bool dropped = false;
+			//bool dropped = false;
 			for(int i = 0; i < 2; i++)
 			{
 				PythonScript::Exec(cv_py_file);
@@ -560,7 +560,7 @@ namespace driver
 				bool left = (*Bridge::get_data_value("left"))[0];
 				int nrk = (*Bridge::get_data_value("NRK"))[0];
 
-				if(victim && !dropped)
+				if(victim)
 				{
 					int dir_left = (int)helper::prev_dir(bot->dir);
 					int dir_right = (int)helper::next_dir(bot->dir);
@@ -573,7 +573,7 @@ namespace driver
 						if(ret)
 						{
 							bot->map[bot->index].vic |= (1 << dir) & 0b1111;
-							dropped = true;
+							//dropped = true;
 						}
 						
 					}
@@ -585,7 +585,7 @@ namespace driver
 						if(ret)
 						{
 							bot->map[bot->index].vic |= (1 << dir) & 0b1111;
-							dropped = true;
+							//dropped = true;
 						}
 					}
 				}
@@ -697,21 +697,22 @@ namespace driver
 		//wait for it to finish running
 		//auto time_step = std::chrono::high_resolution_clock::now();
 		bool victim = false;
-		double prev_vic_dist_left = 0.0;
-		double prev_vic_dist_right = 0.0;
+		//double prev_vic_dist_left = 0.0;
+		//double prev_vic_dist_right = 0.0;
 		while((bool)(*Bridge::get_data_value("forward_status"))[0]) 
 		{ 
 			PythonScript::Exec(ser_py_file);
 			PythonScript::Exec(cv_py_file);
-			if(!Bridge::get_data_value("dist_percent").has_value())
+			if(!Bridge::get_data_value("can_drop").has_value())
 			{
-				std::this_thread::sleep_for(std::chrono::milliseconds(10));
+				std::this_thread::sleep_for(std::chrono::milliseconds(5));
 				continue;
 			}
-			double dist_percent = (double)(*Bridge::get_data_value("dist_percent"))[0];
+			bool can_drop_left = (bool)(*Bridge::get_data_value("can_drop"))[0];
+			bool can_drop_right = (bool)(*Bridge::get_data_value("can_drop"))[1];
 
 			//TODO: determine the correct value!
-			if(dist_percent >= 0.16 && dist_percent <= 1 - 0.16)
+			if(true)
 			{
 				for(int i = 0; i < 2; i++)
 				{
@@ -724,32 +725,32 @@ namespace driver
 					{
 						int dir_left = (int)helper::prev_dir(bot->dir);
 						int dir_right = (int)helper::next_dir(bot->dir);
-						if(left && (!(bot->map[bot->index].vic & (1 << dir_left)) || !bot->map[bot->index].vis) && dist_percent - prev_vic_dist_left >= 0.16)
+						if(left && (!(bot->map[bot->index].vic & (1 << dir_left)) || !bot->map[bot->index].vis) && can_drop_left)
 						{
-							int dir = (int)helper::prev_dir(bot->dir);
+							//int dir = (int)helper::prev_dir(bot->dir);
 							bool ret = drop_vic(nrk, left);
 							if(ret)
 							{
-								bot->map[bot->index].vic |= (1 << dir) & 0b1111;
-								prev_vic_dist_left = dist_percent;
+								bot->map[bot->index].vic |= (1 << dir_left) & 0b1111;
+								//prev_vic_dist_left = dist_percent;
+							    std::this_thread::sleep_for(std::chrono::milliseconds(20));
 							}
-							std::this_thread::sleep_for(std::chrono::milliseconds(20));
 						}
-						else if((!(bot->map[bot->index].vic & (1 << dir_right)) || !bot->map[bot->index].vis) && dist_percent - prev_vic_dist_right >= 0.16)
+						else if((!(bot->map[bot->index].vic & (1 << dir_right)) || !bot->map[bot->index].vis) && can_drop_right)
 						{
-							int dir = (int)helper::next_dir(bot->dir);
+							//int dir = (int)helper::next_dir(bot->dir);
 							bool ret = drop_vic(nrk, left);
 							if(ret)
 							{
-								bot->map[bot->index].vic |= (1 << dir) & 0b1111;
-								prev_vic_dist_right = dist_percent;
+								bot->map[bot->index].vic |= (1 << dir_right) & 0b1111;
+								//prev_vic_dist_right = dist_percent;
+								std::this_thread::sleep_for(std::chrono::milliseconds(20));
 							}
-							std::this_thread::sleep_for(std::chrono::milliseconds(20));
 						}
 					}
 				}
 			}
-			std::this_thread::sleep_for(std::chrono::milliseconds(5));
+			//std::this_thread::sleep_for(std::chrono::milliseconds(5));
 		}
 
 		int ramp = 0;
