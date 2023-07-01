@@ -499,6 +499,7 @@ namespace driver
 		robot* bot = robot::get_instance();
 		CHECK(bot);
 		CHECK(bot->map);
+		PythonScript::CallPythonFunction<bool, bool>("VictimStrip", false);
 		//bot->map[bot->index].letter = (uint8_t)Bridge::get_data_value("letter")[0];
 		if(!bot->map[bot->index].vis)
 		{
@@ -692,6 +693,8 @@ namespace driver
 			PythonScript::Exec(cv_py_file);
 			std::this_thread::sleep_for(std::chrono::milliseconds(20));
 		}
+
+		PythonScript::CallPythonFunction<bool, bool>("VictimStrip", true);
 		
 		Bridge::remove_data_value("victim");
 		

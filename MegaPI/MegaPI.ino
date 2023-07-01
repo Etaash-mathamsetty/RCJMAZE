@@ -2,7 +2,7 @@
 //#define FAKE_SERIAL
 // #define DEBUG_DISPLAY
 // #define MOTORSOFF
-// #define TEST
+//#define TEST
 // #define ALIGN_ANGLE
 // #define NO_PI //basic auto when no raspberry pi (brain stem mode)
 // #define NO_LIMIT
@@ -359,7 +359,7 @@ void loop() {
   }
 #endif
 
-  delay(100);
+  delay(10);
 }
 #else
 
@@ -391,9 +391,13 @@ void loop() {
 // Serial.print(" ");
 // Serial.println(tofCalibrated(4));
 
-right(SPEED, SPEED, false);
-alignAngle(false);
-delay(1000);
+// right(SPEED, SPEED, false);
+// alignAngle(false);
+// delay(1000);
+
+  kitDrop(12, 'r');
+  delay(500);
+
 
 // forwardTicks(100, 5 * CM_TO_ENCODERS);
 // oled.print("Ticks: ");
@@ -455,7 +459,7 @@ delay(1000);
 #else
   // alignAngle(true);
   // delay(1000);
-#endif
+#endif //ALIGN_ANGLE
 
 
   // kitDrop(2, 'r');
@@ -494,7 +498,7 @@ delay(1000);
     clear_oled_counter = 0;
   }
 
-#endif
+#endif //TEST
 }
 
 #endif

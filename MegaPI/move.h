@@ -27,6 +27,8 @@ void drive(int32_t encoders, int speed) {
   double new_angle = start_yaw;
   double ticks_left_bdrop = 0.0;
   double ticks_right_bdrop = 0.0;
+  const double full_vic_percent = 0.3;
+  const double strip_vic_percent = 0.2;
   // encoders = orig_encoders / cos(-orientationData.orientation.z * (2 * PI / 360));
 
 
@@ -89,9 +91,9 @@ void drive(int32_t encoders, int speed) {
     if((int64_t)millis() - (int64_t)time_dist_percent > 5)
     {
       pi_send_tag("can_drop");
-      PI_SERIAL.print(double(dist_percent >= 0.16 && dist_percent <= 1 - 0.16 && dist_percent - ticks_left_bdrop >= 0.16));
+      PI_SERIAL.print(double(dist_percent >= full_vic_percent && dist_percent <= 1 - full_vic_percent && dist_percent - ticks_left_bdrop >= strip_vic_percent));
       PI_SERIAL.print(",");
-      PI_SERIAL.println(double(dist_percent >= 0.16 && dist_percent <= 1 - 0.16 && dist_percent - ticks_right_bdrop >= 0.16));
+      PI_SERIAL.println(double(dist_percent >= full_vic_percent && dist_percent <= 1 - full_vic_percent && dist_percent - ticks_right_bdrop >= strip_vic_percent));
     }
 
     if (returnColor(true) == 1) {
@@ -116,7 +118,7 @@ void drive(int32_t encoders, int speed) {
     UPDATE_BNO();
 
     if (abs(BNO_Z - start_pitch) < 5) {
-      if(dist_percent < 0.16 || dist_percent > 1 - 0.16)
+      if(dist_percent < full_vic_percent || dist_percent > 1 - full_vic_percent)
       {
         empty_serial_buffer();
         pi_send_drop_status(false, false);
@@ -129,9 +131,9 @@ void drive(int32_t encoders, int speed) {
           ticks_left_bdrop /= encoders;
           ticks_right_bdrop /= encoders;
           pi_send_tag("can_drop");
-          PI_SERIAL.print(double(dist_percent >= 0.16 && dist_percent <= 1 - 0.16 && dist_percent - ticks_left_bdrop >= 0.16));
+          PI_SERIAL.print(double(dist_percent >= full_vic_percent && dist_percent <= 1 - full_vic_percent && dist_percent - ticks_left_bdrop >= strip_vic_percent));
           PI_SERIAL.print(",");
-          PI_SERIAL.println(double(dist_percent >= 0.16 && dist_percent <= 1 - 0.16 && dist_percent - ticks_right_bdrop >= 0.16));
+          PI_SERIAL.println(double(dist_percent >= full_vic_percent && dist_percent <= 1 - full_vic_percent && dist_percent - ticks_right_bdrop >= strip_vic_percent));
           oled.clear();
           oled.print("lbdrop::");
           oled.println(ticks_left_bdrop);

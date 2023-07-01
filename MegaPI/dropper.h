@@ -79,7 +79,7 @@ bool kitDrop(int num, char side) {
     delay(1000);
   else
     //required by rules
-  delay(3000);
+   delay(3000);
   analogWrite(5, 0);
   analogWrite(2, 0);
   analogWrite(4, 0);

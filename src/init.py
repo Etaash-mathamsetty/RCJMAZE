@@ -8,6 +8,7 @@ import time
 print("Initializing Python subsystem")
 
 simulation = Rb.isSimulation()
+victim_strip = False
 print("simulation = " + str(simulation))
 
 if not simulation:
@@ -46,6 +47,10 @@ def SendSerialCommand(command):
         ser.write(b)
     except:
         return False
+    return True
+
+def VictimStrip(strp):
+    victim_strip = strp
     return True
 
 print("py init done!")
