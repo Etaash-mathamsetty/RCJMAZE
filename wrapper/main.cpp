@@ -46,6 +46,7 @@ bool button_released()
 }
 
 bool printed = false;
+bool button_once = true;
 
 bool has_child_exited(pid_t pid)
 {
@@ -57,6 +58,7 @@ bool has_child_exited(pid_t pid)
         if(!printed)
             std::cerr << "error with waitpid (probably SEGV on child)" << std::endl;
         printed = true;
+        button_once = true;
         return false;
     }
     if(ret == 0)
@@ -68,6 +70,8 @@ bool has_child_exited(pid_t pid)
     {
         return true;
     }
+
+    button_once = true;
 
     return false;
 }
@@ -213,12 +217,18 @@ int main(int argc, char **argv)
 
         printed = false;
 
-        //wait until button is pressed again for program to start
-        while(!button_pressed());
-        while(!button_released());
+        //prevent them from thinking we are cheating
+        if(!button_once)
+        {
+            //wait until button is pressed again for program to start
+            while(!button_pressed());
+            while(!button_released());
 
-        send_restart_command();
-        sleep(5);
+            send_restart_command();
+            sleep(5);
+
+            button_once = false;
+        }
     }
 
     
