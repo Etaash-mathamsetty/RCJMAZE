@@ -53,7 +53,6 @@ if (abs(relative_angle) < 1) {
   return;
 }
 
-#ifndef TURN_TEST
 #ifndef MOTORSOFF
   if (alignment) {
     motorL.addBoost(ALIGN_TURN_BOOST);
@@ -167,49 +166,6 @@ if (abs(relative_angle) < 1) {
   resetBoost();
   stopMotors();
 #endif
-#else 
-
-  if (!alignment) {
-    motorL.addBoost(TURN_BOOST);
-    motorR.addBoost(TURN_BOOST);
-  } else {
-    motorL.addBoost(ALIGN_TURN_BOOST);
-    motorR.addBoost(ALIGN_TURN_BOOST);
-    speed = ALIGN_SPEED;
-  }
-
-  UPDATE_BNO();
-  int32_t new_angle = BNO_X + relative_angle;
-  if (new_angle < 0) {
-    new_angle += 360;
-  } else if (new_angle >= 360) {
-    new_angle -= 360;
-  }
-
-  double reading;
-  int32_t tstart = millis();
-  const double BNO_STATIC_KP = 30;
-
-  do {
-    UPDATE_BNO();
-    if (BNO_X - new_angle > 180) {
-      reading = BNO_X - 360;
-    } else if (BNO_X - new_angle < -180) {
-      reading = BNO_X + 360;
-    } else {
-      reading = BNO_X;
-    }
-
-    double bno_error = (reading - new_angle) * (BNO_STATIC_KP + abs(reading - new_angle) / 300.0);
-    if ((int32_t) millis() - (int32_t) tstart > 5000) {
-      addBoost(TURN_BOOST + 80);
-    }
-    forward(bno_error, -bno_error);
-  } while (abs(reading - new_angle) > 1);
-
-  resetBoost();
-
-#endif
 }
 
 void right(int relative_angle, int speed, bool turn_status = true) {
@@ -259,7 +215,6 @@ void raw_left(double relative_angle, int speed, bool alignment) {
     return;
   }
 
-#ifndef TURN_TEST
 #ifndef MOTORSOFF
 
   if (!alignment) {
@@ -366,51 +321,6 @@ void raw_left(double relative_angle, int speed, bool alignment) {
   }
   resetBoost();
   stopMotors();
-#endif
-#else
-
-  if (!alignment) {
-    motorL.addBoost(TURN_BOOST);
-    motorR.addBoost(TURN_BOOST);
-  } else {
-    motorL.addBoost(ALIGN_TURN_BOOST);
-    motorR.addBoost(ALIGN_TURN_BOOST);
-    speed = ALIGN_SPEED;
-  }
-
-  UPDATE_BNO();
-  int32_t new_angle = BNO_X - relative_angle;
-  if (new_angle < 0) {
-    new_angle += 360;
-  } else if (new_angle >= 360) {
-    new_angle -= 360;
-  }
-
-  double reading;
-  int32_t tstart = millis();
-  const double BNO_STATIC_KP = 30;
-
-  do {
-    UPDATE_BNO();
-    if (BNO_X - new_angle > 180) {
-      reading = BNO_X - 360;
-    } else if (BNO_X - new_angle < -180) {
-      reading = BNO_X + 360;
-    } else {
-      reading = BNO_X;
-    }
-
-    double bno_error = (reading - new_angle) * (BNO_STATIC_KP + abs(reading - new_angle) / 300.0);
-
-    if ((int32_t) millis() - (int32_t) tstart > 5000) {
-      addBoost(TURN_BOOST + 80);
-    }
-
-    forward(bno_error, -bno_error);
-  } while (abs(reading - new_angle) > 1);
-
-  resetBoost();
-
 #endif
 }
 
@@ -598,10 +508,6 @@ void alignAngle(bool reset, int tolerance = 10, double start_yaw = INFINITY) {
     UPDATE_BNO();
 
     double new_angle = closestToDirection(BNO_X);
-    if(start_yaw != INFINITY)
-    {
-      new_angle = start_yaw;
-    }
     // double new_angle = global_angle;
     double reading = 0.0;
 

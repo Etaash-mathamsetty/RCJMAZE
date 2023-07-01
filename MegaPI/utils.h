@@ -45,17 +45,10 @@ void stopMotors(){
 void forwardTicks(int speed, int ticks, bool reset = true){
   if(reset)
   resetTicks();
-  if(speed > 0){
-    while(motor2->getTicks() <= ticks){
-      forward(speed);
-    }
+  while(abs(motor->getTicks()) <= abs(ticks))
+  {
+    forward(speed);
   }
-  else{
-    while(motor->getTicks() <= ticks){
-      forward(speed);
-    }
-  }
-
   stopMotors();
 }
 

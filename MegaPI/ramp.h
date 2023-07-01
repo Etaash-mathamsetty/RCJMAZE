@@ -68,7 +68,7 @@ bool handle_up_ramp(double start_pitch) {
       err = 0;
     }
 
-    forward(85.0 + bno_error + err, 85.0 - bno_error - err);
+    forward(80.0 + err, 80.0 - err);
     UPDATE_BNO();
 
     // calculate distance on a ramp
@@ -161,7 +161,7 @@ bool handle_down_ramp(double start_pitch) {
 
     if (returnColor(true) == 1) {
       
-      forwardTicks(SPEED * 0.75, -10 * CM_TO_ENCODERS);
+      forwardTicks(-SPEED * 0.75, 10 * CM_TO_ENCODERS);
       pi_send_forward_status(false, false);
       pi_send_ramp(0.0,0.0,0.0);
       return;
@@ -179,7 +179,7 @@ bool handle_down_ramp(double start_pitch) {
   while (BNO_Z - start_pitch <= -6.7 && tofCalibrated(4) >= 90) {
     if (returnColor(true) == 1) {
       
-      forwardTicks(SPEED * 0.75, -10 * CM_TO_ENCODERS);
+      forwardTicks(-SPEED * 0.75, 10 * CM_TO_ENCODERS);
       pi_send_forward_status(false, false);
       pi_send_ramp(0.0,0.0,0.0);
       return;
@@ -222,7 +222,7 @@ bool handle_down_ramp(double start_pitch) {
     UPDATE_BNO();
     double delta_theta = abs(BNO_Z - start_pitch);
 
-    forward(70.0 + bno_error + err, 70.0 - bno_error - err);
+    forward(70.0 + err, 70.0 - err);
 
     double delta_x = abs(motorR.getTicks()) - abs(old_x);
     old_x = motorR.getTicks();
