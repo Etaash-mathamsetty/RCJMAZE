@@ -521,7 +521,7 @@ namespace driver
 				save_state();
 
 			bool dropped = false;
-			for(int i = 0; i < 40; i++)
+			for(int i = 0; i < 2; i++)
 			{
 				PythonScript::Exec(cv_py_file);
 				bool victim = (*Bridge::get_data_value("victim"))[0];
@@ -551,7 +551,6 @@ namespace driver
 							bot->map[bot->index].vic |= (1 << dir) & 0b1111;
 							dropped = true;
 						}
-
 					}					
 				}
 			}
@@ -559,7 +558,7 @@ namespace driver
 		else
 		{
 			bool dropped = false;
-			for(int i = 0; i < 40; i++)
+			for(int i = 0; i < 2; i++)
 			{
 				PythonScript::Exec(cv_py_file);
 				bool victim = (*Bridge::get_data_value("victim"))[0];
@@ -739,7 +738,7 @@ namespace driver
 								bot->map[bot->index].vic |= (1 << dir) & 0b1111;
 								prev_vic_dist_left = dist_percent;
 							}
-							std::this_thread::sleep_for(std::chrono::milliseconds(10));
+							std::this_thread::sleep_for(std::chrono::milliseconds(20));
 						}
 						else if((!(bot->map[bot->index].vic & (1 << dir_right)) || !bot->map[bot->index].vis) && dist_percent - prev_vic_dist_right >= 0.16)
 						{
@@ -750,7 +749,7 @@ namespace driver
 								bot->map[bot->index].vic |= (1 << dir) & 0b1111;
 								prev_vic_dist_right = dist_percent;
 							}
-							std::this_thread::sleep_for(std::chrono::milliseconds(10));
+							std::this_thread::sleep_for(std::chrono::milliseconds(20));
 						}
 					}
 				}

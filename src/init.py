@@ -21,12 +21,14 @@ if not simulation:
     label_txt = np.loadtxt("label.txt", np.float32).reshape((feature_txt.shape[0], 1))
     knn.train(feature_txt, cv2.ml.ROW_SAMPLE, label_txt)
 
-    video = cv2.VideoCapture(0)
-    video1 = cv2.VideoCapture(1)
+    video = cv2.VideoCapture(0, cv2.CAP_V4L2)
+    video1 = cv2.VideoCapture(1, cv2.CAP_V4L2)
     video.set(3, 320)
     video.set(4, 240)
     video1.set(3, 320)
     video1.set(4, 240)
+    video.set(cv2.CAP_PROP_BUFFERSIZE, 1)
+    video1.set(cv2.CAP_PROP_BUFFERSIZE, 1)
 
     if not video.isOpened():
         print("failed to open video 0")

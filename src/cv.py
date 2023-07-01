@@ -68,8 +68,10 @@ if True:
     
     for i in range(1):
         if camera_num:
+            video.set(cv2.CAP_PROP_BUFFERSIZE, 1)
             org = cv2.flip(video.read()[1], -1)
         else:
+            video1.set(cv2.CAP_PROP_BUFFERSIZE, 1)
             org = cv2.flip(video1.read()[1], -1)
              
         # width: 320 height: 240
