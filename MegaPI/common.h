@@ -143,7 +143,7 @@ void oled_display_walls(bool walls[4]) {
 int closestToDirection(double num) {
   for (int i = 0; i <= 360; i += 90) {
     if (abs(num - i) <= 45) {
-      return i;
+      return (i == 360 ? 0 : i);
     }
   }
 }

@@ -35,6 +35,8 @@ bool kitDrop(int num, char side) {
   }
 
   analogWrite(5, 50);
+  analogWrite(2, 50);
+  analogWrite(4, 50);
   if (num > 0) {
     if (side == 'r') {
       myservo2.write(50);
@@ -77,8 +79,10 @@ bool kitDrop(int num, char side) {
     delay(1000);
   else
     //required by rules
-    delay(3000);
+  delay(3000);
   analogWrite(5, 0);
+  analogWrite(2, 0);
+  analogWrite(4, 0);
 
   return true;
 }

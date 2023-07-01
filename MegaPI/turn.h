@@ -179,11 +179,11 @@ void right(int relative_angle, int speed, bool turn_status = true) {
   }
 
 
-  int offset = (int)(orientationData.orientation.x) % relative_angle;
+  // int offset = (int)(orientationData.orientation.x) % relative_angle;
 
-  if (offset < relative_angle / 2) {
-    relative_angle -= offset;
-  }
+  // if (offset < relative_angle / 2) {
+  //   relative_angle -= offset;
+  // }
 
   raw_right(relative_angle, speed, false);
 
@@ -327,11 +327,11 @@ void raw_left(double relative_angle, int speed, bool alignment) {
 void left(int relative_angle, int speed, bool turn_status = true) {
   bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
 
-  int offset = relative_angle - (int)(orientationData.orientation.x) % relative_angle;
+  // int offset = relative_angle - (int)(orientationData.orientation.x) % relative_angle;
 
-  if (offset < relative_angle / 2) {
-    relative_angle -= offset;
-  }
+  // if (offset < relative_angle / 2) {
+  //   relative_angle -= offset;
+  // }
 
   if (turn_status) {
     pi_send_tag("turn_status");
@@ -514,6 +514,12 @@ void alignAngle(bool reset, int tolerance = 10, double start_yaw = INFINITY) {
     if (abs(new_angle - BNO_X) < 3) {
       return;
     }
+
+    // oled.clearDisplay();
+    // oled.setCursor(0,0);
+    // oled.print(BNO_X);
+    // oled.print(" ");
+    // oled.println(new_angle);
 
     double tstart = millis();
 

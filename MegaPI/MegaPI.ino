@@ -391,7 +391,7 @@ void loop() {
 // Serial.print(" ");
 // Serial.println(tofCalibrated(4));
 
-right(SPEED, 90);
+right(SPEED, SPEED, false);
 alignAngle(false);
 delay(1000);
 
