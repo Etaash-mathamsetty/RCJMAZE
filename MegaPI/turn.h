@@ -386,7 +386,7 @@ void turn(char char_end_direction) {
     case -2:
       left(90, SPEED, false);
       global_angle = math::wrapAround(global_angle - 90, 360);
-      delay(200);
+      delay(700);
       left(90, SPEED);
       global_angle = math::wrapAround(global_angle - 90, 360);
       break;

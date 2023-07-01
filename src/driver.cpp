@@ -889,6 +889,8 @@ namespace driver
 					if(std::filesystem::exists("save.txt"))
 						std::filesystem::remove("save.txt");
 					
+					std::cout << "failed 3 times!!" << std::endl;
+
 					exit(EXIT_FAILURE);
 				}
 

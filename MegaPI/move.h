@@ -25,6 +25,8 @@ void drive(int32_t encoders, int speed) {
   bool limit_detected = false;
   double BNO_KP = 7;
   double new_angle = start_yaw;
+  double ticks_left_bdrop = 0.0;
+  double ticks_right_bdrop = 0.0;
   // encoders = orig_encoders / cos(-orientationData.orientation.z * (2 * PI / 360));
 
 
@@ -81,11 +83,15 @@ void drive(int32_t encoders, int speed) {
       dist_percent = (double)abs(motorR.getTicks()) / (double)abs(encoders);
     //otherwise, just assume 0
 
-    if((int32_t)millis() - (int32_t)time_dist_percent > 20)
+    //oled.setCursor(0, 0);
+    //oled.print("dist_percent: ");
+    //oled.println(dist_percent);
+    if((int64_t)millis() - (int64_t)time_dist_percent > 5)
     {
-      pi_send_tag("dist_percent");
-      PI_SERIAL.println(dist_percent);
-      time_dist_percent = millis();
+      pi_send_tag("can_drop");
+      PI_SERIAL.print(double(dist_percent >= 0.16 && dist_percent <= 1 - 0.16 && dist_percent - ticks_left_bdrop >= 0.16));
+      PI_SERIAL.print(",");
+      PI_SERIAL.println(double(dist_percent >= 0.16 && dist_percent <= 1 - 0.16 && dist_percent - ticks_right_bdrop >= 0.16));
     }
 
     if (returnColor(true) == 1) {
@@ -109,9 +115,7 @@ void drive(int32_t encoders, int speed) {
     // Serial.println(speed * (double)(abs(encoders) - abs(motor1.getTicks()))/abs(encoders));
     UPDATE_BNO();
 
-    if (abs(BNO_Z) < 5) {
-
-      //TODO: find correct values
+    if (abs(BNO_Z - start_pitch) < 5) {
       if(dist_percent < 0.16 || dist_percent > 1 - 0.16)
       {
         empty_serial_buffer();
@@ -120,15 +124,22 @@ void drive(int32_t encoders, int speed) {
       else
       {
         while (PI_SERIAL.available()) {
-          auto right_ticks = motorR.getTicks();
-          auto left_ticks = motorL.getTicks();
           stopMotors();
-          pi_read_vision();
+          pi_read_vision(ticks_left_bdrop, ticks_right_bdrop);
+          ticks_left_bdrop /= encoders;
+          ticks_right_bdrop /= encoders;
+          pi_send_tag("can_drop");
+          PI_SERIAL.print(double(dist_percent >= 0.16 && dist_percent <= 1 - 0.16 && dist_percent - ticks_left_bdrop >= 0.16));
+          PI_SERIAL.print(",");
+          PI_SERIAL.println(double(dist_percent >= 0.16 && dist_percent <= 1 - 0.16 && dist_percent - ticks_right_bdrop >= 0.16));
+          oled.clear();
+          oled.print("lbdrop::");
+          oled.println(ticks_left_bdrop);
+          oled.print("rbdrop::");
+          oled.println(ticks_right_bdrop);
           if (restart)
             return;
           oled_println("detected");
-          motorR.getTicks() = right_ticks;
-          motorL.getTicks() = left_ticks;
           tstart = millis();
         }
       }
@@ -204,17 +215,17 @@ void driveCM(float cm, int speed = 200, int tolerance = 10) {
   // ramp detection
 
   int invalid_count = 0;
-  int32_t tof_front = tofCalibrated(4, 3);
+  int32_t tof_front = tofCalibrated(4);
   int32_t tof_ramp = tofCalibrated(6, 5, &invalid_count);
 
-  if (tof_front > 220 && tof_front <= 530 && tof_ramp < 265  && tof_ramp > 190 && abs(BNO_Z) < 5) {
+  if (tof_front > 220 && tof_front <= 530 && tof_ramp < 265  && tof_ramp > 190 && abs(BNO_Z) < 4) {
     forwardTicks(SPEED * 0.75, 2 * CM_TO_ENCODERS);
     invalid_count = 0;
-    tof_front = tofCalibrated(4, 3);
+    tof_front = tofCalibrated(4);
     tof_ramp = tofCalibrated(6, 5, &invalid_count);
   }
 
-  if (tof_front > 220 && tof_front <= 490 && tof_ramp < 255  && tof_ramp > 190 && abs(BNO_Z) < 5) {
+  if (tof_front > 220 && tof_front <= 490 && tof_ramp < 255  && tof_ramp > 190 && abs(BNO_Z) < 4) {
     oled_clear();
     oled_println("up ramp detected!");
     delay(500);
@@ -225,7 +236,7 @@ void driveCM(float cm, int speed = 200, int tolerance = 10) {
     return;
   }
 
-  if (tof_front >= 490 && tof_ramp >= 460 && tof_ramp <= 2000 && invalid_count <= 0) {
+  if (tof_front >= 490 && tof_ramp >= 460 && tof_ramp <= 2000 && invalid_count <= 0 && abs(BNO_Z) < 4) {
     oled_clear();
     oled_println("down ramp detected!");
     delay(500);
@@ -238,8 +249,8 @@ void driveCM(float cm, int speed = 200, int tolerance = 10) {
 
 #if 1
   const float mult_factor = 1.0;
-  uint right = (tofCalibrated(2, 5) + tofCalibrated(3, 5)) / 2;
-  uint left = (tofCalibrated(0, 5) + tofCalibrated(1, 5)) / 2;
+  uint right = (tofCalibrated(2, 3) + tofCalibrated(3, 3)) / 2;
+  uint left = (tofCalibrated(0, 3) + tofCalibrated(1, 3)) / 2;
   const float half_chassis = 75;
   const double target_dist_from_wall = (300.0 - half_chassis * 2) / 2.0;
 

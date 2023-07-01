@@ -61,7 +61,7 @@ void pi_send_drop_status(bool status, bool success)
   PI_SERIAL.println((double)success);
 }
 
-void pi_read_vision() {
+void pi_read_vision(double& left_vic_ticks, double& right_vic_ticks) {
   String data = "";
   char ch = 0;
   int num = 0;
@@ -90,6 +90,8 @@ void pi_read_vision() {
         cur_cmd.remove(0);
 
         pi_send_drop_status(false, ret);
+
+        left_vic_ticks = motorR.getTicks();
       }
     } else if (c == 'r') {
       if (cur_cmd.length() > 0 && cur_cmd[0] == 'd') {
@@ -100,6 +102,8 @@ void pi_read_vision() {
         cur_cmd.remove(0);
 
         pi_send_drop_status(false, ret);
+
+        right_vic_ticks = motorR.getTicks();
       }
     } else if (c >= '0' && c <= '9') {
       if (cur_cmd.length() > 0 && cur_cmd[0] == 'd') {

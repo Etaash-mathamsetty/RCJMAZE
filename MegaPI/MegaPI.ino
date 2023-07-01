@@ -2,7 +2,7 @@
 //#define FAKE_SERIAL
 // #define DEBUG_DISPLAY
 // #define MOTORSOFF
-#define TEST
+// #define TEST
 // #define ALIGN_ANGLE
 // #define NO_PI //basic auto when no raspberry pi (brain stem mode)
 // #define NO_LIMIT
