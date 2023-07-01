@@ -469,11 +469,6 @@ namespace driver
 			std::this_thread::sleep_for(std::chrono::milliseconds(20));
 		}
 
-		for(int i = 0; i < 100; i++)
-		{
-			PythonScript::Exec(cv_py_file);
-		}
-
 		return (bool)(*Bridge::get_data_value("drop_status"))[1];
 	}
 
