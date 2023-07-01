@@ -881,6 +881,8 @@ namespace driver
 				bot->map[bot->index].vis = false;
 				bot->map[bot->index].bot = true;
 				get_sensor_data();
+				
+				return false;
 			}
 
 			bot->index = org_index;
