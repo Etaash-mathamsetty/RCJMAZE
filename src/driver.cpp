@@ -705,13 +705,14 @@ namespace driver
 		while((bool)(*Bridge::get_data_value("forward_status"))[0]) 
 		{ 
 			PythonScript::Exec(ser_py_file);
+			PythonScript::Exec(cv_py_file);
 			for(int i = 0; i < 2; i++)
 			{
 				PythonScript::Exec(cv_py_file);
 				victim = (*Bridge::get_data_value("victim"))[0];
 				bool left = (*Bridge::get_data_value("left"))[0];
 				int nrk = (*Bridge::get_data_value("NRK"))[0];
-				//TODO: Tune this value
+
 				if(victim)
 				{
 					int dir_left = (int)helper::prev_dir(bot->dir);
