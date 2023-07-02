@@ -84,13 +84,16 @@ void pi_read_vision(double& left_vic_ticks, double& right_vic_ticks, double dist
     } else if (c == 'l') {
       if (cur_cmd.length() > 0 && cur_cmd[0] == 'd') {
         if(dist_percent - left_vic_ticks < strip_vic_percent)
+        {
+          pi_send_drop_status(false, false);
           continue;
+        }
 
-        if(dist_percent < full_vic_percent)
+        if(dist_percent < full_vic_percent || dist_percent > 1.0 - full_vic_percent)
+        {
+          pi_send_drop_status(false, false);
           continue;
-
-        if(dist_percent > 1.0 - full_vic_percent)
-          continue;
+        }
 
         pi_send_drop_status(true, false);
 
@@ -105,14 +108,16 @@ void pi_read_vision(double& left_vic_ticks, double& right_vic_ticks, double dist
     } else if (c == 'r') {
       if (cur_cmd.length() > 0 && cur_cmd[0] == 'd') {
         if(dist_percent - right_vic_ticks < strip_vic_percent)
+        {
+          pi_send_drop_status(false, false);
           continue;
+        }
 
-        if(dist_percent > 1.0 - full_vic_percent)
+        if(dist_percent > 1.0 - full_vic_percent || dist_percent < full_vic_percent)
+        {
+          pi_send_drop_status(false, false);
           continue;
-
-        if(dist_percent < full_vic_percent)
-          continue;
-          
+        }
 
         pi_send_drop_status(true, false);
 
