@@ -32,7 +32,7 @@ bool handle_up_ramp(double start_pitch) {
   }
 
   double old_x = motorR.getTicks();
-  const float wall_kp = 0.2f;
+  const float wall_kp = 0.35f;
   UPDATE_BNO();
 
   //move until not ramp
@@ -171,7 +171,7 @@ bool handle_down_ramp(double start_pitch) {
   UPDATE_BNO();
 
   double old_x = motorR.getTicks();
-  const float wall_kp = 0.2f;
+  const float wall_kp = 0.35f;
   const double BNO_KP = 2;
 
   // move until not ramp
