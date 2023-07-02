@@ -7,7 +7,10 @@
 inline void empty_serial_buffer()
 {
   while(PI_SERIAL.available())
+  {
     PI_SERIAL.read();
+    delay(5);
+  }
 }
 
 inline void pi_send_tag(const char* tag) {
