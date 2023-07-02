@@ -46,7 +46,7 @@ bool button_released()
 }
 
 bool printed = false;
-bool button_once = true;
+bool button_once = false;
 
 bool has_child_exited(pid_t pid)
 {
@@ -71,7 +71,8 @@ bool has_child_exited(pid_t pid)
         return true;
     }
 
-    button_once = true;
+    if(WIFEXITED(status))
+        button_once = true;
 
     return false;
 }
