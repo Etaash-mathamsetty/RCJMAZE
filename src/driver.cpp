@@ -705,42 +705,37 @@ namespace driver
 		while((bool)(*Bridge::get_data_value("forward_status"))[0]) 
 		{ 
 			PythonScript::Exec(ser_py_file);
-
-			//TODO: determine the correct value!
-			if(true)
+			for(int i = 0; i < 2; i++)
 			{
-				for(int i = 0; i < 2; i++)
+				PythonScript::Exec(cv_py_file);
+				victim = (*Bridge::get_data_value("victim"))[0];
+				bool left = (*Bridge::get_data_value("left"))[0];
+				int nrk = (*Bridge::get_data_value("NRK"))[0];
+				//TODO: Tune this value
+				if(victim)
 				{
-					PythonScript::Exec(cv_py_file);
-					victim = (*Bridge::get_data_value("victim"))[0];
-					bool left = (*Bridge::get_data_value("left"))[0];
-					int nrk = (*Bridge::get_data_value("NRK"))[0];
-					//TODO: Tune this value
-					if(victim)
+					int dir_left = (int)helper::prev_dir(bot->dir);
+					int dir_right = (int)helper::next_dir(bot->dir);
+					if(left && (!(bot->map[bot->index].vic & (1 << dir_left)) || !bot->map[bot->index].vis))
 					{
-						int dir_left = (int)helper::prev_dir(bot->dir);
-						int dir_right = (int)helper::next_dir(bot->dir);
-						if(left && (!(bot->map[bot->index].vic & (1 << dir_left)) || !bot->map[bot->index].vis))
+						//int dir = (int)helper::prev_dir(bot->dir);
+						bool ret = drop_vic(nrk, left);
+						if(ret)
 						{
-							//int dir = (int)helper::prev_dir(bot->dir);
-							bool ret = drop_vic(nrk, left);
-							if(ret)
-							{
-								bot->map[bot->index].vic |= (1 << dir_left) & 0b1111;
-								//prev_vic_dist_left = dist_percent;
-							    //std::this_thread::sleep_for(std::chrono::milliseconds(20));
-							}
+							bot->map[bot->index].vic |= (1 << dir_left) & 0b1111;
+							//prev_vic_dist_left = dist_percent;
+							std::this_thread::sleep_for(std::chrono::milliseconds(20));
 						}
-						else if((!(bot->map[bot->index].vic & (1 << dir_right)) || !bot->map[bot->index].vis))
+					}
+					else if((!(bot->map[bot->index].vic & (1 << dir_right)) || !bot->map[bot->index].vis))
+					{
+						//int dir = (int)helper::next_dir(bot->dir);
+						bool ret = drop_vic(nrk, left);
+						if(ret)
 						{
-							//int dir = (int)helper::next_dir(bot->dir);
-							bool ret = drop_vic(nrk, left);
-							if(ret)
-							{
-								bot->map[bot->index].vic |= (1 << dir_right) & 0b1111;
-								//prev_vic_dist_right = dist_percent;
-								//std::this_thread::sleep_for(std::chrono::milliseconds(20));
-							}
+							bot->map[bot->index].vic |= (1 << dir_right) & 0b1111;
+							//prev_vic_dist_right = dist_percent;
+							std::this_thread::sleep_for(std::chrono::milliseconds(20));
 						}
 					}
 				}
