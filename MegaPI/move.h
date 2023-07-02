@@ -7,7 +7,7 @@
 
 using namespace utils;
 
-void drive(int32_t encoders, int speed) {
+void drive(const int32_t encoders, int speed) {
 #ifndef MOTORSOFF
   addBoost(DRIVE_BOOST);
   UPDATE_BNO();
@@ -27,8 +27,6 @@ void drive(int32_t encoders, int speed) {
   double new_angle = start_yaw;
   double ticks_left_bdrop = 0.0;
   double ticks_right_bdrop = 0.0;
-  const double full_vic_percent = 0.3;
-  const double strip_vic_percent = 0.2;
   // encoders = orig_encoders / cos(-orientationData.orientation.z * (2 * PI / 360));
 
 
@@ -85,17 +83,6 @@ void drive(int32_t encoders, int speed) {
       dist_percent = (double)abs(motorR.getTicks()) / (double)abs(encoders);
     //otherwise, just assume 0
 
-    //oled.setCursor(0, 0);
-    //oled.print("dist_percent: ");
-    //oled.println(dist_percent);
-    if((int64_t)millis() - (int64_t)time_dist_percent > 5)
-    {
-      pi_send_tag("can_drop");
-      PI_SERIAL.print(double(dist_percent >= full_vic_percent && dist_percent <= 1 - full_vic_percent && dist_percent - ticks_left_bdrop >= strip_vic_percent));
-      PI_SERIAL.print(",");
-      PI_SERIAL.println(double(dist_percent >= full_vic_percent && dist_percent <= 1 - full_vic_percent && dist_percent - ticks_right_bdrop >= strip_vic_percent));
-    }
-
     if (returnColor(true) == 1) {
       while (/* motorR.getTicks() > 0 && */ motorL.getTicks() > 0 && tofCalibrated(5) >= 80) {
         forward(-speed);
@@ -118,22 +105,9 @@ void drive(int32_t encoders, int speed) {
     UPDATE_BNO();
 
     if (abs(BNO_Z - start_pitch) < 5) {
-      if(dist_percent < full_vic_percent || dist_percent > 1 - full_vic_percent)
-      {
-        empty_serial_buffer();
-        pi_send_drop_status(false, false);
-      }
-      else
-      {
         while (PI_SERIAL.available()) {
           stopMotors();
-          pi_read_vision(ticks_left_bdrop, ticks_right_bdrop);
-          ticks_left_bdrop /= encoders;
-          ticks_right_bdrop /= encoders;
-          pi_send_tag("can_drop");
-          PI_SERIAL.print(double(dist_percent >= full_vic_percent && dist_percent <= 1 - full_vic_percent && dist_percent - ticks_left_bdrop >= strip_vic_percent));
-          PI_SERIAL.print(",");
-          PI_SERIAL.println(double(dist_percent >= full_vic_percent && dist_percent <= 1 - full_vic_percent && dist_percent - ticks_right_bdrop >= strip_vic_percent));
+          pi_read_vision(ticks_left_bdrop, ticks_right_bdrop, dist_percent);
           oled.clear();
           oled.print("lbdrop::");
           oled.println(ticks_left_bdrop);
@@ -144,7 +118,6 @@ void drive(int32_t encoders, int speed) {
           oled_println("detected");
           tstart = millis();
         }
-      }
     }
     else
     {
@@ -362,7 +335,7 @@ void driveCM(float cm, int speed = 200, int tolerance = 10) {
       oled_clear();
       oled_println("achievement unlocked!");
       oled_println("How did we get here?");
-      while (tofCalibrated(4) >= 70) {
+      while (tofCalibrated(4) >= 90) {
         forward(SPEED * 0.7);
       }
       stopMotors();
@@ -408,7 +381,7 @@ void driveCM(float cm, int speed = 200, int tolerance = 10) {
       oled_clear();
       oled_println("achievement unlocked!");
       oled_println("How did we get here?");
-      while (tofCalibrated(4) >= 70) {
+      while (tofCalibrated(4) >= 90) {
         forward(SPEED * 0.7);
       }
       stopMotors();
@@ -440,7 +413,7 @@ void driveCM(float cm, int speed = 200, int tolerance = 10) {
       oled_clear();
       oled_println("achievement unlocked!");
       oled_println("How did we get here?");
-      while (tofCalibrated(4) >= 70) {
+      while (tofCalibrated(4) >= 90) {
         forward(SPEED * 0.7);
       }
       stopMotors();

@@ -61,7 +61,7 @@ void pi_send_drop_status(bool status, bool success)
   PI_SERIAL.println((double)success);
 }
 
-void pi_read_vision(double& left_vic_ticks, double& right_vic_ticks) {
+void pi_read_vision(double& left_vic_ticks, double& right_vic_ticks, double dist_percent) {
   String data = "";
   char ch = 0;
   int num = 0;
@@ -83,6 +83,15 @@ void pi_read_vision(double& left_vic_ticks, double& right_vic_ticks) {
       cur_cmd += c;
     } else if (c == 'l') {
       if (cur_cmd.length() > 0 && cur_cmd[0] == 'd') {
+        if(dist_percent - left_vic_ticks < strip_vic_percent)
+          continue;
+
+        if(dist_percent < full_vic_percent)
+          continue;
+
+        if(dist_percent > 1.0 - full_vic_percent)
+          continue;
+
         pi_send_drop_status(true, false);
 
         bool ret = kitDrop(num, 'l');
@@ -91,10 +100,20 @@ void pi_read_vision(double& left_vic_ticks, double& right_vic_ticks) {
 
         pi_send_drop_status(false, ret);
 
-        left_vic_ticks = motorR.getTicks();
+        left_vic_ticks = (double)motorR.getTicks()/dist_percent;
       }
     } else if (c == 'r') {
       if (cur_cmd.length() > 0 && cur_cmd[0] == 'd') {
+        if(dist_percent - right_vic_ticks < strip_vic_percent)
+          continue;
+
+        if(dist_percent > 1.0 - full_vic_percent)
+          continue;
+
+        if(dist_percent < full_vic_percent)
+          continue;
+          
+
         pi_send_drop_status(true, false);
 
         bool ret = kitDrop(num, 'r');
@@ -103,7 +122,7 @@ void pi_read_vision(double& left_vic_ticks, double& right_vic_ticks) {
 
         pi_send_drop_status(false, ret);
 
-        right_vic_ticks = motorR.getTicks();
+        right_vic_ticks = (double)motorR.getTicks()/dist_percent;
       }
     } else if (c >= '0' && c <= '9') {
       if (cur_cmd.length() > 0 && cur_cmd[0] == 'd') {

@@ -682,6 +682,7 @@ namespace driver
 		forward += com::forward;
 		forward += '\n';
 		PythonScript::CallPythonFunction<bool, std::string>("SendSerialCommand", forward);
+		PythonScript::CallPythonFunction<bool, bool>("VictimStrip", true);
 
 		Bridge::remove_data_value("forward_status");
 
@@ -693,8 +694,6 @@ namespace driver
 			PythonScript::Exec(cv_py_file);
 			std::this_thread::sleep_for(std::chrono::milliseconds(20));
 		}
-
-		PythonScript::CallPythonFunction<bool, bool>("VictimStrip", true);
 		
 		Bridge::remove_data_value("victim");
 		
@@ -706,14 +705,6 @@ namespace driver
 		while((bool)(*Bridge::get_data_value("forward_status"))[0]) 
 		{ 
 			PythonScript::Exec(ser_py_file);
-			PythonScript::Exec(cv_py_file);
-			if(!Bridge::get_data_value("can_drop").has_value())
-			{
-				std::this_thread::sleep_for(std::chrono::milliseconds(5));
-				continue;
-			}
-			bool can_drop_left = (bool)(*Bridge::get_data_value("can_drop"))[0];
-			bool can_drop_right = (bool)(*Bridge::get_data_value("can_drop"))[1];
 
 			//TODO: determine the correct value!
 			if(true)
@@ -729,7 +720,7 @@ namespace driver
 					{
 						int dir_left = (int)helper::prev_dir(bot->dir);
 						int dir_right = (int)helper::next_dir(bot->dir);
-						if(left && (!(bot->map[bot->index].vic & (1 << dir_left)) || !bot->map[bot->index].vis) && can_drop_left)
+						if(left && (!(bot->map[bot->index].vic & (1 << dir_left)) || !bot->map[bot->index].vis))
 						{
 							//int dir = (int)helper::prev_dir(bot->dir);
 							bool ret = drop_vic(nrk, left);
@@ -737,10 +728,10 @@ namespace driver
 							{
 								bot->map[bot->index].vic |= (1 << dir_left) & 0b1111;
 								//prev_vic_dist_left = dist_percent;
-							    std::this_thread::sleep_for(std::chrono::milliseconds(20));
+							    //std::this_thread::sleep_for(std::chrono::milliseconds(20));
 							}
 						}
-						else if((!(bot->map[bot->index].vic & (1 << dir_right)) || !bot->map[bot->index].vis) && can_drop_right)
+						else if((!(bot->map[bot->index].vic & (1 << dir_right)) || !bot->map[bot->index].vis))
 						{
 							//int dir = (int)helper::next_dir(bot->dir);
 							bool ret = drop_vic(nrk, left);
@@ -748,7 +739,7 @@ namespace driver
 							{
 								bot->map[bot->index].vic |= (1 << dir_right) & 0b1111;
 								//prev_vic_dist_right = dist_percent;
-								std::this_thread::sleep_for(std::chrono::milliseconds(20));
+								//std::this_thread::sleep_for(std::chrono::milliseconds(20));
 							}
 						}
 					}
@@ -879,12 +870,12 @@ namespace driver
 			else
 			{
 				std::cout << "drive::forward: WARN: Failed to move forward, returning false" << std::endl;
-				bot->map[bot->index].bot = false;
-				bot->index = org_index;
-				floor_num = org_floor;
-				bot->map = bot->floors[org_floor];
+				//bot->map[bot->index].bot = false;
+				//bot->index = org_index;
+				//floor_num = org_floor;
+				//bot->map = bot->floors[org_floor];
 				bot->map[bot->index].vis = false;
-				bot->map[bot->index].bot = true;
+				//bot->map[bot->index].bot = true;
 				get_sensor_data();
 				
 				if(fail_count == 3)
@@ -898,8 +889,6 @@ namespace driver
 				}
 
 				fail_count++;
-
-				return false;
 			}
 
 			bot->index = org_index;

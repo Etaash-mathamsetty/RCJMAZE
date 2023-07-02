@@ -108,6 +108,9 @@ const int wall_tresh = 175;
 const float tile_dist = 31.1;
 const float forward_offset = 1.5 * CM_TO_ENCODERS;
 
+const double full_vic_percent = 0.3;
+const double strip_vic_percent = 0.2;
+
 bool black_tile_detected = false;
 
 inline void tcaselect(uint8_t i) {
