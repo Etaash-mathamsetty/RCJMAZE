@@ -387,10 +387,21 @@ void loop() {
 // Serial.print(" ");
 // Serial.println(BNO_Z);
 // Serial.println();
-Serial.print(tofCalibrated(6));
-Serial.print(" ");
-Serial.println(tofCalibrated(4));
-
+// Serial.print(tofCalibrated(6));
+// Serial.print(" ");
+// Serial.println(tofCalibrated(4));
+// UPDATE_BNO();
+// Serial.println(BNO_X);
+forwardTicks(60, 90 * CM_TO_ENCODERS);
+stopMotors();
+delay(1000);
+drive(110 * CM_TO_ENCODERS, SPEED);
+stopMotors();
+delay(1000);
+right(110, SPEED);
+alignAngle(false);
+stopMotors();
+delay(1000);
 // right(SPEED, SPEED, false);
 // alignAngle(false);
 // delay(1000);

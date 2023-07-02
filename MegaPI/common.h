@@ -109,7 +109,7 @@ const float tile_dist = 31.1;
 const float forward_offset = 1.5 * CM_TO_ENCODERS;
 
 const double full_vic_percent = 0.3;
-const double strip_vic_percent = 0.2;
+const double strip_vic_percent = 0.3;
 
 bool black_tile_detected = false;
 

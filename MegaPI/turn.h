@@ -55,12 +55,10 @@ if (abs(relative_angle) < 1) {
 
 #ifndef MOTORSOFF
   if (alignment) {
-    motorL.addBoost(ALIGN_TURN_BOOST);
-    motorR.addBoost(ALIGN_TURN_BOOST);
+    addBoost(ALIGN_TURN_BOOST);
     speed = ALIGN_SPEED;
   } else {
-    motorL.addBoost(TURN_BOOST);
-    motorR.addBoost(TURN_BOOST);
+    addBoost(TURN_BOOST);
   }
 
   double p, i = 0, d;
@@ -218,11 +216,9 @@ void raw_left(double relative_angle, int speed, bool alignment) {
 #ifndef MOTORSOFF
 
   if (!alignment) {
-    motorL.addBoost(TURN_BOOST);
-    motorR.addBoost(TURN_BOOST);
+    addBoost(TURN_BOOST);
   } else {
-    motorL.addBoost(ALIGN_TURN_BOOST);
-    motorR.addBoost(ALIGN_TURN_BOOST);
+    addBoost(ALIGN_TURN_BOOST);
     speed = ALIGN_SPEED;
   }
 
@@ -431,9 +427,9 @@ int left_obstacle() {
   stopMotors();
   delay(500);
 
-  empty_serial_buffer();
+  //empty_serial_buffer();
   //ignore any commands if pi saw something
-  pi_send_drop_status(false, false);
+  //pi_send_drop_status(false, false);
 
   return abs(forward_ticks);
 }
@@ -469,9 +465,9 @@ int right_obstacle() {
   stopMotors();
   delay(500);
 
-  empty_serial_buffer();
+  //empty_serial_buffer();
   //ignore any commands if pi saw something
-  pi_send_drop_status(false, false);
+  //pi_send_drop_status(false, false);
 
   return abs(forward_ticks);
 }
@@ -546,7 +542,7 @@ void alignAngle(bool reset, int tolerance = 10, double start_yaw = INFINITY) {
         break;
       }
 
-    } while (abs(reading - new_angle) > 2);
+    } while (abs(reading - new_angle) > 1);
     return;
   }
 

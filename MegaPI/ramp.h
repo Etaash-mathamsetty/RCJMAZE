@@ -149,6 +149,7 @@ bool handle_down_ramp(double start_pitch) {
   double new_angle = closestToDirection(BNO_X);
 
   motorR.resetTicks();
+  motorL.resetTicks();
   // while (abs(motorR.getTicks()) < abs(ticks)) {
   //   forward(70);
   // }
@@ -161,7 +162,9 @@ bool handle_down_ramp(double start_pitch) {
 
     if (returnColor(true) == 1) {
       
-      forwardTicks(-SPEED * 0.75, 10 * CM_TO_ENCODERS);
+      while (/* motorR.getTicks() > 0 && */ motorL.getTicks() > 0 && tofCalibrated(5) >= 90) {
+        forward(-SPEED * 0.75);
+      }
       pi_send_forward_status(false, false);
       pi_send_ramp(0.0,0.0,0.0);
       return;

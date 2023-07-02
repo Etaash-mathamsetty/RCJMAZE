@@ -84,7 +84,7 @@ void drive(const int32_t encoders, int speed) {
     //otherwise, just assume 0
 
     if (returnColor(true) == 1) {
-      while (/* motorR.getTicks() > 0 && */ motorL.getTicks() > 0 && tofCalibrated(5) >= 80) {
+      while (/* motorR.getTicks() > 0 && */ motorL.getTicks() > 0 && tofCalibrated(5) >= 90) {
         forward(-speed);
       }
       // stopMotors();
@@ -107,12 +107,13 @@ void drive(const int32_t encoders, int speed) {
     if (abs(BNO_Z - start_pitch) < 5) {
         while (PI_SERIAL.available()) {
           stopMotors();
+          delay(100);
           pi_read_vision(ticks_left_bdrop, ticks_right_bdrop, dist_percent);
           oled.clear();
-          oled.print("lbdrop::");
-          oled.println(ticks_left_bdrop);
-          oled.print("rbdrop::");
-          oled.println(ticks_right_bdrop);
+          // oled.print("lbdrop::");
+          // oled.println(ticks_left_bdrop);
+          // oled.print("rbdrop::");
+          // oled.println(ticks_right_bdrop);
           if (restart)
             return;
           oled_println("detected");
