@@ -113,6 +113,7 @@ if (abs(relative_angle) < 1) {
     } else*/ 
     if (digitalRead(FRONT_LEFT) || digitalRead(FRONT_RIGHT)) {
       resetTicks();
+      stopMotors();
       while (abs(motorR.getTicks()) < 1.5 * CM_TO_ENCODERS) {
         forward(-SPEED * 0.75);
       }
@@ -203,6 +204,20 @@ void right(int relative_angle, int speed, bool turn_status = true) {
     PI_SERIAL.println(0.0);
   }
 
+  while (PI_SERIAL.available()) {
+    stopMotors();
+    delay(100);
+    pi_read_vision(nullptr, nullptr, 0);
+    // oled.clear();
+    // oled.print("lbdrop::");
+    // oled.println(ticks_left_bdrop);
+    // oled.print("rbdrop::");
+    // oled.println(ticks_right_bdrop);
+    if (restart)
+      return;
+    oled_println("detected");
+  }
+
   stopMotors();
   delay(300);
 }
@@ -270,6 +285,7 @@ void raw_left(double relative_angle, int speed, bool alignment) {
       }
     } else*/ 
     if (digitalRead(FRONT_LEFT) || digitalRead(FRONT_RIGHT)) {
+      stopMotors();
       resetTicks();
       while (abs(motorR.getTicks()) < 1.5 * CM_TO_ENCODERS) {
         forward(-SPEED * 0.75);
@@ -353,6 +369,20 @@ void left(int relative_angle, int speed, bool turn_status = true) {
     PI_SERIAL.println(0.0);
   }
 
+  while (PI_SERIAL.available()) {
+    stopMotors();
+    delay(100);
+    pi_read_vision(nullptr, nullptr, 0);
+    // oled.clear();
+    // oled.print("lbdrop::");
+    // oled.println(ticks_left_bdrop);
+    // oled.print("rbdrop::");
+    // oled.println(ticks_right_bdrop);
+    if (restart)
+      return;
+    oled_println("detected");
+  }
+
   stopMotors();
   delay(300);
 }
@@ -382,7 +412,7 @@ void turn(char char_end_direction) {
     case -2:
       left(90, SPEED, false);
       global_angle = math::wrapAround(global_angle - 90, 360);
-      delay(700);
+      delay(1000);
       left(90, SPEED);
       global_angle = math::wrapAround(global_angle - 90, 360);
       break;
@@ -472,7 +502,7 @@ int right_obstacle() {
   return abs(forward_ticks);
 }
 
-void alignAngle(bool reset, int tolerance = 10, double start_yaw = INFINITY) {
+bool alignAngle(bool reset, int tolerance = 10, double start_yaw = INFINITY) {
   int tofR1, tofR2;
   int tofR3, tofR4;
   int lnum = 1, rnum = 0;
@@ -499,17 +529,17 @@ void alignAngle(bool reset, int tolerance = 10, double start_yaw = INFINITY) {
 
   if ((tofR3 >= wall_tresh || tofR4 >= wall_tresh) && (tofR1 >= wall_tresh || tofR2 >= wall_tresh)) {
 
-    Serial.println("too high values");
-    oled_println("BNO ALIGNMENT!");
-    UPDATE_BNO();
+    // Serial.println("too high values");
+    // oled_println("BNO ALIGNMENT!");
+    // UPDATE_BNO();
 
-    double new_angle = closestToDirection(BNO_X);
-    // double new_angle = global_angle;
-    double reading = 0.0;
+    // double new_angle = closestToDirection(BNO_X);
+    // // double new_angle = global_angle;
+    // double reading = 0.0;
 
-    if (abs(new_angle - BNO_X) < 3) {
-      return;
-    }
+    // if (abs(new_angle - BNO_X) < 3) {
+    //   return;
+    // }
 
     // oled.clearDisplay();
     // oled.setCursor(0,0);
@@ -517,33 +547,33 @@ void alignAngle(bool reset, int tolerance = 10, double start_yaw = INFINITY) {
     // oled.print(" ");
     // oled.println(new_angle);
 
-    double tstart = millis();
+    // double tstart = millis();
 
-    do {
-      UPDATE_BNO();
+    // do {
+    //   UPDATE_BNO();
 
-      if (BNO_X - new_angle > 180) {
-        reading = BNO_X - 360;
-      } else if (BNO_X - new_angle < -180) {
-        reading = BNO_X + 360;
-      } else {
-        reading = BNO_X;
-      }
+    //   if (BNO_X - new_angle > 180) {
+    //     reading = BNO_X - 360;
+    //   } else if (BNO_X - new_angle < -180) {
+    //     reading = BNO_X + 360;
+    //   } else {
+    //     reading = BNO_X;
+    //   }
 
-      double error = (reading - new_angle) * BNO_KP;
+    //   double error = (reading - new_angle) * BNO_KP;
 
-      if (millis() - tstart > 3000) {
-        addBoost(ALIGN_TURN_BOOST + 60);
-      }
+    //   if (millis() - tstart > 3000) {
+    //     addBoost(ALIGN_TURN_BOOST + 60);
+    //   }
 
-      forward(error * BNO_KP, -error * BNO_KP);
+    //   forward(error * BNO_KP, -error * BNO_KP);
 
-      if (abs(error * BNO_KP) < 1) {
-        break;
-      }
+    //   if (abs(error * BNO_KP) < 1) {
+    //     break;
+    //   }
 
-    } while (abs(reading - new_angle) > 1);
-    return;
+    // } while (abs(reading - new_angle) > 1);
+    return true;
   }
 
   float len = abs((int)tofCalibrated(lnum) - (int)tofCalibrated(rnum));
@@ -552,7 +582,7 @@ void alignAngle(bool reset, int tolerance = 10, double start_yaw = INFINITY) {
 
   if (len <= tolerance) {
     //Serial.println("return");
-    return;
+    return true;
   }
 
   //const int width = TOF_DISTANCE;
@@ -584,6 +614,8 @@ void alignAngle(bool reset, int tolerance = 10, double start_yaw = INFINITY) {
     oled_println("BNO has reset!");
     delay(50);
   }
+
+  return false;
 }
 
 #endif

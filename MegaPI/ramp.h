@@ -77,7 +77,7 @@ bool handle_up_ramp(double start_pitch) {
     double delta_theta = abs(BNO_Z - start_pitch);
     height += delta_x * sin(delta_theta * (PI / 180.0));
     distance += delta_x * cos(delta_theta * (PI / 180.0));
-    Serial.print("Rampe distance: ");
+    Serial.print("Ramp distance: ");
     Serial.println(distance);
   }
 
@@ -120,7 +120,7 @@ bool handle_up_ramp(double start_pitch) {
   }
   pi_send_ramp(1.0, round((distance / (30.0 * CM_TO_ENCODERS)) - 0.25), height);
   pi_send_forward_status(false, true);
-  alignAngle(true);
+  alignAngle(false);
 
   if (tofCalibrated(4) <= wall_tresh) {
     while (tofCalibrated(4) >= 90) {
@@ -165,7 +165,8 @@ bool handle_down_ramp(double start_pitch) {
       while (/* motorR.getTicks() > 0 && */ motorL.getTicks() > 0 && tofCalibrated(5) >= 90) {
         forward(-SPEED * 0.75);
       }
-      pi_send_forward_status(false, false);
+      
+      black_tile_detected = true;
       pi_send_ramp(0.0,0.0,0.0);
       return;
     }
@@ -182,8 +183,12 @@ bool handle_down_ramp(double start_pitch) {
   while (BNO_Z - start_pitch <= -6.7 && tofCalibrated(4) >= 90) {
     if (returnColor(true) == 1) {
       
-      forwardTicks(-SPEED * 0.75, 10 * CM_TO_ENCODERS);
-      pi_send_forward_status(false, false);
+      while(motorR.getTicks() > 0 && tofCalibrated(5) >= 90)
+      {
+        forward(-80);
+      }
+      //pi_send_forward_status(false, false);
+      black_tile_detected = true;
       pi_send_ramp(0.0,0.0,0.0);
       return;
     }
@@ -251,8 +256,8 @@ bool handle_down_ramp(double start_pitch) {
     stopMotors();
     delay(5000);
     pi_send_ramp(0.0, 0.0, 0.0);
-    pi_send_forward_status(false, !black_tile_detected);
-    black_tile_detected = false;
+    //pi_send_forward_status(false, !black_tile_detected);
+    //black_tile_detected = false;
 
     return true;
   }
@@ -268,8 +273,8 @@ bool handle_down_ramp(double start_pitch) {
     height = 1;
   }
   pi_send_ramp(10.0, round(distance / (30.0 * CM_TO_ENCODERS)), height);
-  pi_send_forward_status(false, true);
-  alignAngle(true);
+  //pi_send_forward_status(false, true);
+  alignAngle(false);
 
   if (tofCalibrated(4) <= wall_tresh) {
     while (tofCalibrated(4) >= 90) {

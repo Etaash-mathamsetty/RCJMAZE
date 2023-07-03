@@ -7,8 +7,9 @@
 
 using namespace utils;
 
-void drive(const int32_t encoders, int speed) {
+void drive(const int32_t encoders, int speed, bool align = false) {
 #ifndef MOTORSOFF
+
   addBoost(DRIVE_BOOST);
   UPDATE_BNO();
   resetTicks();
@@ -23,8 +24,14 @@ void drive(const int32_t encoders, int speed) {
   uint32_t time_dist_percent = 0;
   int32_t ticks_before = 0;
   bool limit_detected = false;
-  double BNO_KP = 7;
-  double new_angle = start_yaw;
+  double BNO_KP = 12;
+  double new_angle;
+  
+  if (align) {
+    new_angle = closestToDirection(BNO_X);
+  } else {
+    new_angle = start_yaw;
+  }
   double ticks_left_bdrop = 0.0;
   double ticks_right_bdrop = 0.0;
   // encoders = orig_encoders / cos(-orientationData.orientation.z * (2 * PI / 360));
@@ -108,8 +115,8 @@ void drive(const int32_t encoders, int speed) {
         while (PI_SERIAL.available()) {
           stopMotors();
           delay(100);
-          pi_read_vision(ticks_left_bdrop, ticks_right_bdrop, dist_percent);
-          oled.clear();
+          pi_read_vision(&ticks_left_bdrop, &ticks_right_bdrop, dist_percent);
+          // oled.clear();
           // oled.print("lbdrop::");
           // oled.println(ticks_left_bdrop);
           // oled.print("rbdrop::");
@@ -178,10 +185,17 @@ void drive(const int32_t encoders, int speed) {
 void driveCM(float cm, int speed = 200, int tolerance = 10) {
   //kitDrop(1);
   double start_yaw = 0.0;
+  bool alignment = false;
+
+
+  if ((_tofCalibrated(0) >= wall_tresh || _tofCalibrated(1) >= wall_tresh) && (_tofCalibrated(2) >= wall_tresh || _tofCalibrated(3) >= wall_tresh)) {
+    alignment = true;
+  }
+
   UPDATE_BNO();
   if (abs(orientationData.orientation.z) < 12) {
     //pi_read_data();
-    alignAngle(true);
+    alignAngle(false);
     UPDATE_BNO();
     start_yaw = BNO_X;
   }
@@ -218,8 +232,8 @@ void driveCM(float cm, int speed = 200, int tolerance = 10) {
     delay(500);
     UPDATE_BNO();
     handle_down_ramp(BNO_Z);
-    // pi_send_forward_status(false, !black_tile_detected);
-    // black_tile_detected = false;
+    pi_send_forward_status(false, !black_tile_detected);
+    black_tile_detected = false;
     return;
   }
 
@@ -258,7 +272,7 @@ void driveCM(float cm, int speed = 200, int tolerance = 10) {
       raw_right(90 - min(90, angle * mult_factor), SPEED, true);
 
       if (tofCalibrated(4) > wall_tresh - 50)
-        drive((cm * CM_TO_ENCODERS) / abs(sin(angle * (PI / 180))) - forward_offset, speed);
+        drive((cm * CM_TO_ENCODERS) / abs(sin(angle * (PI / 180))) - forward_offset, speed, alignment);
       else {
         Serial.println("achievement unlocked! How did we get here?");
         oled_clear();
@@ -286,7 +300,7 @@ void driveCM(float cm, int speed = 200, int tolerance = 10) {
       raw_left(90 - min(90, angle * mult_factor), SPEED, true);
 
       if (tofCalibrated(4) > wall_tresh - 50)
-        drive((cm * CM_TO_ENCODERS) / abs(sin(angle * (PI / 180))) - forward_offset, speed);
+        drive((cm * CM_TO_ENCODERS) / abs(sin(angle * (PI / 180))) - forward_offset, speed, alignment);
       else {
         Serial.println("achievement unlocked! How did we get here?");
         oled_clear();
@@ -330,7 +344,7 @@ void driveCM(float cm, int speed = 200, int tolerance = 10) {
     // oled_print(atan((cm * 10)/(150 - (half_chassis + left))));
 
     if (tofCalibrated(4) > wall_tresh - 50)
-      drive(cm / sin(angle * (PI / 180)) * CM_TO_ENCODERS - forward_offset, speed);
+      drive(cm / sin(angle * (PI / 180)) * CM_TO_ENCODERS - forward_offset, speed, alignment);
     else {
       Serial.println("achievement unlocked! How did we get here?");
       oled_clear();
@@ -376,7 +390,7 @@ void driveCM(float cm, int speed = 200, int tolerance = 10) {
     }
 
     if (tofCalibrated(4) > wall_tresh - 50)
-      drive(cm / sin(angle * (PI / 180)) * CM_TO_ENCODERS - forward_offset, speed);
+      drive(cm / sin(angle * (PI / 180)) * CM_TO_ENCODERS - forward_offset, speed, alignment);
     else {
       Serial.println("achievement unlocked! How did we get here?");
       oled_clear();
@@ -408,7 +422,7 @@ void driveCM(float cm, int speed = 200, int tolerance = 10) {
 #endif
   {
     if (tofCalibrated(4) > wall_tresh - 50)
-      drive((cm * CM_TO_ENCODERS), speed);
+      drive((cm * CM_TO_ENCODERS), speed, alignment);
     else {
       Serial.println("achievement unlocked! How did we get here?");
       oled_clear();
@@ -438,7 +452,7 @@ void driveCM(float cm, int speed = 200, int tolerance = 10) {
   UPDATE_BNO();
   if (abs(orientationData.orientation.z) < 12) {
     //pi_read_data();
-    alignAngle(true, 10, start_yaw);
+    alignAngle(false, 10, start_yaw);
   }
 
   //pause for blue
@@ -447,4 +461,9 @@ void driveCM(float cm, int speed = 200, int tolerance = 10) {
     stopMotors();
     delay(5000);
   }
+
+  for (int i = 0; i < ARRAY_SIZE(seen); i++) {
+    seen[i] = -1;
+  }
+  index = 0;
 }

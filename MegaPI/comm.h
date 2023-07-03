@@ -64,7 +64,7 @@ void pi_send_drop_status(bool status, bool success)
   PI_SERIAL.println((double)success);
 }
 
-void pi_read_vision(double& left_vic_ticks, double& right_vic_ticks, double dist_percent) {
+void pi_read_vision(double* left_vic_ticks, double* right_vic_ticks, double dist_percent) {
   String data = "";
   char ch = 0;
   int num = 0;
@@ -86,13 +86,13 @@ void pi_read_vision(double& left_vic_ticks, double& right_vic_ticks, double dist
       cur_cmd += c;
     } else if (c == 'l') {
       if (cur_cmd.length() > 0 && cur_cmd[0] == 'd') {
-        if(dist_percent - left_vic_ticks < strip_vic_percent)
+        if(left_vic_ticks && dist_percent - *left_vic_ticks < strip_vic_percent)
         {
           pi_send_drop_status(false, false);
           continue;
         }
 
-        if(dist_percent < full_vic_percent || dist_percent > 1.0 - full_vic_percent)
+        if(left_vic_ticks && (dist_percent < full_vic_percent_begin || dist_percent > full_vic_percent_end))
         {
           pi_send_drop_status(false, false);
           continue;
@@ -106,17 +106,18 @@ void pi_read_vision(double& left_vic_ticks, double& right_vic_ticks, double dist
 
         pi_send_drop_status(false, ret);
 
-        left_vic_ticks = (double)motorR.getTicks()/dist_percent;
+        if(dist_percent != 0 && left_vic_ticks)
+          *left_vic_ticks = (double)motorR.getTicks()/dist_percent;
       }
     } else if (c == 'r') {
       if (cur_cmd.length() > 0 && cur_cmd[0] == 'd') {
-        if(dist_percent - right_vic_ticks < strip_vic_percent)
+        if(right_vic_ticks && dist_percent - *right_vic_ticks < strip_vic_percent)
         {
           pi_send_drop_status(false, false);
           continue;
         }
 
-        if(dist_percent > 1.0 - full_vic_percent || dist_percent < full_vic_percent)
+        if(right_vic_ticks && (dist_percent > full_vic_percent_end || dist_percent < full_vic_percent_begin))
         {
           pi_send_drop_status(false, false);
           continue;
@@ -130,7 +131,8 @@ void pi_read_vision(double& left_vic_ticks, double& right_vic_ticks, double dist
 
         pi_send_drop_status(false, ret);
 
-        right_vic_ticks = (double)motorR.getTicks()/dist_percent;
+        if(dist_percent != 0 && right_vic_ticks)
+          *right_vic_ticks = (double)motorR.getTicks()/dist_percent;
       }
     } else if (c >= '0' && c <= '9') {
       if (cur_cmd.length() > 0 && cur_cmd[0] == 'd') {

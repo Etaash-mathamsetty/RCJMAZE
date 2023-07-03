@@ -118,11 +118,11 @@ bool* get_tof_vals(double threshold) {
 
     if (reading < threshold - ((i >= 4) ? 50 : 0)) {
       arr[i] = true;
-      Serial.print("Wall: ");
+      // Serial.print("Wall: ");
     } else {
-      Serial.print("No Wall: ");
+      // Serial.print("No Wall: ");
     }
-    Serial.println(reading);
+    // Serial.println(reading);
   }
 
   //Serial.println("end");

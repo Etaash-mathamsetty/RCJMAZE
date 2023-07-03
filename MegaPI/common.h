@@ -35,6 +35,7 @@
 #define BACK_RIGHT A10
 #define BACK_LEFT A8
 #define UPDATE_BNO() bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER)
+#define ARRAY_SIZE(x) (sizeof(x)/sizeof(x[0]))
 
 U8X8_SSD1306_128X64_NONAME_SW_I2C oled(OLED_CLK, OLED_DATA);
 
@@ -108,10 +109,18 @@ const int wall_tresh = 175;
 const float tile_dist = 31.1;
 const float forward_offset = 1.5 * CM_TO_ENCODERS;
 
-const double full_vic_percent = 0.3;
-const double strip_vic_percent = 0.3;
+const double full_vic_percent_end = 0.9;
+const double full_vic_percent_begin = 0.2;
+const double strip_vic_percent = 0.2;
+
+volatile bool left_dropped = false;
+volatile bool right_dropped = false;
 
 bool black_tile_detected = false;
+
+// double detection
+volatile int index = 0;
+volatile int seen[20] = { -1 };
 
 inline void tcaselect(uint8_t i) {
   if (i > 7)

@@ -2,7 +2,7 @@
 //#define FAKE_SERIAL
 // #define DEBUG_DISPLAY
 // #define MOTORSOFF
-// #define TEST
+//#define TEST
 // #define ALIGN_ANGLE
 // #define NO_PI //basic auto when no raspberry pi (brain stem mode)
 // #define NO_LIMIT
@@ -200,6 +200,10 @@ void pi_read_data() {
   data += '\n';
   String cur_cmd = "";
   Serial.println(data);
+
+  bool left_dropped = false;
+  bool right_dropped = false;
+
   for (char c : data) {
     if (c == 'g' || c == 'f' || c == 't' || c == 'd' || c == 'q') {
       if (cur_cmd.length() > 0) {
@@ -221,9 +225,18 @@ void pi_read_data() {
     }
     if (c == 'l') {
       if (cur_cmd.length() > 0 && cur_cmd[0] == 'd') {
+
+        if(left_dropped)
+        {
+          pi_send_drop_status(false, false);
+          continue;
+        }
+
         pi_send_drop_status(true, false);
 
         bool ret = kitDrop(num, 'l');
+
+        left_dropped |= ret;
 
         cur_cmd.remove(0);
 
@@ -231,9 +244,18 @@ void pi_read_data() {
       }
     } else if (c == 'r') {
       if (cur_cmd.length() > 0 && cur_cmd[0] == 'd') {
+
+        if(right_dropped)
+        {
+          pi_send_drop_status(false, false);
+          continue;
+        }
+
         pi_send_drop_status(true, false);
 
         bool ret = kitDrop(num, 'r');
+
+        right_dropped |= ret;
         
         cur_cmd.remove(0);
 
@@ -392,16 +414,18 @@ void loop() {
 // Serial.println(tofCalibrated(4));
 // UPDATE_BNO();
 // Serial.println(BNO_X);
-forwardTicks(60, 90 * CM_TO_ENCODERS);
-stopMotors();
-delay(1000);
-drive(110 * CM_TO_ENCODERS, SPEED);
-stopMotors();
-delay(1000);
-right(110, SPEED);
-alignAngle(false);
-stopMotors();
-delay(1000);
+// forwardTicks(60, 90 * CM_TO_ENCODERS);
+// stopMotors();
+// delay(1000);
+// drive(110 * CM_TO_ENCODERS, SPEED);
+// stopMotors();
+// delay(1000);
+// right(110, SPEED);
+// alignAngle(false);
+// stopMotors();
+// delay(1000); 
+kitDrop(12, 'r'); 
+delay(500); 
 // right(SPEED, SPEED, false);
 // alignAngle(false);
 // delay(1000);

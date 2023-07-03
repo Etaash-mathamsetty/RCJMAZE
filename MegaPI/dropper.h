@@ -25,6 +25,14 @@ bool kitDrop(int num, char side) {
       return false;
   }
 
+  for (int i = 0; i < ARRAY_SIZE(seen); i++) {
+    if (seen[i] == num) {
+      Serial.println();
+      return false;
+    }
+  }
+
+
   analogWrite(3, 150);
   delay(200);
   analogWrite(3, 255);
@@ -67,7 +75,7 @@ bool kitDrop(int num, char side) {
     Serial.println("numDropped");
     Serial.println(numDropped);
     delay(1000);
-    myservo.write(175);
+    myservo.write(180);
     delay(1000);
     numDropped++;
   }
@@ -79,10 +87,18 @@ bool kitDrop(int num, char side) {
     delay(1000);
   else
     //required by rules
-   delay(3000);
+  delay(3000);
   analogWrite(5, 0);
   analogWrite(2, 0);
   analogWrite(4, 0);
+
+  seen[index++] = num;
+
+  for (int i = 0; i < ARRAY_SIZE(seen); i++) {
+    Serial.print(seen[i]);
+    Serial.print(" ");
+  }
+  Serial.println();
 
   return true;
 }
