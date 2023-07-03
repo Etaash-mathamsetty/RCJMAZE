@@ -25,11 +25,15 @@ bool kitDrop(int num, char side) {
       return false;
   }
 
-  for (int i = 0; i < ARRAY_SIZE(seen); i++) {
-    if (seen[i] == num) {
-      Serial.println();
+  if(side == 'l')
+  {
+    if(seen_l[num] == side)
       return false;
-    }
+  }
+  else
+  {
+    if(seen_r[num] == side)
+      return false;
   }
 
 
@@ -66,6 +70,8 @@ bool kitDrop(int num, char side) {
       myservo.detach();
       delay(max(0, 3000 - 2000*i - 100));
       analogWrite(5, 0);
+      analogWrite(2, 0);
+      analogWrite(4, 0);
       return true;
     }
 
@@ -92,10 +98,19 @@ bool kitDrop(int num, char side) {
   analogWrite(2, 0);
   analogWrite(4, 0);
 
-  seen[index++] = num;
+  if(side == 'l')
+    seen_l[num] = side;
+  else
+    seen_r[num] = side;
 
-  for (int i = 0; i < ARRAY_SIZE(seen); i++) {
-    Serial.print(seen[i]);
+  for (int i = 0; i < ARRAY_SIZE(seen_l); i++) {
+    Serial.print(seen_l[i]);
+    Serial.print(" ");
+  }
+  Serial.println();
+
+  for(int i = 0; i < ARRAY_SIZE(seen_r); i++) {
+    Serial.print(seen_r[i]);
     Serial.print(" ");
   }
   Serial.println();

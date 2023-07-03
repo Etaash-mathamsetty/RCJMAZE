@@ -110,8 +110,8 @@ const float tile_dist = 31.1;
 const float forward_offset = 1.5 * CM_TO_ENCODERS;
 
 const double full_vic_percent_end = 0.9;
-const double full_vic_percent_begin = 0.2;
-const double strip_vic_percent = 0.2;
+const double full_vic_percent_begin = 0.25;
+const double strip_vic_percent = 0.1;
 
 volatile bool left_dropped = false;
 volatile bool right_dropped = false;
@@ -119,8 +119,8 @@ volatile bool right_dropped = false;
 bool black_tile_detected = false;
 
 // double detection
-volatile int index = 0;
-volatile int seen[20] = { -1 };
+volatile char seen_l[4] = { 0 };
+volatile char seen_r[4] = { 0 };
 
 inline void tcaselect(uint8_t i) {
   if (i > 7)

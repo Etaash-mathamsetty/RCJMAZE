@@ -2,9 +2,9 @@
 //#define FAKE_SERIAL
 // #define DEBUG_DISPLAY
 // #define MOTORSOFF
-//#define TEST
+#define TEST
 // #define ALIGN_ANGLE
-// #define NO_PI //basic auto when no raspberry pi (brain stem mode)
+#define NO_PI //basic auto when no raspberry pi (brain stem mode)
 // #define NO_LIMIT
 // #define NO_PID
 // #define TCS
@@ -406,6 +406,13 @@ void loop() {
 //   Serial.print(_tofCalibrated(i));
 //   Serial.print(", ");
 // }
+
+// Serial.print(" ");
+// Serial.print(digitalRead(FRONT_RIGHT));
+// Serial.print(" ");
+// Serial.print(digitalRead(FRONT_LEFT));
+// Serial.println();
+
 // Serial.print(" ");
 // Serial.println(BNO_Z);
 // Serial.println();
@@ -424,8 +431,14 @@ void loop() {
 // alignAngle(false);
 // stopMotors();
 // delay(1000); 
-kitDrop(12, 'r'); 
-delay(500); 
+// kitDrop(12, 'r'); 
+// delay(500); 
+for (int i = 0; i < 4; i++) {
+  turn(dir_to_char(i));
+}
+
+// Serial.println(tofCalibrated(5));
+
 // right(SPEED, SPEED, false);
 // alignAngle(false);
 // delay(1000);

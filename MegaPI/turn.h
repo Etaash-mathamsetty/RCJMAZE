@@ -8,7 +8,7 @@ using namespace std;
 
 void backup_align(int speed, int time) {
 
-  while (tofCalibrated(5) >= 80 /*|| digitalRead(BACK_LEFT) || digitalRead(BACK_RIGHT) */) {
+  while (tofCalibrated(5) >= 55 /*|| digitalRead(BACK_LEFT) || digitalRead(BACK_RIGHT) */) {
     forward(-speed * 0.75);
   }
   stopMotors();
@@ -114,9 +114,11 @@ if (abs(relative_angle) < 1) {
     if (digitalRead(FRONT_LEFT) || digitalRead(FRONT_RIGHT)) {
       resetTicks();
       stopMotors();
-      while (abs(motorR.getTicks()) < 1.5 * CM_TO_ENCODERS) {
+      while (digitalRead(FRONT_LEFT) || digitalRead(FRONT_RIGHT)) {
         forward(-SPEED * 0.75);
       }
+      stopMotors();
+      delay(200);
     } 
     // else if (tofCalibrated(5) < 60) {
     //   while (tofCalibrated(5) < 60) {
@@ -193,7 +195,7 @@ void right(int relative_angle, int speed, bool turn_status = true) {
     //   forward(-speed);
     // }
 
-    while (tofCalibrated(5) <= 80) {
+    while (tofCalibrated(5) <= 55) {
       forward(speed);
     }
     stopMotors();
@@ -287,9 +289,11 @@ void raw_left(double relative_angle, int speed, bool alignment) {
     if (digitalRead(FRONT_LEFT) || digitalRead(FRONT_RIGHT)) {
       stopMotors();
       resetTicks();
-      while (abs(motorR.getTicks()) < 1.5 * CM_TO_ENCODERS) {
+      while (digitalRead(FRONT_LEFT) || digitalRead(FRONT_RIGHT)) {
         forward(-SPEED * 0.75);
       }
+      stopMotors();
+      delay(200);
     } 
     // else if (tofCalibrated(5) < 60) {
     //   while (tofCalibrated(5) < 60) {
@@ -358,7 +362,7 @@ void left(int relative_angle, int speed, bool turn_status = true) {
     // {
     //   forward(-speed);
     // }
-    while (tofCalibrated(5) <= 80) {
+    while (tofCalibrated(5) <= 55) {
       forward(speed);
     }
     stopMotors();
@@ -412,18 +416,19 @@ void turn(char char_end_direction) {
     case -2:
       left(90, SPEED, false);
       global_angle = math::wrapAround(global_angle - 90, 360);
-      delay(1000);
       left(90, SPEED);
       global_angle = math::wrapAround(global_angle - 90, 360);
       break;
-    default: Serial.println("invalid");
     case 0:
       pi_send_tag("turn_status");
       PI_SERIAL.println(0.0);
       break;
+    default: Serial.println("invalid");
+            break;
   }
 
   cur_direction = end_direction;
+  //delay(500);
 }
 
 //DO NOT USE IN ANYTHING OTHER THAN drive()

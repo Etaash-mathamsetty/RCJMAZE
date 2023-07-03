@@ -68,7 +68,17 @@ bool handle_up_ramp(double start_pitch) {
       err = 0;
     }
 
-    forward(80.0 + err, 80.0 - err);
+    double l_offset = 0, r_offset = 0;
+
+    if (_tofCalibrated(1) < 50) {
+      l_offset = 20;
+    }
+
+    if (_tofCalibrated(3) < 50) {
+      r_offset = 20;
+    }
+
+    forward(80.0 + bno_error + r_offset, 80.0 - bno_error + l_offset);
     UPDATE_BNO();
 
     // calculate distance on a ramp
@@ -86,15 +96,25 @@ bool handle_up_ramp(double start_pitch) {
     motorR.getTicks() = - old_ticks - ticks - 4 * CM_TO_ENCODERS;
     motorL.resetTicks();
 
-    oled_clear();
-    oled_print("Fake Ramp: ");
-    oled_println((distance / (30.0 * CM_TO_ENCODERS)) - 0.25);
-    oled_print("Distance: ");
-    oled_println(distance);
-    oled_print("Height: ");
-    oled_println(height);
+    // oled_clear();
+    // oled_print("Fake Ramp: ");
+    // oled_println((distance / (30.0 * CM_TO_ENCODERS)) - 0.25);
+    // oled_print("Distance: ");
+    // oled_println(distance);
+    // oled_print("Height: ");
+    // oled_println(height);
+    // stopMotors();
+
+    oled.clear();
+    oled.print("Fake Ramp: ");
+    oled.println((distance / (30.0 * CM_TO_ENCODERS)) - 0.25);
+    oled.print("Distance: ");
+    oled.println(distance);
+    oled.print("Height: ");
+    oled.println(height);
     stopMotors();
-    delay(5000);
+
+    delay(2000);
     pi_send_ramp(0.0, 0.0, 0.0);
     pi_send_forward_status(false, !black_tile_detected);
     black_tile_detected = false;
@@ -165,6 +185,8 @@ bool handle_down_ramp(double start_pitch) {
       while (/* motorR.getTicks() > 0 && */ motorL.getTicks() > 0 && tofCalibrated(5) >= 90) {
         forward(-SPEED * 0.75);
       }
+      stopMotors();
+      delay(300);
       
       black_tile_detected = true;
       pi_send_ramp(0.0,0.0,0.0);
@@ -230,7 +252,17 @@ bool handle_down_ramp(double start_pitch) {
     UPDATE_BNO();
     double delta_theta = abs(BNO_Z - start_pitch);
 
-    forward(70.0 + err, 70.0 - err);
+    double l_offset = 0, r_offset = 0;
+
+    if (_tofCalibrated(1) < 50) {
+      l_offset = 20;
+    }
+
+    if (_tofCalibrated(3) < 50) {
+      r_offset = 20;
+    }
+
+    forward(80.0 + bno_error + r_offset, 80.0 - bno_error + l_offset);
 
     double delta_x = abs(motorR.getTicks()) - abs(old_x);
     old_x = motorR.getTicks();
@@ -246,15 +278,22 @@ bool handle_down_ramp(double start_pitch) {
     motorR.getTicks() = old_ticks - ticks - 4 * CM_TO_ENCODERS;
 
     stopMotors();
-    oled_clear();
-    oled_print("Fake Ramp: ");
-    oled_println((distance / (30.0 * CM_TO_ENCODERS)));
-    oled_print("Distance: ");
-    oled_println(distance);
-    oled_print("Height: ");
-    oled_println(height);
+    // oled_clear();
+    // oled_print("Fake Ramp: ");
+    // oled_println((distance / (30.0 * CM_TO_ENCODERS)));
+    // oled_print("Distance: ");
+    // oled_println(distance);
+    // oled_print("Height: ");
+    // oled_println(height);
+    oled.clear();
+    oled.print("Fake Ramp: ");
+    oled.println((distance / (30.0 * CM_TO_ENCODERS)));
+    oled.print("Distance: ");
+    oled.println(distance);
+    oled.print("Height: ");
+    oled.println(height);
     stopMotors();
-    delay(5000);
+    delay(2000);
     pi_send_ramp(0.0, 0.0, 0.0);
     //pi_send_forward_status(false, !black_tile_detected);
     //black_tile_detected = false;

@@ -94,7 +94,8 @@ void drive(const int32_t encoders, int speed, bool align = false) {
       while (/* motorR.getTicks() > 0 && */ motorL.getTicks() > 0 && tofCalibrated(5) >= 90) {
         forward(-speed);
       }
-      // stopMotors();
+      stopMotors();
+      delay(300);
       //pi_send_data(false, false);
       black_tile_detected = true;
       pi_send_ramp(0.0, 0.0, 0.0);
@@ -209,7 +210,7 @@ void driveCM(float cm, int speed = 200, int tolerance = 10) {
   int32_t tof_ramp = tofCalibrated(6, 5, &invalid_count);
 
   if (tof_front > 220 && tof_front <= 530 && tof_ramp < 265  && tof_ramp > 130) {
-    forwardTicks(SPEED * 0.75, 4 * CM_TO_ENCODERS);
+    forwardTicks(SPEED * 0.65, 4 * CM_TO_ENCODERS);
     invalid_count = 0;
     tof_front = tofCalibrated(4);
     tof_ramp = tofCalibrated(6, 5, &invalid_count);
@@ -462,8 +463,6 @@ void driveCM(float cm, int speed = 200, int tolerance = 10) {
     delay(5000);
   }
 
-  for (int i = 0; i < ARRAY_SIZE(seen); i++) {
-    seen[i] = -1;
-  }
-  index = 0;
+  memset(seen_l, 0, sizeof(seen_l));
+  memset(seen_r, 0, sizeof(seen_r));
 }
