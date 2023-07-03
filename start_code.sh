@@ -4,4 +4,4 @@
 cd "${0%/*}"
 
 # run the program boiiiii
-./wrapper/build/wrapper ./src/BFS
+./wrapper/build/wrapper ./src/BFS #&> output.txt

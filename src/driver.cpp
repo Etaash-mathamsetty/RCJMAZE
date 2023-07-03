@@ -378,6 +378,24 @@ namespace driver
 
     #else
 
+
+	void save_victims()
+	{
+		robot* bot = robot::get_instance();
+		CHECK(bot);
+		CHECK(bot->map);
+		std::ofstream out;
+		out.open("victim.txt");
+
+		std::cout << "saving victims" << std::endl;
+
+		for(int l = 0; l < max_num_floors; l++)
+		for(int i = 0; i < horz_size * vert_size; i++)
+		{
+			out << bot->floors[l][i].vic << std::endl;
+		}
+	}
+
 	CREATE_DRIVER(void, save_state)
 	{
 		robot* bot = robot::get_instance();
@@ -392,10 +410,35 @@ namespace driver
 			{
 				node n = bot->floors[l][i];
 				out << n.N << " " << n.E << " " << n.S << " " << n.W << " ";
-				out << n.vic << " " << n.bot << " " << n.vis << " " << n.ramp << " ";
+				out << n.bot << " " << n.vis << " " << n.ramp << " ";
 				out << n.checkpoint << std::endl;
 			}
 	}
+
+	void load_victims()
+	{
+		robot* bot = robot::get_instance();
+		CHECK(bot);
+		CHECK(bot->map);
+
+		if(!std::filesystem::exists("victim.txt"))
+			return;
+
+		std::ifstream in;
+		in.open("victim.txt");
+
+		uint8_t vic;
+
+		for(int l = 0; l < max_num_floors; l++)
+		for(int i = 0; i < horz_size * vert_size; i++)
+		{
+			in >> vic;
+			bot->floors[l][i].vic = vic & 0b1111;
+		}
+
+		std::cout << "loaded victims!" << std::endl;
+	}
+
 
 	CREATE_DRIVER(void, load_state)
 	{
@@ -405,7 +448,7 @@ namespace driver
 		std::ifstream in;
 		in.open("save.txt");
 		bool n, e, s, w, vis, checkpoint, bot_here;
-		uint8_t ramp, vic;
+		uint8_t ramp;
 		//char dir;
 		//in >> dir;
 		//wtf happens with directions, I think we can only restart the raspberry pi
@@ -413,25 +456,26 @@ namespace driver
 		for(int l = 0; l < max_num_floors; l++)
 		for(int i = 0; i < horz_size * vert_size; i++)
 		{
-			in >> n >> e >> s >> w >> vic >> bot_here >> vis >> ramp >> checkpoint;
+			in >> n >> e >> s >> w >> bot_here >> vis >> ramp >> checkpoint;
 			if(bot_here)
 			{
 				bot->index = i;
 				bot->map = bot->floors[l];
 				floor_num = l;
 			}
-			
+
 			node& temp = bot->floors[l][i];
 			temp.N = n;
 			temp.E = e;
 			temp.S = s;
 			temp.W = w;
-			temp.vic = vic;
+			//temp.vic = vic;
 			temp.vis = vis;
 			temp.ramp = ramp;
 			temp.checkpoint = checkpoint;
 			temp.bot = bot_here;
 		}
+		load_victims();
 		std::cout << "loaded save file!" << std::endl;
 	}
 
@@ -440,7 +484,7 @@ namespace driver
 		CHECK(robot::get_instance());
 		PythonScript::initPython();
 		PythonScript::Exec(init_py_file);
-		
+
 		if(std::filesystem::exists("save.txt"))
 			load_state();
 	}
@@ -468,6 +512,9 @@ namespace driver
 			PythonScript::Exec(ser_py_file);
 			std::this_thread::sleep_for(std::chrono::milliseconds(20));
 		}
+		
+		for(int i = 0; i < 10; i++)
+			PythonScript::Exec(cv_py_file);
 
 		return (bool)(*Bridge::get_data_value("drop_status"))[1];
 	}
@@ -499,8 +546,12 @@ namespace driver
 		robot* bot = robot::get_instance();
 		CHECK(bot);
 		CHECK(bot->map);
-		PythonScript::CallPythonFunction<bool, bool>("VictimStrip", false);
+		//PythonScript::CallPythonFunction<bool, bool>("VictimStrip", false);
 		//bot->map[bot->index].letter = (uint8_t)Bridge::get_data_value("letter")[0];
+		
+		for(int i = 0; i < 10; i++)
+			PythonScript::Exec(cv_py_file);
+		
 		if(!bot->map[bot->index].vis)
 		{
 			bot->map[bot->index].vis = true;
@@ -526,25 +577,28 @@ namespace driver
 
 				if(victim)
 				{
+					int dir_left = (int)helper::prev_dir(bot->dir);
+					int dir_right = (int)helper::next_dir(bot->dir);
+					
 					if(left)
 					{
 						//west relative
-						int dir = (int)helper::prev_dir(bot->dir);
+						//int dir = (int)helper::prev_dir(bot->dir);
 						bool ret = drop_vic(nrk, left);
 						if(ret)
 						{
-							bot->map[bot->index].vic |= (1 << dir) & 0b1111;
+							bot->map[bot->index].vic |= (1 << dir_left) & 0b1111;
 							//dropped = true;
 						}
 					}
 					else
 					{
 						//east relative
-						int dir = (int)helper::next_dir(bot->dir);
+						//int dir = (int)helper::next_dir(bot->dir);
 						bool ret = drop_vic(nrk, left);
 						if(ret)
 						{
-							bot->map[bot->index].vic |= (1 << dir) & 0b1111;
+							bot->map[bot->index].vic |= (1 << dir_right) & 0b1111;
 							//dropped = true;
 						}
 					}					
@@ -569,11 +623,11 @@ namespace driver
 					if(left && !(bot->map[bot->index].vic & (1 << dir_left)))
 					{
 						//west relative
-						int dir = (int)helper::prev_dir(bot->dir);
+						//int dir = (int)helper::prev_dir(bot->dir);
 						bool ret = drop_vic(nrk, left);
 						if(ret)
 						{
-							bot->map[bot->index].vic |= (1 << dir) & 0b1111;
+							bot->map[bot->index].vic |= (1 << dir_left) & 0b1111;
 							//dropped = true;
 						}
 						
@@ -581,11 +635,11 @@ namespace driver
 					else if(!(bot->map[bot->index].vic & (1 << dir_right)))
 					{
 						//east relative
-						int dir = (int)helper::next_dir(bot->dir);
+						//int dir = (int)helper::next_dir(bot->dir);
 						bool ret = drop_vic(nrk, left);
 						if(ret)
 						{
-							bot->map[bot->index].vic |= (1 << dir) & 0b1111;
+							bot->map[bot->index].vic |= (1 << dir_right) & 0b1111;
 							//dropped = true;
 						}
 					}
@@ -593,6 +647,7 @@ namespace driver
 			}
 		}
 
+		save_victims();
 	}
 
 	void set_mov_indexes(int delta, bool up_ramp, bool down_ramp, int ramp_len, int ramp_height, bool victim)
@@ -614,7 +669,7 @@ namespace driver
 		{
 			set_ramp_wall();
 			bot->map[bot->index].bot = false;
-            bot->map[bot->index].ramp = 0b01;
+            		bot->map[bot->index].ramp = 0b01;
 			bot->map[bot->index].vis = true;
 
 			floor_num += ramp_height;
@@ -638,7 +693,7 @@ namespace driver
 		{
 			set_ramp_wall();
 			bot->map[bot->index].bot = false;
-            bot->map[bot->index].ramp = 0b10;
+            		bot->map[bot->index].ramp = 0b10;
 			bot->map[bot->index].vis = true;
 
 			floor_num -= ramp_height;
@@ -682,7 +737,7 @@ namespace driver
 		forward += com::forward;
 		forward += '\n';
 		PythonScript::CallPythonFunction<bool, std::string>("SendSerialCommand", forward);
-		PythonScript::CallPythonFunction<bool, bool>("VictimStrip", true);
+		//PythonScript::CallPythonFunction<bool, bool>("VictimStrip", true);
 
 		Bridge::remove_data_value("forward_status");
 
@@ -692,24 +747,30 @@ namespace driver
 			PythonScript::Exec(ser_py_file);
 			//prevent camera from getting desynced
 			PythonScript::Exec(cv_py_file);
-			std::this_thread::sleep_for(std::chrono::milliseconds(20));
+			std::this_thread::sleep_for(std::chrono::milliseconds(10));
 		}
 		
 		Bridge::remove_data_value("victim");
 		
 		//wait for it to finish running
 		//auto time_step = std::chrono::high_resolution_clock::now();
-		bool victim = false;
+		//bool victim = false;
+		bool victim_detected = false;
+		
+		for(int i = 0; i < 10; i++)
+			PythonScript::Exec(cv_py_file);
+		
 		//double prev_vic_dist_left = 0.0;
 		//double prev_vic_dist_right = 0.0;
 		while((bool)(*Bridge::get_data_value("forward_status"))[0]) 
 		{ 
 			PythonScript::Exec(ser_py_file);
-			PythonScript::Exec(cv_py_file);
+			//for(int i = 0; i < 4; i++);
+				//PythonScript::Exec(cv_py_file);
 			for(int i = 0; i < 2; i++)
 			{
 				PythonScript::Exec(cv_py_file);
-				victim = (*Bridge::get_data_value("victim"))[0];
+				bool victim = (*Bridge::get_data_value("victim"))[0];
 				bool left = (*Bridge::get_data_value("left"))[0];
 				int nrk = (*Bridge::get_data_value("NRK"))[0];
 
@@ -725,7 +786,12 @@ namespace driver
 						{
 							bot->map[bot->index].vic |= (1 << dir_left) & 0b1111;
 							//prev_vic_dist_left = dist_percent;
+							victim_detected = true;
 							std::this_thread::sleep_for(std::chrono::milliseconds(20));
+						}
+						else
+						{
+							std::this_thread::sleep_for(std::chrono::milliseconds(800));
 						}
 					}
 					else if((!(bot->map[bot->index].vic & (1 << dir_right)) || !bot->map[bot->index].vis))
@@ -736,7 +802,12 @@ namespace driver
 						{
 							bot->map[bot->index].vic |= (1 << dir_right) & 0b1111;
 							//prev_vic_dist_right = dist_percent;
+							victim_detected = true;
 							std::this_thread::sleep_for(std::chrono::milliseconds(20));
+						}
+						else
+						{
+							std::this_thread::sleep_for(std::chrono::milliseconds(800));
 						}
 					}
 				}
@@ -769,7 +840,7 @@ namespace driver
 			case DIR::N:
 			{
 				if(helper::is_valid_index(bot->index - horz_size) && !bot->map[bot->index].N){
-					set_mov_indexes(-horz_size, up_ramp, down_ramp, ramp_len, ramp_height, victim);
+					set_mov_indexes(-horz_size, up_ramp, down_ramp, ramp_len, ramp_height, victim_detected);
 				}
 				else{
 					std::cerr << "ERROR: Cannot move forward!" << std::endl;
@@ -781,7 +852,7 @@ namespace driver
 			case DIR::E:
 			{
 				if(helper::is_valid_index(bot->index + 1) && !bot->map[bot->index].E){
-					set_mov_indexes(1, up_ramp, down_ramp, ramp_len, ramp_height, victim);
+					set_mov_indexes(1, up_ramp, down_ramp, ramp_len, ramp_height, victim_detected);
 				}
 				else{
 					std::cerr << "ERROR: Cannot move forward!" << std::endl;
@@ -793,7 +864,7 @@ namespace driver
 			case DIR::S:
 			{
 				if(helper::is_valid_index(bot->index + horz_size) && !bot->map[bot->index].S){
-					set_mov_indexes(horz_size, up_ramp, down_ramp, ramp_len, ramp_height, victim);
+					set_mov_indexes(horz_size, up_ramp, down_ramp, ramp_len, ramp_height, victim_detected);
 				}
 				else{
 					std::cerr << "ERROR: Cannot move forward!" << std::endl;
@@ -805,7 +876,7 @@ namespace driver
 			case DIR::W:
 			{
 				if(helper::is_valid_index(bot->index - 1) && !bot->map[bot->index].W){
-					set_mov_indexes(-1, up_ramp, down_ramp, ramp_len, ramp_height, victim);
+					set_mov_indexes(-1, up_ramp, down_ramp, ramp_len, ramp_height, victim_detected);
 				}
 				else{
 					std::cerr << "ERROR: Cannot move forward!" << std::endl;
@@ -895,6 +966,7 @@ namespace driver
 
 		fail_count = 0;
 
+		save_victims();
 		return true;
 	}
 
@@ -920,6 +992,12 @@ namespace driver
 		{
 			return;
 		}
+		if(abs((int)bot->dir - (int)dir) == 2)
+		{
+			turn_east();
+			turn_east();
+			return;
+		}
 		bot->dir = dir;
 		std::string turn_cmd = "";
 		turn_cmd += com::turn;
@@ -942,6 +1020,46 @@ namespace driver
 			PythonScript::Exec(ser_py_file);
 			PythonScript::Exec(cv_py_file);
 			std::this_thread::sleep_for(std::chrono::milliseconds(20));
+		}
+		
+		for(int i = 0; i < 10; i++)
+			PythonScript::Exec(cv_py_file);
+			
+		
+		for(int i = 0; i < 2; i++)
+		{
+			PythonScript::Exec(cv_py_file);
+			bool victim = (*Bridge::get_data_value("victim"))[0];
+			bool left = (*Bridge::get_data_value("left"))[0];
+			int nrk = (*Bridge::get_data_value("NRK"))[0];
+
+			if(victim)
+			{
+				int dir_left = (int)helper::prev_dir(bot->dir);
+				int dir_right = (int)helper::next_dir(bot->dir);
+
+				if(left && !(bot->map[bot->index].vic & (1 << dir_left)))
+				{
+					//west relative
+					bool ret = drop_vic(nrk, left);
+					if(ret)
+					{
+						bot->map[bot->index].vic |= (1 << dir_left) & 0b1111;
+						//dropped = true;
+					}
+					
+				}
+				else if(!(bot->map[bot->index].vic & (1 << dir_right)))
+				{
+					//east relative
+					bool ret = drop_vic(nrk, left);
+					if(ret)
+					{
+						bot->map[bot->index].vic |= (1 << dir_right) & 0b1111;
+						//dropped = true;
+					}
+				}
+			}
 		}
 	}
 

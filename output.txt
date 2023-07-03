@@ -1,0 +1,13 @@
+executing: "/home/pi/Documents/RCJMAZE/src/BFS"
+parent path: "/home/pi/Documents/RCJMAZE/src"
+removed save.txt
+parent process starting: 806
+child process starting: 875
+INFO: Debug info is ENABLED
+delay over
+killing child process: 875
+parent process starting: 806
+child process starting: 944
+INFO: Debug info is ENABLED
+delay over
+error with waitpid (probably SEGV on child)

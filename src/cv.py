@@ -25,6 +25,7 @@
 
 rescue = 0
 camera_num = not camera_num
+victim_strip = False
 
 Rb.SetDataValue("NRK", [0.0])
 Rb.SetDataValue("victim", [0.0])
@@ -68,16 +69,16 @@ if True:
     
     for i in range(1):
         if camera_num:
-            video.set(cv2.CAP_PROP_BUFFERSIZE, 2)
+            video.set(cv2.CAP_PROP_BUFFERSIZE, 1)
             org = cv2.flip(video.read()[1], -1)
         else:
-            video1.set(cv2.CAP_PROP_BUFFERSIZE, 2)
+            video1.set(cv2.CAP_PROP_BUFFERSIZE, 1)
             org = cv2.flip(video1.read()[1], -1)
              
         # width: 320 height: 240
         # params : [y1:y2, x1:x2]
-        if(victim_strip):
-            org = org[0 : 240, 100 : 220]
+        #if(victim_strip):
+        org = org[0 : 240, 0 : 320]
         frame = cv2.cvtColor(org, cv2.COLOR_BGR2HSV)
         
         bounding_rect = []

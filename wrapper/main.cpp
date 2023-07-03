@@ -46,7 +46,7 @@ bool button_released()
 }
 
 bool printed = false;
-bool button_once = false;
+//bool button_once = false;
 
 bool has_child_exited(pid_t pid)
 {
@@ -58,7 +58,7 @@ bool has_child_exited(pid_t pid)
         if(!printed)
             std::cerr << "error with waitpid (probably SEGV on child)" << std::endl;
         printed = true;
-        button_once = true;
+//        button_once = true;
         return false;
     }
     if(ret == 0)
@@ -71,8 +71,8 @@ bool has_child_exited(pid_t pid)
         return true;
     }
 
-    if(WIFEXITED(status))
-        button_once = true;
+//    if(WIFEXITED(status))
+//        button_once = true;
 
     return false;
 }
@@ -98,7 +98,7 @@ void run_parent_and_child(const fs::path& path_to_bfs, const fs::path& parent_pa
         std::cout << "parent process starting: " << getpid() << std::endl;
         //wait for child to start
         sleep(5);
-	    std::cout << "delay over" << std::endl;
+        std::cout << "delay over" << std::endl;
         while(!button_pressed())
         {
             if(has_child_exited(child_pid))
@@ -152,12 +152,20 @@ natural_exit:
     if(child_pid > 0)
     {
         std::string save_path = parent_path.string() + "/save.txt";
+	std::string victim_path = parent_path.string() + "/victim.txt";
 
         if(fs::exists(save_path))
         {
             fs::remove(save_path);
             std::cout << "removed save.txt" << std::endl;
         }
+
+	if(fs::exists(victim_path))
+	{
+
+	    fs::remove(victim_path);
+            std::cout << "removed victim.txt" << std::endl;
+	}
     }
 
     exit(EXIT_SUCCESS);
@@ -199,11 +207,18 @@ int main(int argc, char **argv)
     std::cout << "parent path: " << parent_path << std::endl;
 
     std::string save_path = parent_path.string() + "/save.txt";
+    std::string victim_path = parent_path.string() + "/victim.txt";
 
     if(fs::exists(save_path))
     {
         fs::remove(save_path);
         std::cout << "removed save.txt" << std::endl;
+    }
+
+    if(fs::exists(victim_path))
+    {
+        fs::remove(victim_path);
+	std::cout << "removed victim.txt" << std::endl;
     }
 
     while(!button_pressed());
@@ -219,8 +234,8 @@ int main(int argc, char **argv)
         printed = false;
 
         //prevent them from thinking we are cheating
-        if(!button_once)
-        {
+        //if(!button_once)
+        //{
             //wait until button is pressed again for program to start
             while(!button_pressed());
             while(!button_released());
@@ -228,10 +243,11 @@ int main(int argc, char **argv)
             send_restart_command();
             sleep(5);
 
-            button_once = false;
-        }
+           // button_once = false;
+       // }
+	//button_once = false;
     }
 
-    
+
     return 0;
 }
