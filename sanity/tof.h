@@ -101,7 +101,7 @@ bool* get_tof_vals(double threshold) {
   static bool arr[TOF_NUMBER + 1];
   uint32_t reading = 0;
 
-  memset(arr, 0, ARRAY_SIZE(arr));
+  memset(arr, 0, sizeof(arr));
 
   //Serial.println("start");
 
