@@ -756,6 +756,8 @@ namespace driver
 		//auto time_step = std::chrono::high_resolution_clock::now();
 		//bool victim = false;
 		bool victim_detected = false;
+		int prev_dropped_vic_l = 0;
+		int prev_dropped_vic_r = 0;
 		
 		for(int i = 0; i < 10; i++)
 			PythonScript::Exec(cv_py_file);
@@ -778,7 +780,7 @@ namespace driver
 				{
 					int dir_left = (int)helper::prev_dir(bot->dir);
 					int dir_right = (int)helper::next_dir(bot->dir);
-					if(left && (!(bot->map[bot->index].vic & (1 << dir_left)) || !bot->map[bot->index].vis))
+					if(left && (!(bot->map[bot->index].vic & (1 << dir_left)) || !bot->map[bot->index].vis) && prev_dropped_vic_l != nrk)
 					{
 						//int dir = (int)helper::prev_dir(bot->dir);
 						bool ret = drop_vic(nrk, left);
@@ -787,6 +789,7 @@ namespace driver
 							bot->map[bot->index].vic |= (1 << dir_left) & 0b1111;
 							//prev_vic_dist_left = dist_percent;
 							victim_detected = true;
+							prev_dropped_vic_l = nrk;
 							std::this_thread::sleep_for(std::chrono::milliseconds(20));
 						}
 						else
@@ -794,7 +797,7 @@ namespace driver
 							std::this_thread::sleep_for(std::chrono::milliseconds(800));
 						}
 					}
-					else if((!(bot->map[bot->index].vic & (1 << dir_right)) || !bot->map[bot->index].vis))
+					else if((!(bot->map[bot->index].vic & (1 << dir_right)) || !bot->map[bot->index].vis) && prev_dropped_vic_r != nrk)
 					{
 						//int dir = (int)helper::next_dir(bot->dir);
 						bool ret = drop_vic(nrk, left);
@@ -803,6 +806,7 @@ namespace driver
 							bot->map[bot->index].vic |= (1 << dir_right) & 0b1111;
 							//prev_vic_dist_right = dist_percent;
 							victim_detected = true;
+							prev_dropped_vic_r = nrk;
 							std::this_thread::sleep_for(std::chrono::milliseconds(20));
 						}
 						else
