@@ -231,8 +231,8 @@ void driveCM(float cm, int speed = 200, int tolerance = 10) {
     delay(500);
     UPDATE_BNO();
     handle_up_ramp(BNO_Z);
-    // pi_send_forward_status(false, !black_tile_detected);
-    // black_tile_detected = false;
+    pi_send_forward_status(false, !black_tile_detected);
+    black_tile_detected = false;
     return;
   }
 

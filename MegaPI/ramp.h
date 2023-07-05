@@ -29,6 +29,19 @@ bool handle_up_ramp(double start_pitch) {
   while (BNO_Z - start_pitch <= 6.7 && tofCalibrated(4) >= 45) {
     UPDATE_BNO();
     forward(SPEED + 25);
+
+    if (returnColor(true) == 1) {
+      while(motorR.getTicks() > 0 && tofCalibrated(5) >= 90)
+      {
+        forward(-80);
+      }
+      stopMotors();
+      delay(300);
+      //pi_send_forward_status(false, false);
+      black_tile_detected = true;
+      pi_send_ramp(0.0,0.0,0.0);
+      return;
+    }
   }
 
   double old_x = motorR.getTicks();
@@ -36,7 +49,20 @@ bool handle_up_ramp(double start_pitch) {
   UPDATE_BNO();
 
   //move until not ramp
-  while (BNO_Z - start_pitch >= 6.5 && tofCalibrated(4) >= 90) {
+  while (BNO_Z - start_pitch >= 6.5 && tofCalibrated(4) >= 90) {  
+    if (returnColor(true) == 1) {
+      while(motorR.getTicks() > 0 && tofCalibrated(5) >= 90)
+      {
+        forward(-80);
+      }
+      stopMotors();
+      delay(300);
+      //pi_send_forward_status(false, false);
+      black_tile_detected = true;
+      pi_send_ramp(0.0,0.0,0.0);
+      return;
+    }
+
     UPDATE_BNO();
     double reading;
 
@@ -128,8 +154,6 @@ bool handle_up_ramp(double start_pitch) {
 
     delay(200);
     pi_send_ramp(0.0, 0.0, 0.0);
-    pi_send_forward_status(false, !black_tile_detected);
-    black_tile_detected = false;
     return true;
   }
 
@@ -151,7 +175,7 @@ bool handle_up_ramp(double start_pitch) {
     height = 1;
   }
   pi_send_ramp(1.0, round((distance / (30.0 * CM_TO_ENCODERS)) - 0.25), height);
-  pi_send_forward_status(false, true);
+  //pi_send_forward_status(false, true);
   alignAngle(false);
 
   if (tofCalibrated(4) <= wall_tresh) {
@@ -221,6 +245,8 @@ bool handle_down_ramp(double start_pitch) {
       {
         forward(-80);
       }
+      stopMotors();
+      delay(300);
       //pi_send_forward_status(false, false);
       black_tile_detected = true;
       pi_send_ramp(0.0,0.0,0.0);
