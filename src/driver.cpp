@@ -756,8 +756,8 @@ namespace driver
 		//auto time_step = std::chrono::high_resolution_clock::now();
 		//bool victim = false;
 		bool victim_detected = false;
-		int prev_dropped_vic_l = 0;
-		int prev_dropped_vic_r = 0;
+		int prev_dropped_vic_l = -1;
+		int prev_dropped_vic_r = -1;
 		
 		for(int i = 0; i < 10; i++)
 			PythonScript::Exec(cv_py_file);
