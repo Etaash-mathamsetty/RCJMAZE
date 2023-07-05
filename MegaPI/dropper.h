@@ -16,6 +16,11 @@ bool kitDrop(int num, char side) {
 
   bool walls[4] = { arr[4], arr[2] || arr[3], arr[5], arr[0] || arr[1] };
 
+  if (millis() - tvictim < 10000) {
+    memset(seen_l, 0, sizeof(seen_l));
+    memset(seen_r, 0, sizeof(seen_r));
+  }
+
   if (side == 'r') {
     if (!walls[1])
       return false;
@@ -36,25 +41,24 @@ bool kitDrop(int num, char side) {
       return false;
   }
 
+  tvictim = millis();
+
   // avoid misdetecting orange obstacles
   if (num == 1 && side == 'r') {
-    if (abs(tofCalibrated(2) - tofCalibrated(3)) > 50) {
+    if (abs(tofCalibrated(2, 3) - tofCalibrated(3, 3)) > 140) {
       oled.clearDisplay();
       oled.setCursor(0,0);
       oled.println("obstacle seen r");
-      delay(2000);
       return false;
     }
   } else if (num == 1 && side == 'l') {
-    if (abs(tofCalibrated(0) - tofCalibrated(1)) > 50) {
+    if (abs(tofCalibrated(0, 3) - tofCalibrated(1, 3)) > 140) {
       oled.clearDisplay();
       oled.setCursor(0,0);
       oled.println("obstacle seen l");
-      delay(2000);
       return false;
     }
   }
-
 
   analogWrite(3, 150);
   delay(200);
@@ -88,6 +92,16 @@ bool kitDrop(int num, char side) {
       myservo2.detach();
       myservo.detach();
       delay(max(0, 3000 - 2000*i - 100));
+      // for (int i = 0; i < 3; i++) {
+      //   analogWrite(5, 50);
+      //   analogWrite(2, 50);
+      //   analogWrite(4, 50);
+      //   delay(400);
+      //   analogWrite(5, 0);
+      //   analogWrite(2, 0);
+      //   analogWrite(4, 0);
+      //   delay(400);
+      // } 
       analogWrite(5, 0);
       analogWrite(2, 0);
       analogWrite(4, 0);
@@ -99,8 +113,14 @@ bool kitDrop(int num, char side) {
     Serial.println(columnNum);
     Serial.println("numDropped");
     Serial.println(numDropped);
+    analogWrite(5, 50);
+    analogWrite(2, 50);
+    analogWrite(4, 50);
     delay(1000);
     myservo.write(180);
+    analogWrite(5, 0);
+    analogWrite(2, 0);
+    analogWrite(4, 0);
     delay(1000);
     numDropped++;
   }
@@ -108,11 +128,19 @@ bool kitDrop(int num, char side) {
   myservo.detach();
   myservo2.detach();
   
-  if(num > 0)
-    delay(1000);
-  else
-    //required by rules
-  delay(3000);
+  //required by rules
+
+  for (int i = 0; i < 3; i++) {
+    analogWrite(5, 50);
+    analogWrite(2, 50);
+    analogWrite(4, 50);
+    delay(400);
+    analogWrite(5, 0);
+    analogWrite(2, 0);
+    analogWrite(4, 0);
+    delay(400);
+  } 
+  // delay(3000);
   analogWrite(5, 0);
   analogWrite(2, 0);
   analogWrite(4, 0);
@@ -122,17 +150,24 @@ bool kitDrop(int num, char side) {
   else
     seen_r[num] = side;
 
+  oled.clearDisplay();
+  oled.setCursor(0,0);
+
   for (int i = 0; i < ARRAY_SIZE(seen_l); i++) {
-    Serial.print(seen_l[i]);
-    Serial.print(" ");
+    oled.print(seen_l[i]);
+    oled.print(" ");
   }
-  Serial.println();
+  oled.println();
+  oled.println(move_count);
+  oled.println();
 
   for(int i = 0; i < ARRAY_SIZE(seen_r); i++) {
-    Serial.print(seen_r[i]);
-    Serial.print(" ");
+    oled.print(seen_r[i]);
+    oled.print(" ");
   }
-  Serial.println();
+  oled.println();
+  oled.println(move_count);
+  oled.println();
 
   return true;
 }

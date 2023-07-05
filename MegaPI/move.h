@@ -91,8 +91,8 @@ void drive(const int32_t encoders, int speed, bool align = false) {
     //otherwise, just assume 0
 
     if (returnColor(true) == 1) {
-      while (/* motorR.getTicks() > 0 && */ motorL.getTicks() > 0 && tofCalibrated(5) >= 90) {
-        forward(-speed);
+      while (/* motorR.getTicks() > 0 && */ motorL.getTicks() > -1.5 * CM_TO_ENCODERS && tofCalibrated(5) >= 60) {
+        forward(-SPEED * 0.65);
       }
       stopMotors();
       delay(300);
@@ -107,6 +107,10 @@ void drive(const int32_t encoders, int speed, bool align = false) {
     //we are close enough to the target at this point, so quit the loop
     if (/* abs(p_turn * DRIVE_STRAIGHT_KP) <= 0.01 && */ PID <= 0.01)
       break;
+    
+    if (abs(encoders - abs(motorR.getTicks())) < 0.1) {
+      break;
+    }
     // speed = speed * (abs(encoders) - abs(motor1.getTicks()))/abs(encoders);
 
     // Serial.println(speed * (double)(abs(encoders) - abs(motor1.getTicks()))/abs(encoders));
@@ -155,6 +159,11 @@ void drive(const int32_t encoders, int speed, bool align = false) {
       error = 100;
     } else if (error < -100) {
       error = -100;
+    }
+
+    
+    if (BNO_Z > 6.5) {
+      addBoost(DRIVE_BOOST + 50);
     }
 
     if (limit_detected) {
@@ -240,8 +249,8 @@ void driveCM(float cm, int speed = 200, int tolerance = 10) {
 
 #if 1
   const float mult_factor = 1.0;
-  uint right = (tofCalibrated(2, 3) + tofCalibrated(3, 3)) / 2;
-  uint left = (tofCalibrated(0, 3) + tofCalibrated(1, 3)) / 2;
+  uint right = (tofCalibrated(2, 1) + tofCalibrated(3, 1)) / 2;
+  uint left = (tofCalibrated(0, 1) + tofCalibrated(1, 1)) / 2;
   const float half_chassis = 75;
   const double target_dist_from_wall = (300.0 - half_chassis * 2) / 2.0;
 
@@ -463,6 +472,7 @@ void driveCM(float cm, int speed = 200, int tolerance = 10) {
     delay(5000);
   }
 
-  memset(seen_l, 0, sizeof(seen_l));
-  memset(seen_r, 0, sizeof(seen_r));
+  // memset(seen_l, 0, sizeof(seen_l));
+  // memset(seen_r, 0, sizeof(seen_r));
+  move_count++;
 }

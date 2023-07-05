@@ -122,6 +122,12 @@ bool black_tile_detected = false;
 volatile char seen_l[4] = { 0 };
 volatile char seen_r[4] = { 0 };
 
+// move count for debug
+volatile int move_count = 0;
+
+// timer for resetting victim
+volatile int32_t tvictim = -10000000;
+
 inline void tcaselect(uint8_t i) {
   if (i > 7)
     return;

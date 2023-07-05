@@ -1,6 +1,6 @@
 //#define FAKE_ROBOT
 //#define FAKE_SERIAL
-// #define DEBUG_DISPLAY
+#define DEBUG_DISPLAY
 // #define MOTORSOFF
 // #define TEST
 // #define ALIGN_ANGLE
@@ -9,6 +9,7 @@
 // #define NO_PID
 // #define TCS
 // #define TURN_TEST
+// #define LIGHT_MODE
 #define AMS
 
 //define: debug display, motorsoff, test, comment out all others if you want to calibrate tofs
@@ -112,8 +113,7 @@ void setup() {
       Serial.print(i);
       Serial.println(" is init");
     }
-    delay(10);
-
+    delay(5);
     //tof.setTimeout(500);
     //tof.startContinuous();
   }
@@ -269,7 +269,7 @@ void pi_read_data() {
         // Serial.println(vals);
 
         // //n e s w
-        bool walls[4] = { arr[4], arr[2] || arr[3], arr[5], arr[0] || arr[1] };
+        bool walls[4] = { arr[4], arr[2] && arr[3], arr[5], arr[0] && arr[1] };
         // not wrapped around and stuff
         //oled_display_walls(walls);
         //  this is wrapped
@@ -354,7 +354,7 @@ void loop() {
   bool* arr = get_tof_vals(wall_tresh);
 
   // //n e s w
-  bool walls[4] = { arr[4], arr[2] || arr[3], arr[5], arr[0] || arr[1] };
+  bool walls[4] = { arr[4], arr[2] && arr[3], arr[5], arr[0] && arr[1] };
   // not wrapped around and stuff
   oled_display_walls(walls);
   //acceleration_position();
@@ -524,7 +524,7 @@ returnColor();
   bool* arr = get_tof_vals(wall_tresh);
 
   // // //n e s w
-  bool walls[4] = { arr[4], arr[2] || arr[3], arr[5], arr[0] || arr[1] };
+  bool walls[4] = { arr[4], arr[2] && arr[3], arr[5], arr[0] && arr[1] };
   // not wrapped around and stuff
   oled_display_walls(walls);
 

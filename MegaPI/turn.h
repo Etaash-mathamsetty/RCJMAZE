@@ -8,7 +8,7 @@ using namespace std;
 
 void backup_align(int speed, int time) {
 
-  while (tofCalibrated(5) >= 55 /*|| digitalRead(BACK_LEFT) || digitalRead(BACK_RIGHT) */) {
+  while (tofCalibrated(5) >= 60 /*|| digitalRead(BACK_LEFT) || digitalRead(BACK_RIGHT) */) {
     forward(-speed * 0.75);
   }
   stopMotors();
@@ -135,7 +135,7 @@ if (abs(relative_angle) < 1) {
       
       resetTicks();
       
-      while (abs(motorR.getTicks()) < 4 * CM_TO_ENCODERS) {
+      while (abs(motorR.getTicks()) < 7 * CM_TO_ENCODERS) {
         forward(-255, 0);
       }
 
@@ -325,7 +325,7 @@ void raw_left(double relative_angle, int speed, bool alignment) {
       delay(200);
       resetTicks();
 
-      while (abs(motorL.getTicks()) < 4 * CM_TO_ENCODERS) {
+      while (abs(motorL.getTicks()) < 7 * CM_TO_ENCODERS) {
         forward(0, -255);
       }
 
@@ -549,10 +549,10 @@ bool alignAngle(bool reset, int tolerance = 10, double start_yaw = INFINITY) {
   float BNO_KP = 2;
   addBoost(ALIGN_TURN_BOOST);
 
-  tofR1 = tofCalibrated(0, 5);
-  tofR2 = tofCalibrated(1, 5);
-  tofR3 = tofCalibrated(2, 5);
-  tofR4 = tofCalibrated(3, 5);
+  tofR1 = tofCalibrated(0, 1);
+  tofR2 = tofCalibrated(1, 1);
+  tofR3 = tofCalibrated(2, 1);
+  tofR4 = tofCalibrated(3, 1);
   Serial.print(tofR1);
   Serial.print(" ");
   Serial.print(tofR2);

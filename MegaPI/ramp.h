@@ -194,8 +194,8 @@ bool handle_down_ramp(double start_pitch) {
 
     if (returnColor(true) == 1) {
       
-      while (/* motorR.getTicks() > 0 && */ motorL.getTicks() > 0 && tofCalibrated(5) >= 90) {
-        forward(-SPEED * 0.75);
+      while (/* motorR.getTicks() > 0 && */ motorL.getTicks() > -1.5 * CM_TO_ENCODERS && tofCalibrated(5) >= 60) {
+        forward(-SPEED * 0.65);
       }
       stopMotors();
       delay(300);
