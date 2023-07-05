@@ -91,7 +91,7 @@ void drive(const int32_t encoders, int speed, bool align = false) {
     //otherwise, just assume 0
 
     if (returnColor(true) == 1) {
-      while (/* motorR.getTicks() > 0 && */ motorL.getTicks() > -1.5 * CM_TO_ENCODERS && tofCalibrated(5) >= 60) {
+      while (/* motorR.getTicks() > 0 && */ motorL.getTicks() > -1.5 * CM_TO_ENCODERS && tofCalibrated(5) >= 90) {
         forward(-SPEED * 0.65);
       }
       stopMotors();
