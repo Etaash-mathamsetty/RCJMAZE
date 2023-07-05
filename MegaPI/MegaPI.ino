@@ -2,9 +2,9 @@
 //#define FAKE_SERIAL
 // #define DEBUG_DISPLAY
 // #define MOTORSOFF
-#define TEST
+// #define TEST
 // #define ALIGN_ANGLE
-#define NO_PI //basic auto when no raspberry pi (brain stem mode)
+// #define NO_PI //basic auto when no raspberry pi (brain stem mode)
 // #define NO_LIMIT
 // #define NO_PID
 // #define TCS
@@ -398,7 +398,9 @@ void loop() {
 // int clear_oled_counter = 0;
 
 // UPDATE_BNO();
-// returnColor();
+returnColor();
+// UPDATE_BNO();
+// Serial.println(BNO_X);
 
 // for (int i = 0; i <= TOF_NUMBER; i++) {
 //   Serial.print(i);
@@ -433,9 +435,9 @@ void loop() {
 // delay(1000); 
 // kitDrop(12, 'r'); 
 // delay(500); 
-for (int i = 0; i < 4; i++) {
-  turn(dir_to_char(i));
-}
+// for (int i = 0; i < 4; i++) {
+//   turn(dir_to_char(i));
+// }
 
 // Serial.println(tofCalibrated(5));
 

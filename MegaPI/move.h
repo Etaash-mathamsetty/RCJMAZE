@@ -207,13 +207,13 @@ void driveCM(float cm, int speed = 200, int tolerance = 10) {
 
   int invalid_count = 0;
   int32_t tof_front = tofCalibrated(4);
-  int32_t tof_ramp = tofCalibrated(6, 5, &invalid_count);
+  int32_t tof_ramp = tofCalibrated(6, 3, &invalid_count);
 
   if (tof_front > 220 && tof_front <= 530 && tof_ramp < 265  && tof_ramp > 130) {
     forwardTicks(SPEED * 0.65, 4 * CM_TO_ENCODERS);
     invalid_count = 0;
     tof_front = tofCalibrated(4);
-    tof_ramp = tofCalibrated(6, 5, &invalid_count);
+    tof_ramp = tofCalibrated(6, 3, &invalid_count);
   }
 
   if (tof_front > 220 && tof_front <= 490 && tof_ramp < 255  && tof_ramp > 130) {

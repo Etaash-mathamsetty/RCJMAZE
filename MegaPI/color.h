@@ -128,7 +128,7 @@ int returnColor(bool only_black = false) {
       violet_greatest = false;
     }
 
-    if (amsValues[i] <= 20) {
+    if (amsValues[i] <= 30) {
       dark_count++;
     }
 
@@ -141,11 +141,35 @@ int returnColor(bool only_black = false) {
     }
   }
 
-  if (dark_count >= 5 && abs(BNO_Z) < 12) {
+  if (dark_count >= 5 && abs(BNO_Z) < 7 && amsValues[AS726x_VIOLET] <= 32) {
     // stopMotors ();
     // oled_clear();
     // oled_println(" black detected");
-    // Serial.println(" black detected");
+    if (only_black) {
+      int black_persistence = 0;
+      for (int i = 0; i < 2; i++) {        
+        int dark_count2 = 0;
+        UPDATE_BNO();
+
+        for (int i = 0; i <= AS726x_RED; i++) {
+          if (amsValues[i] <= 30) {
+            dark_count2++;
+          }
+        }
+
+        if (dark_count2 >= 5 && abs(BNO_Z) < 7 && amsValues[AS726x_VIOLET] <= 32) {
+          black_persistence++;
+        } 
+      }
+
+      if (black_persistence >= 2) {
+        Serial.println("black detected");
+        return 1;
+      } else {
+        return 0;
+      }
+    }
+    Serial.println(" black detected");
     return 1;
   } else if (bright_count >= 3 && abs((double) amsValues[AS726x_GREEN] - (double) amsValues[AS726x_YELLOW]) < 80 && abs(BNO_Z) < 12 && !only_black) {
     // stopMotors();
@@ -154,7 +178,7 @@ int returnColor(bool only_black = false) {
     // delay(5000);
     Serial.println(" silver detected");
     return 2;
-  } else if (violet_greatest && !only_black && amsValues[AS726x_VIOLET] > 40 && amsValues[AS726x_RED] <= 18 && amsValues[AS726x_BLUE] >= 18 && abs(BNO_Z) < 12) {
+  } else if (violet_greatest && !only_black && amsValues[AS726x_VIOLET] > 35 && amsValues[AS726x_RED] <= 18 && amsValues[AS726x_BLUE] >= 16 && abs(BNO_Z) < 12) {
     //stopMotors();
     Serial.println(" blue detected");
     oled_clear();

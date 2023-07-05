@@ -64,6 +64,7 @@ if (abs(relative_angle) < 1) {
   double p, i = 0, d;
   double PID;
   bool cross_over = false;
+  bool backwards = false;
   bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
 
   if (orientationData.orientation.x + relative_angle >= 360) {
@@ -128,13 +129,29 @@ if (abs(relative_angle) < 1) {
 
 #ifndef NO_PID
 
+    if (millis() - tstart > 5000 && !backwards) {
+      stopMotors();
+      delay(200);
+      
+      resetTicks();
+      
+      while (abs(motorR.getTicks()) < 4 * CM_TO_ENCODERS) {
+        forward(-255, 0);
+      }
+
+      stopMotors();
+      delay(200);
+      backwards = true;
+      continue;
+    }
+
     if (millis() - tstart < 3000) {
       forward((PID * -speed), (PID * speed));
     } else {
       if (alignment) {
         addBoost(ALIGN_TURN_BOOST + 150);
       } else {
-        addBoost(TURN_BOOST + 150);
+        addBoost(TURN_BOOST + 250);
       }
       forward((PID * -speed), (PID * speed));
     }
@@ -242,6 +259,7 @@ void raw_left(double relative_angle, int speed, bool alignment) {
   double p, i = 0, d;
   double PID;
   bool cross_over = false;
+  bool backwards = false;
   bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
 
   if (orientationData.orientation.x - relative_angle < 0) {
@@ -302,13 +320,29 @@ void raw_left(double relative_angle, int speed, bool alignment) {
     // }
 
 #ifndef NO_PID
+    if (millis() - tstart > 5000 && !backwards) {
+      stopMotors();
+      delay(200);
+      resetTicks();
+
+      while (abs(motorL.getTicks()) < 4 * CM_TO_ENCODERS) {
+        forward(0, -255);
+      }
+
+      stopMotors();
+      delay(200);
+      backwards = true;
+      continue;
+    }
+
+
     if (millis() - tstart < 3000) {
       forward((PID * speed), (PID * -speed));
     } else {
       if (alignment) {
         addBoost(ALIGN_TURN_BOOST + 150);
       } else {
-        addBoost(TURN_BOOST + 150);
+        addBoost(TURN_BOOST + 250);
       }
       forward((PID * speed), (PID * -speed));
     }

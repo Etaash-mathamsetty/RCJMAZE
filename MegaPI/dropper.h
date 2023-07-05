@@ -36,6 +36,25 @@ bool kitDrop(int num, char side) {
       return false;
   }
 
+  // avoid misdetecting orange obstacles
+  if (num == 1 && side == 'r') {
+    if (abs(tofCalibrated(2) - tofCalibrated(3)) > 50) {
+      oled.clearDisplay();
+      oled.setCursor(0,0);
+      oled.println("obstacle seen r");
+      delay(2000);
+      return false;
+    }
+  } else if (num == 1 && side == 'l') {
+    if (abs(tofCalibrated(0) - tofCalibrated(1)) > 50) {
+      oled.clearDisplay();
+      oled.setCursor(0,0);
+      oled.println("obstacle seen l");
+      delay(2000);
+      return false;
+    }
+  }
+
 
   analogWrite(3, 150);
   delay(200);

@@ -68,6 +68,8 @@ bool handle_up_ramp(double start_pitch) {
       err = 0;
     }
 
+    // use tof values
+
     double l_offset = 0, r_offset = 0;
 
     if (_tofCalibrated(1) < 50) {
@@ -78,7 +80,17 @@ bool handle_up_ramp(double start_pitch) {
       r_offset = 20;
     }
 
-    forward(80.0 + bno_error + r_offset, 80.0 - bno_error + l_offset);
+    // use limit switches
+
+    if (digitalRead(FRONT_LEFT)) {
+      l_offset += 20;
+    }
+
+    if (digitalRead(FRONT_RIGHT)) {
+      r_offset += 20;
+    }
+
+    forward(85.0 + bno_error + r_offset, 85.0 - bno_error + l_offset);
     UPDATE_BNO();
 
     // calculate distance on a ramp
@@ -114,7 +126,7 @@ bool handle_up_ramp(double start_pitch) {
     oled.println(height);
     stopMotors();
 
-    delay(2000);
+    delay(200);
     pi_send_ramp(0.0, 0.0, 0.0);
     pi_send_forward_status(false, !black_tile_detected);
     black_tile_detected = false;
@@ -133,7 +145,7 @@ bool handle_up_ramp(double start_pitch) {
   oled_println(height / (30.0 * CM_TO_ENCODERS));
   oled_print("Delta Angle");
   oled_print(BNO_Z - start_pitch);
-  delay(5000);
+  delay(200);
   height = round(height / (30.0 * CM_TO_ENCODERS));
   if (height == 0) {
     height = 1;
@@ -254,12 +266,24 @@ bool handle_down_ramp(double start_pitch) {
 
     double l_offset = 0, r_offset = 0;
 
+    // use tof sensors to align
+
     if (_tofCalibrated(1) < 50) {
-      l_offset = 20;
+      l_offset += 20;
     }
 
     if (_tofCalibrated(3) < 50) {
-      r_offset = 20;
+      r_offset += 20;
+    }
+
+    // use limit switches
+
+    if (digitalRead(FRONT_LEFT)) {
+      l_offset += 20;
+    }
+
+    if (digitalRead(FRONT_RIGHT)) {
+      r_offset += 20;
     }
 
     forward(80.0 + bno_error + r_offset, 80.0 - bno_error + l_offset);
@@ -293,7 +317,7 @@ bool handle_down_ramp(double start_pitch) {
     oled.print("Height: ");
     oled.println(height);
     stopMotors();
-    delay(2000);
+    delay(200);
     pi_send_ramp(0.0, 0.0, 0.0);
     //pi_send_forward_status(false, !black_tile_detected);
     //black_tile_detected = false;
@@ -306,7 +330,7 @@ bool handle_down_ramp(double start_pitch) {
   oled_print("Ramps: ");
   oled_println((distance / (30.0 * CM_TO_ENCODERS)));
   oled_print(height / (30.0 * CM_TO_ENCODERS));
-  delay(5000);
+  delay(200);
   height = round(height / (30.0 * CM_TO_ENCODERS));
   if (height == 0) {
     height = 1;
