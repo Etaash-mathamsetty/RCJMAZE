@@ -56,11 +56,11 @@ def label_img(frame):
         return ()
 
 
-green_low_hsv = [50,80, 40]
+green_low_hsv = [40,80, 40]
 green_high_hsv = [90, 239, 231]
 red_low_hsv = [120, 150, 70]
 red_high_hsv = [200, 239, 231]
-red_low_hsv2 = [0, 150, 115]
+red_low_hsv2 = [0, 150, 105]
 red_high_hsv2 = [30, 255, 200]
 yellow_low_hsv = [30, 110, 100]
 yellow_high_hsv = [60, 247, 231]
