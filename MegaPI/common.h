@@ -91,7 +91,7 @@ volatile int32_t global_angle = 0;
 volatile bool restart = false;
 
 const int SPEED = 105;
-const int ALIGN_SPEED = 75;
+const int ALIGN_SPEED = 85;
 
 enum type { Color,
             Distance };
@@ -126,7 +126,8 @@ volatile char seen_r[4] = { 0 };
 volatile int move_count = 0;
 
 // timer for resetting victim
-volatile int32_t tvictim = -10000000;
+volatile int32_t tvictim = 10000000;
+volatile int32_t ttest = 10000000;
 
 inline void tcaselect(uint8_t i) {
   if (i > 7)

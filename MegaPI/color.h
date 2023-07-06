@@ -103,6 +103,7 @@ int returnColor(bool only_black = false) {
 
   readColors();
 #ifdef TEST
+#ifndef NO_PI
   Serial.print("Violet:");
   Serial.print(amsValues[AS726x_VIOLET]);
   Serial.print(",Blue:");
@@ -117,6 +118,7 @@ int returnColor(bool only_black = false) {
   Serial.print(amsValues[AS726x_RED]);
   Serial.println();
 #endif
+#endif
 
   bool violet_greatest = true;
   int dark_count = 0;
@@ -128,7 +130,7 @@ int returnColor(bool only_black = false) {
       violet_greatest = false;
     }
 
-    if (amsValues[i] <= 30) {
+    if (amsValues[i] <= 28) {
       dark_count++;
     }
 
@@ -141,7 +143,7 @@ int returnColor(bool only_black = false) {
     }
   }
 
-  if (dark_count >= 5 && abs(BNO_Z) < 7 && amsValues[AS726x_VIOLET] <= 32) {
+  if (dark_count >= 5 && abs(BNO_Z) < 7 && amsValues[AS726x_VIOLET] <= 32 && !violet_greatest) {
     // stopMotors ();
     // oled_clear();
     // oled_println(" black detected");
@@ -152,12 +154,16 @@ int returnColor(bool only_black = false) {
         UPDATE_BNO();
 
         for (int i = 0; i <= AS726x_RED; i++) {
-          if (amsValues[i] <= 30) {
+          if (amsValues[i] <= 28) {
             dark_count2++;
+          }
+
+          if (amsValues[AS726x_VIOLET] < amsValues[i]) {
+            violet_greatest = false;
           }
         }
 
-        if (dark_count2 >= 5 && abs(BNO_Z) < 7 && amsValues[AS726x_VIOLET] <= 32) {
+        if (dark_count2 >= 5 && abs(BNO_Z) < 7 && amsValues[AS726x_VIOLET] <= 32 && !violet_greatest) {
           black_persistence++;
         } 
       }
@@ -169,18 +175,18 @@ int returnColor(bool only_black = false) {
         return 0;
       }
     }
-    Serial.println(" black detected");
+    Serial.println(" black detected ");
     return 1;
   } else if (bright_count >= 3 && abs((double) amsValues[AS726x_GREEN] - (double) amsValues[AS726x_YELLOW]) < 80 && abs(BNO_Z) < 12 && !only_black) {
     // stopMotors();
     oled_clear();
-    oled_println(" silver detected");
+    oled_print(" silver detected ");
     // delay(5000);
     Serial.println(" silver detected");
     return 2;
   } else if (violet_greatest && !only_black && amsValues[AS726x_VIOLET] > 35 && amsValues[AS726x_RED] <= 18 && amsValues[AS726x_BLUE] >= 16 && abs(BNO_Z) < 12) {
     //stopMotors();
-    Serial.println(" blue detected");
+    Serial.print(" blue detected ");
     oled_clear();
     oled_println(" blue detected");
     //delay(5000);

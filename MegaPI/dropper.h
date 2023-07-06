@@ -16,7 +16,7 @@ bool kitDrop(int num, char side) {
 
   bool walls[4] = { arr[4], arr[2] || arr[3], arr[5], arr[0] || arr[1] };
 
-  if (millis() - tvictim < 10000) {
+  if (millis() - tvictim > 10000) {
     memset(seen_l, 0, sizeof(seen_l));
     memset(seen_r, 0, sizeof(seen_r));
   }
@@ -44,21 +44,21 @@ bool kitDrop(int num, char side) {
   tvictim = millis();
 
   // avoid misdetecting orange obstacles
-  if (num == 1 && side == 'r') {
-    if (abs(tofCalibrated(2, 3) - tofCalibrated(3, 3)) > 140) {
-      oled.clearDisplay();
-      oled.setCursor(0,0);
-      oled.println("obstacle seen r");
-      return false;
-    }
-  } else if (num == 1 && side == 'l') {
-    if (abs(tofCalibrated(0, 3) - tofCalibrated(1, 3)) > 140) {
-      oled.clearDisplay();
-      oled.setCursor(0,0);
-      oled.println("obstacle seen l");
-      return false;
-    }
-  }
+  // if (num == 1 && side == 'r') {
+  //   if (abs(tofCalibrated(2, 3) - tofCalibrated(3, 3)) > 160) {
+  //     oled.clearDisplay();
+  //     oled.setCursor(0,0);
+  //     oled.println("obstacle seen r");
+  //     return false;
+  //   }
+  // } else if (num == 1 && side == 'l') {
+  //   if (abs(tofCalibrated(0, 3) - tofCalibrated(1, 3)) > 160) {
+  //     oled.clearDisplay();
+  //     oled.setCursor(0,0);
+  //     oled.println("obstacle seen l");
+  //     return false;
+  //   }
+  // }
 
   analogWrite(3, 150);
   delay(200);
