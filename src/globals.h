@@ -109,7 +109,7 @@ namespace com
 
 const std::string init_py_file = "init.py";
 const std::string cv_py_file = "cv.py";
-const std::string ser_py_file = "serial.py";
+const std::string ser_py_file = "ser.py";
 const std::string cleanup_py_file = "cleanup.py";
 
 const int max_num_floors = 20;
