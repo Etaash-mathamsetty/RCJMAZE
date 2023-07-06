@@ -1,10 +1,10 @@
 //#define FAKE_ROBOT
 //#define FAKE_SERIAL
-#define DEBUG_DISPLAY
+// #define DEBUG_DISPLAY
 // #define MOTORSOFF
-// #define TEST
+#define TEST
 // #define ALIGN_ANGLE
-// #define NO_PI //basic auto when no raspberry pi (brain stem mode)
+#define NO_PI //basic auto when no raspberry pi (brain stem mode)
 // #define NO_LIMIT
 // #define NO_PID
 // #define TCS
@@ -398,9 +398,13 @@ void loop() {
 // int clear_oled_counter = 0;
 
 // UPDATE_BNO();
-returnColor();
-// UPDATE_BNO();
-// Serial.println(BNO_X);
+// returnColor();
+// Serial.print(digitalRead(FRONT_LEFT));
+// Serial.print(" ");
+// Serial.print(digitalRead(FRONT_RIGHT));
+// Serial.println();
+UPDATE_BNO();
+Serial.println(BNO_Z);
 
 // for (int i = 0; i <= TOF_NUMBER; i++) {
 //   Serial.print(i);
