@@ -658,7 +658,9 @@ namespace driver
 			}
 		}
 
+#ifndef SUPERTEAM
 		save_victims();
+#endif
 	}
 
 	void set_mov_indexes(int delta, bool up_ramp, bool down_ramp, int ramp_len, int ramp_height, bool victim)
@@ -984,7 +986,9 @@ namespace driver
 
 		fail_count = 0;
 
+#ifndef SUPERTEAM
 		save_victims();
+#endif
 		return true;
 	}
 
