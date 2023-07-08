@@ -767,8 +767,10 @@ namespace driver
 		while((bool)(*Bridge::get_data_value("forward_status"))[0]) 
 		{ 
 			PythonScript::Exec(ser_py_file);
-			//for(int i = 0; i < 4; i++);
-				//PythonScript::Exec(cv_py_file);
+#ifdef SUPERTEAM
+			for(int i = 0; i < 4; i++);
+				PythonScript::Exec(cv_py_file);
+#else
 			for(int i = 0; i < 2; i++)
 			{
 				PythonScript::Exec(cv_py_file);
@@ -816,6 +818,7 @@ namespace driver
 					}
 				}
 			}
+#endif
 			//std::this_thread::sleep_for(std::chrono::milliseconds(5));
 		}
 

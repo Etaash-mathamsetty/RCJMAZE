@@ -161,6 +161,7 @@ int main(int argc, char* argv[]){
 	#else 
 		//#define TEST_MODE
 		//REAL CODE HERE
+#ifndef SUPERTEAM
 		while(true)
 		{
 			#ifndef DEBUG_CV
@@ -202,6 +203,38 @@ int main(int argc, char* argv[]){
 				printf("\n");
 			#endif
 		}
+#else
+		//japan's bot is a short one
+		robot->map[robot->index].S = true;
+
+		robot->forward();
+		driver::turn_to(DIR::W);
+		robot->forward();
+		driver::turn_to(DIR::S);
+		robot->forward();
+		driver::turn_to(DIR::N);
+		for(int i = 0; i < 3; i++)
+			robot->forward();
+		driver::turn_to(DIR::S);
+		robot->forward();
+		driver::turn_to(DIR::E);
+		for(int i = 0; i < 2; i++)
+			robot->forward();
+		driver::turn_to(DIR::N);
+		robot->forward();
+		driver::turn_to(DIR::S);
+		for(int i = 0; i < 3; i++)
+			robot->forward();
+		driver::turn_to(DIR::N);
+		robot->forward();
+		driver::turn_to(DIR::W);
+		robot->forward();
+		driver::turn_to(DIR::S);
+		robot->forward();
+		driver::turn_to(DIR::N);
+		
+		//now communicate the victims :)
+#endif
 	#endif
 	//DRIVER_turn_east();
 	//std::cout << (std::string)robot << std::endl;
