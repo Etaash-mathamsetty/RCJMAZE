@@ -199,13 +199,14 @@ void driveCM(float cm, int speed = 200, int tolerance = 10) {
   oled.setCursor(0,0);
   oled.print(move_count);
 
+#ifdef SUPER_TEAM
   switch (move_count) {
     case 6: cm = tile_dist * 2; break;
     case 4:
     case 8: cm = tile_dist * 3; break;
     default: cm = tile_dist; break;
-
   }
+#endif
 
   //kitDrop(1);
   double start_yaw = 0.0;
@@ -229,10 +230,12 @@ void driveCM(float cm, int speed = 200, int tolerance = 10) {
   // ramp detection
 
   int invalid_count = 0;
+
+#ifndef SUPER_TEAM
   int32_t tof_front = tofCalibrated(4);
   int32_t tof_ramp = tofCalibrated(6, 3, &invalid_count);
 
-#ifndef SUPER_TEAM
+
   if (tof_front > 220 && tof_front <= 530 && tof_ramp < 265  && tof_ramp > 130) {
     forwardTicks(SPEED * 0.65, 4 * CM_TO_ENCODERS);
     invalid_count = 0;
@@ -263,7 +266,7 @@ void driveCM(float cm, int speed = 200, int tolerance = 10) {
   }
 #endif
 
-#if 1
+#if 0
   const float mult_factor = 1.0;
   uint right = (tofCalibrated(2, 1) + tofCalibrated(3, 1)) / 2;
   uint left = (tofCalibrated(0, 1) + tofCalibrated(1, 1)) / 2;
