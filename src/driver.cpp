@@ -541,6 +541,8 @@ namespace driver
 		return data;
 	}
 
+	bool dropped_for_current_tile = false;
+
 	CREATE_DRIVER(void, get_sensor_data)
 	{
 		robot* bot = robot::get_instance();
@@ -588,6 +590,7 @@ namespace driver
 						if(ret)
 						{
 							bot->map[bot->index].vic |= (1 << dir_left) & 0b1111;
+							dropped_for_current_tile = true;
 							//dropped = true;
 						}
 					}
@@ -599,6 +602,7 @@ namespace driver
 						if(ret)
 						{
 							bot->map[bot->index].vic |= (1 << dir_right) & 0b1111;
+							dropped_for_current_tile = true;
 							//dropped = true;
 						}
 					}					
@@ -671,7 +675,7 @@ namespace driver
 		{
 			set_ramp_wall();
 			bot->map[bot->index].bot = false;
-            		bot->map[bot->index].ramp = 0b01;
+            bot->map[bot->index].ramp = 0b01;
 			bot->map[bot->index].vis = true;
 
 			floor_num += ramp_height;
@@ -695,7 +699,7 @@ namespace driver
 		{
 			set_ramp_wall();
 			bot->map[bot->index].bot = false;
-            		bot->map[bot->index].ramp = 0b10;
+            bot->map[bot->index].ramp = 0b10;
 			bot->map[bot->index].vis = true;
 
 			floor_num -= ramp_height;
@@ -823,6 +827,8 @@ namespace driver
 #endif
 			//std::this_thread::sleep_for(std::chrono::milliseconds(5));
 		}
+
+		dropped_for_current_tile = false;
 
 		int ramp = 0;
 		int ramp_len = 0;
@@ -1049,7 +1055,7 @@ namespace driver
 				int dir_left = (int)helper::prev_dir(bot->dir);
 				int dir_right = (int)helper::next_dir(bot->dir);
 
-				if(left && !(bot->map[bot->index].vic & (1 << dir_left)))
+				if(left && !(bot->map[bot->index].vic & (1 << dir_left)) && !dropped_for_current_tile)
 				{
 					//west relative
 					bool ret = drop_vic(nrk, left);
@@ -1060,7 +1066,7 @@ namespace driver
 					}
 					
 				}
-				else if(!(bot->map[bot->index].vic & (1 << dir_right)))
+				else if(!(bot->map[bot->index].vic & (1 << dir_right)) && !dropped_for_current_tile)
 				{
 					//east relative
 					bool ret = drop_vic(nrk, left);
