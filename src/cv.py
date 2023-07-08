@@ -253,5 +253,7 @@ if True:
     #     np.savetxt("feature.txt", feature_txt)
     #     print('written')
 
+if(rescue >= 3):
+    rescue = 3
 
 Rb.SetDataValue("NRK", [float(rescue)])
