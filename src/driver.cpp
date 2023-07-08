@@ -549,6 +549,8 @@ namespace driver
 		//PythonScript::CallPythonFunction<bool, bool>("VictimStrip", false);
 		//bot->map[bot->index].letter = (uint8_t)Bridge::get_data_value("letter")[0];
 		
+		int num_walls = 0;
+
 		for(int i = 0; i < 10; i++)
 			PythonScript::Exec(cv_py_file);
 		
@@ -562,6 +564,11 @@ namespace driver
 			bot->map[bot->index].E = (bool)(*Bridge::get_data_value("W"))[1];
 			bot->map[bot->index].S = (bool)(*Bridge::get_data_value("W"))[2];
 			bot->map[bot->index].W = (bool)(*Bridge::get_data_value("W"))[3];
+			for(int i = 0; i < 4; i++)
+			{
+				if((bool)(*Bridge::get_data_value("W"))[i])
+					num_walls++;
+			}
 			Bridge::remove_data_value("W");
 			bot->map[bot->index].checkpoint = wait_for_data<bool>("CP");
 			if(bot->map[bot->index].checkpoint)
@@ -575,6 +582,9 @@ namespace driver
 				bool left = (*Bridge::get_data_value("left"))[0];
 				int nrk = (*Bridge::get_data_value("NRK"))[0];
 
+#ifdef SUPERTEAM
+				if(num_walls == 3)
+#endif
 				if(victim)
 				{
 					int dir_left = (int)helper::prev_dir(bot->dir);
