@@ -213,18 +213,22 @@ int main(int argc, char* argv[]){
 		driver::turn_to(DIR::S);
 		robot->forward();
 		driver::turn_to(DIR::N);
-		for(int i = 0; i < 3; i++)
-			robot->forward();
+		//1 tile
+		robot->forward();
+		//remaining dist
+		robot->forward();
 		driver::turn_to(DIR::S);
 		robot->forward();
 		driver::turn_to(DIR::E);
-		for(int i = 0; i < 2; i++)
-			robot->forward();
+		//goes to the other side
+		robot->forward();
 		driver::turn_to(DIR::N);
 		robot->forward();
 		driver::turn_to(DIR::S);
-		for(int i = 0; i < 3; i++)
-			robot->forward();
+		// 1 tile
+		robot->forward();
+		//remaining dist
+		robot->forward();
 		driver::turn_to(DIR::N);
 		robot->forward();
 		driver::turn_to(DIR::W);
