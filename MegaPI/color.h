@@ -6,6 +6,8 @@
 
 using namespace utils;
 
+#ifdef AMS
+
 void readColors() {
 #ifdef AMS
   //ams.drvOn();
@@ -197,82 +199,6 @@ int returnColor(bool only_black = false) {
   return 0;
 }
 
-void calibrateColor(int num_samples) {
-  Serial.println("Blue!");
-  delay(5000);
-  Serial.println("Sampling Blue!");
-
-  for (int i = 0; i < num_samples; i++) {
-    readColors();
-    for (int i = 0; i <= RED; i++) {
-       blue[i] += amsValues[color_to_value[i]];
-    }
-  }
-
-  for (int i = 0; i <= RED; i++) {
-    blue[i] /= num_samples;
-  }
-
-  Serial.println("Black!");
-  delay(5000);
-  Serial.println("Sampling Black!");
-
-
-  for (int i = 0; i < num_samples; i++) {
-    readColors();
-    for (int i = 0; i <= RED; i++) {
-      black[i] += amsValues[color_to_value[i]];
-    }
-  }
-
-  for (int i = 0; i <= RED; i++) {
-    black[i] /= num_samples;
-  }
-
-  Serial.println("Silver!");
-  delay(5000);
-  Serial.println("Sampling Silver!");
-
-
-  for (int i = 0; i < num_samples; i++) {
-    readColors();
-    for (int i = 0; i <= RED; i++) {
-      silver[i] += amsValues[color_to_value[i]];
-    }
-  }
-
-  oled.println("blue:");
-
-  for (int i = 0; i <= RED; i++) {
-    silver[i] /= num_samples;
-  }
-
-  for (int i = 0; i <= RED; i++) {
-    oled.print(blue[i]);
-    oled.print(" ");
-  }
-
-  oled.println("black:");
-
-  oled.println();
-
-  for (int i = 0; i <= RED; i++) {
-    oled.print(black[i]);
-    oled.print(" ");
-  }
-
-  oled.println();
-  oled.println("silver");
-
-  for (int i = 0; i <= RED; i++) {
-    oled.print(silver[i]);
-    oled.print(" ");
-  }
-
-  oled.println();
-}
-
-
-
+#endif
 
 #endif

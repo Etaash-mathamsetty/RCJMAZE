@@ -207,18 +207,18 @@ void right(int relative_angle, int speed, bool turn_status = true) {
 
   raw_right(relative_angle, speed, false);
 
-  if (tofCalibrated(5) <= wall_tresh - 30) {
-    backup_align(SPEED, 600);
-    // while(tofCalibrated(5) >= 70)
-    // {
-    //   forward(-speed);
-    // }
+  // if (tofCalibrated(5) <= wall_tresh - 30) {
+  //   backup_align(SPEED, 600);
+  //   // while(tofCalibrated(5) >= 70)
+  //   // {
+  //   //   forward(-speed);
+  //   // }
 
-    while (tofCalibrated(5) <= 55) {
-      forward(speed);
-    }
-    stopMotors();
-  }
+  //   while (tofCalibrated(5) <= 55) {
+  //     forward(speed);
+  //   }
+  //   stopMotors();
+  // }
 
   if (turn_status) {
     pi_send_tag("turn_status");
@@ -240,7 +240,7 @@ void right(int relative_angle, int speed, bool turn_status = true) {
   }
 
   stopMotors();
-  delay(300);
+  // delay(300);
 }
 
 void raw_left(double relative_angle, int speed, bool alignment) {
@@ -394,17 +394,17 @@ void left(int relative_angle, int speed, bool turn_status = true) {
 
   raw_left(relative_angle, speed, false);
 
-  if (tofCalibrated(5) <= wall_tresh - 30) {
-    backup_align(SPEED, 600);
-    // while(tofCalibrated(5) >= 70)
-    // {
-    //   forward(-speed);
-    // }
-    while (tofCalibrated(5) <= 55) {
-      forward(speed);
-    }
-    stopMotors();
-  }
+  // if (tofCalibrated(5) <= wall_tresh - 30) {
+  //   backup_align(SPEED, 600);
+  //   // while(tofCalibrated(5) >= 70)
+  //   // {
+  //   //   forward(-speed);
+  //   // }
+  //   while (tofCalibrated(5) <= 55) {
+  //     forward(speed);
+  //   }
+  //   stopMotors();
+  // }
 
   if (turn_status) {
     pi_send_tag("turn_status");
@@ -424,9 +424,10 @@ void left(int relative_angle, int speed, bool turn_status = true) {
       return;
     oled_println("detected");
   }
-
   stopMotors();
-  delay(300);
+
+  // stopMotors();
+  // delay(300);
 }
 
 void turn(char char_end_direction) {

@@ -91,7 +91,7 @@ const double TIMES_PER_SECOND = 1000.0 / SAMPLERATE_DELAY_MS;
 volatile int32_t global_angle = 0;
 volatile bool restart = false;
 
-const int SPEED = 105;
+const int SPEED = 150;
 const int ALIGN_SPEED = 85;
 
 enum type { Color,
