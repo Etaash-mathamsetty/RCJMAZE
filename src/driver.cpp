@@ -583,9 +583,10 @@ namespace driver
 				int nrk = (*Bridge::get_data_value("NRK"))[0];
 
 #ifdef SUPERTEAM
-				if(num_walls == 3)
-#endif
+				if(victim && num_walls == 3)
+#else
 				if(victim)
+#endif
 				{
 					int dir_left = (int)helper::prev_dir(bot->dir);
 					int dir_right = (int)helper::next_dir(bot->dir);
