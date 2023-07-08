@@ -427,7 +427,7 @@ void left(int relative_angle, int speed, bool turn_status = true) {
   stopMotors();
 
   // stopMotors();
-  // delay(300);
+  delay(300);
 }
 
 void turn(char char_end_direction) {

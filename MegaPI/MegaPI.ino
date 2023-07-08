@@ -41,6 +41,7 @@ void setup() {
     cur_direction = n;
     global_angle = 0;
     black_tile_detected = false;
+    move_count = 1;
   }
   
   pinMode(2, OUTPUT);
@@ -187,6 +188,7 @@ void pi_read_data() {
     data += ch;
     delay(10);
   }
+  Serial.println(data);
 
   //data += "\n";
   // String data = PI_SERIAL.readString();
@@ -547,6 +549,7 @@ void loop() {
 
 #else
 
+#ifndef SUPER_TEAM
   static int clear_oled_counter = 0;
 
   bool* arr = get_tof_vals(wall_tresh);
@@ -555,6 +558,7 @@ void loop() {
   bool walls[4] = { arr[4], arr[2] && arr[3], arr[5], arr[0] && arr[1] };
   // not wrapped around and stuff
   oled_display_walls(walls);
+
 
   if (!walls[0]) {
     driveCM(tile_dist, 110);
@@ -572,6 +576,8 @@ void loop() {
     oled_clear();
     clear_oled_counter = 0;
   }
+#endif
+  driveCM
 
 #endif //TEST
 }

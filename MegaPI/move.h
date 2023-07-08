@@ -195,19 +195,15 @@ void drive(const int32_t encoders, int speed, bool align = true) {
 }
 
 void driveCM(float cm, int speed = 200, int tolerance = 10) {
+  oled.clearDisplay();
+  oled.setCursor(0,0);
+  oled.print(move_count);
 
   switch (move_count) {
-    case 1: cm = tile_dist; break;
-    case 2: cm = tile_dist; break;
-    case 3: cm = tile_dist; break;
-    case 4: cm = tile_dist * 3; break;
-    case 5: cm = tile_dist; break;
-    case 6: cm = tile_dist * 3; break;
-    case 7: cm = tile_dist; break;
+    case 6: cm = tile_dist * 2; break;
+    case 4:
     case 8: cm = tile_dist * 3; break;
-    case 9: cm = tile_dist; break;
-    case 10: cm = tile_dist; break;
-    case 11: cm = tile_dist; break;
+    default: cm = tile_dist; break;
 
   }
 

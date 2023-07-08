@@ -2,8 +2,10 @@
 #include <BLEServer.h>
 #include <BLEUtils.h>
 #include <BLE2902.h>
+#include <string.h>
 
 #define BUFFER 64
+#define PI_SERIAL Serial1
 
 BLEServer *pServer = NULL;
 BLECharacteristic * pTxCharacteristic;
@@ -17,6 +19,8 @@ uint8_t txValue[BUFFER] = "";
 #define SERVICE_UUID           "6E400001-B5A3-F393-E0A9-E50E24DCCA9E" // UART service UUID
 #define CHARACTERISTIC_UUID_RX "6E400002-B5A3-F393-E0A9-E50E24DCCA9E"
 #define CHARACTERISTIC_UUID_TX "6E400003-B5A3-F393-E0A9-E50E24DCCA9E"
+
+using namespace std;
 
 
 class MyServerCallbacks: public BLEServerCallbacks {
@@ -90,11 +94,28 @@ void loop() {
     if(Serial.available() != 0)
     {
       size_t bufSize = Serial.read(txValue, Serial.available());
+      // Serial.println(txValue);
       pTxCharacteristic->setValue(txValue, bufSize);
       pTxCharacteristic->notify();
     }
 
     delay(10); // bluetooth stack will go into congestion, if too many packets are sent
+  }
+
+  char ch;
+  string data = "";
+  
+  if (PI_SERIAL.available()) {
+    while (PI_SERIAL.available() && ch != '\n') {
+      ch = PI_SERIAL.read();
+      data += ch;
+      delay(10);
+    }
+
+    for (char c : data) {
+      Ser
+    }
+    Serial.println(data);
   }
   //ここまで
 
