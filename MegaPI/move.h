@@ -41,7 +41,7 @@ void drive(const int32_t encoders, int speed, bool align = false) {
     UPDATE_BNO();
 
 #ifndef NO_LIMIT
-    if (digitalRead(FRONT_RIGHT) == HIGH && abs(BNO_Z) < 4) {
+    if (DIGITAL_READ(FRONT_RIGHT) == HIGH && abs(BNO_Z) < 4) {
 
       if (abs(encoders - abs(motorR.getTicks())) < 1.25 * CM_TO_ENCODERS) {
         pi_send_ramp(0.0,0.0,0.0);
@@ -59,7 +59,7 @@ void drive(const int32_t encoders, int speed, bool align = false) {
       Serial.println("obstacle is done");
     }
 
-    if (digitalRead(FRONT_LEFT) == HIGH && abs(BNO_Z) < 4) {
+    if (DIGITAL_READ(FRONT_LEFT) == HIGH && abs(BNO_Z) < 4) {
 
       if (abs(encoders - abs(motorR.getTicks())) < 1.25 * CM_TO_ENCODERS) {
         pi_send_ramp(0.0, 0.0, 0.0);
@@ -90,6 +90,7 @@ void drive(const int32_t encoders, int speed, bool align = false) {
       dist_percent = (double)abs(motorR.getTicks()) / (double)abs(encoders);
     //otherwise, just assume 0
 
+#ifndef SUPER_TEAM
     if (returnColor(true) == 1) {
       while (/* motorR.getTicks() > 0 && */ motorL.getTicks() > -1.5 * CM_TO_ENCODERS && tofCalibrated(5) >= 90) {
         forward(-SPEED * 0.65);
@@ -102,6 +103,7 @@ void drive(const int32_t encoders, int speed, bool align = false) {
       resetBoost();
       return;
     }
+#endif
 
 
     //we are close enough to the target at this point, so quit the loop
@@ -218,6 +220,7 @@ void driveCM(float cm, int speed = 200, int tolerance = 10) {
   int32_t tof_front = tofCalibrated(4);
   int32_t tof_ramp = tofCalibrated(6, 3, &invalid_count);
 
+#ifndef SUPER_TEAM
   if (tof_front > 220 && tof_front <= 530 && tof_ramp < 265  && tof_ramp > 130) {
     forwardTicks(SPEED * 0.65, 4 * CM_TO_ENCODERS);
     invalid_count = 0;
@@ -236,7 +239,7 @@ void driveCM(float cm, int speed = 200, int tolerance = 10) {
     return;
   }
 
-  if (tof_front >= 490 && tof_ramp >= 460 && tof_ramp <= 2000 && invalid_count <= 0) {
+  if (tof_front >= 490 && tof_ramp >= 458 && tof_ramp <= 2000 && invalid_count <= 0) {
     oled_clear();
     oled_println("down ramp detected!");
     delay(500);
@@ -246,6 +249,7 @@ void driveCM(float cm, int speed = 200, int tolerance = 10) {
     black_tile_detected = false;
     return;
   }
+#endif
 
 #if 1
   const float mult_factor = 1.0;
@@ -466,11 +470,13 @@ void driveCM(float cm, int speed = 200, int tolerance = 10) {
   }
 
   //pause for blue
+#ifndef SUPER_TEAM
   if(returnColor() == 3)
   {
     stopMotors();
     delay(5000);
   }
+#endif
 
   // memset(seen_l, 0, sizeof(seen_l));
   // memset(seen_r, 0, sizeof(seen_r));

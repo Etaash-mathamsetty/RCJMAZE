@@ -130,7 +130,7 @@ int returnColor(bool only_black = false) {
       violet_greatest = false;
     }
 
-    if (amsValues[i] <= 28) {
+    if (amsValues[i] <= 32) {
       dark_count++;
     }
 
@@ -143,18 +143,18 @@ int returnColor(bool only_black = false) {
     }
   }
 
-  if (dark_count >= 5 && abs(BNO_Z) < 7 && amsValues[AS726x_VIOLET] <= 32 && !violet_greatest) {
+  if (dark_count >= 5 && abs(BNO_Z) < 7 && amsValues[AS726x_VIOLET] <= 28 && amsValues[AS726x_VIOLET] / amsValues[AS726x_RED] < 4) {
     // stopMotors ();
     // oled_clear();
     // oled_println(" black detected");
-    if (only_black) {
+    // if (only_black) {
       int black_persistence = 0;
       for (int i = 0; i < 2; i++) {        
         int dark_count2 = 0;
         UPDATE_BNO();
 
         for (int i = 0; i <= AS726x_RED; i++) {
-          if (amsValues[i] <= 28) {
+          if (amsValues[i] <= 32) {
             dark_count2++;
           }
 
@@ -163,7 +163,7 @@ int returnColor(bool only_black = false) {
           }
         }
 
-        if (dark_count2 >= 5 && abs(BNO_Z) < 7 && amsValues[AS726x_VIOLET] <= 32 && !violet_greatest) {
+        if (dark_count2 >= 5 && abs(BNO_Z) < 7 && amsValues[AS726x_VIOLET] <= 28 && amsValues[AS726x_VIOLET] / amsValues[AS726x_RED] < 4) {
           black_persistence++;
         } 
       }
@@ -174,9 +174,9 @@ int returnColor(bool only_black = false) {
       } else {
         return 0;
       }
-    }
-    Serial.println(" black detected ");
-    return 1;
+    // }
+    // Serial.println(" black detected ");
+    // return 1;
   } else if (bright_count >= 3 && abs((double) amsValues[AS726x_GREEN] - (double) amsValues[AS726x_YELLOW]) < 80 && abs(BNO_Z) < 12 && !only_black) {
     // stopMotors();
     oled_clear();
@@ -196,6 +196,83 @@ int returnColor(bool only_black = false) {
 
   return 0;
 }
+
+void calibrateColor(int num_samples) {
+  Serial.println("Blue!");
+  delay(5000);
+  Serial.println("Sampling Blue!");
+
+  for (int i = 0; i < num_samples; i++) {
+    readColors();
+    for (int i = 0; i <= RED; i++) {
+       blue[i] += amsValues[color_to_value[i]];
+    }
+  }
+
+  for (int i = 0; i <= RED; i++) {
+    blue[i] /= num_samples;
+  }
+
+  Serial.println("Black!");
+  delay(5000);
+  Serial.println("Sampling Black!");
+
+
+  for (int i = 0; i < num_samples; i++) {
+    readColors();
+    for (int i = 0; i <= RED; i++) {
+      black[i] += amsValues[color_to_value[i]];
+    }
+  }
+
+  for (int i = 0; i <= RED; i++) {
+    black[i] /= num_samples;
+  }
+
+  Serial.println("Silver!");
+  delay(5000);
+  Serial.println("Sampling Silver!");
+
+
+  for (int i = 0; i < num_samples; i++) {
+    readColors();
+    for (int i = 0; i <= RED; i++) {
+      silver[i] += amsValues[color_to_value[i]];
+    }
+  }
+
+  oled.println("blue:");
+
+  for (int i = 0; i <= RED; i++) {
+    silver[i] /= num_samples;
+  }
+
+  for (int i = 0; i <= RED; i++) {
+    oled.print(blue[i]);
+    oled.print(" ");
+  }
+
+  oled.println("black:");
+
+  oled.println();
+
+  for (int i = 0; i <= RED; i++) {
+    oled.print(black[i]);
+    oled.print(" ");
+  }
+
+  oled.println();
+  oled.println("silver");
+
+  for (int i = 0; i <= RED; i++) {
+    oled.print(silver[i]);
+    oled.print(" ");
+  }
+
+  oled.println();
+}
+
+
 
 
 #endif

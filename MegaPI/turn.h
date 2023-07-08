@@ -112,15 +112,17 @@ if (abs(relative_angle) < 1) {
         forward(SPEED * 0.75);
       }
     } else*/ 
-    if (digitalRead(FRONT_LEFT) || digitalRead(FRONT_RIGHT)) {
+#ifndef NO_LIMIT
+    if (DIGITAL_READ(FRONT_LEFT) || DIGITAL_READ(FRONT_RIGHT)) {
       resetTicks();
       stopMotors();
-      while (digitalRead(FRONT_LEFT) || digitalRead(FRONT_RIGHT)) {
+      while (DIGITAL_READ(FRONT_LEFT) || DIGITAL_READ(FRONT_RIGHT)) {
         forward(-SPEED * 0.75);
       }
       stopMotors();
       delay(200);
     } 
+#endif
     // else if (tofCalibrated(5) < 60) {
     //   while (tofCalibrated(5) < 60) {
     //     forward(SPEED * 0.75);
@@ -304,15 +306,17 @@ void raw_left(double relative_angle, int speed, bool alignment) {
         forward(SPEED * 0.75);
       }
     } else*/ 
-    if (digitalRead(FRONT_LEFT) || digitalRead(FRONT_RIGHT)) {
+#ifndef NO_LIMIT
+    if (DIGITAL_READ(FRONT_LEFT) || DIGITAL_READ(FRONT_RIGHT)) {
       stopMotors();
       resetTicks();
-      while (digitalRead(FRONT_LEFT) || digitalRead(FRONT_RIGHT)) {
+      while (DIGITAL_READ(FRONT_LEFT) || DIGITAL_READ(FRONT_RIGHT)) {
         forward(-SPEED * 0.75);
       }
       stopMotors();
       delay(200);
     } 
+#endif
     // else if (tofCalibrated(5) < 60) {
     //   while (tofCalibrated(5) < 60) {
     //     forward(SPEED * 0.75);

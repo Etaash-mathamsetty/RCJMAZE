@@ -30,12 +30,13 @@
 #define BNO_X orientationData.orientation.x
 #define BNO_Y orientationData.orientation.y
 #define BNO_Z orientationData.orientation.z
-#define FRONT_RIGHT A15
-#define FRONT_LEFT A13
+#define FRONT_LEFT A14
+#define FRONT_RIGHT A13
 #define BACK_RIGHT A10
 #define BACK_LEFT A8
 #define UPDATE_BNO() bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER)
 #define ARRAY_SIZE(x) (sizeof(x)/sizeof(x[0]))
+#define DIGITAL_READ(x) digitalRead(x) && digitalRead(x)
 
 U8X8_SSD1306_128X64_NONAME_SW_I2C oled(OLED_CLK, OLED_DATA);
 
@@ -128,6 +129,17 @@ volatile int move_count = 0;
 // timer for resetting victim
 volatile int32_t tvictim = 10000000;
 volatile int32_t ttest = 10000000;
+
+// color calibration
+
+int color_to_value[6] = {AS726x_VIOLET, AS726x_BLUE, AS726x_GREEN, AS726x_YELLOW, AS726x_ORANGE, AS726x_RED};
+
+
+enum { VIOLET, BLUE, GREEN, YELLOW, ORANGE, RED};
+
+int blue[6] = { 0 };
+int black[6] = { 0 };
+int silver[6] = { 0 };
 
 inline void tcaselect(uint8_t i) {
   if (i > 7)

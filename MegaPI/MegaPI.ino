@@ -2,14 +2,15 @@
 //#define FAKE_SERIAL
 // #define DEBUG_DISPLAY
 // #define MOTORSOFF
-#define TEST
+// #define TEST
 // #define ALIGN_ANGLE
-#define NO_PI //basic auto when no raspberry pi (brain stem mode)
+// #define NO_PI //basic auto when no raspberry pi (brain stem mode)
 // #define NO_LIMIT
 // #define NO_PID
 // #define TCS
 // #define TURN_TEST
 // #define LIGHT_MODE
+// #define SUPER_TEAM
 #define AMS
 
 //define: debug display, motorsoff, test, comment out all others if you want to calibrate tofs
@@ -41,7 +42,7 @@ void setup() {
     global_angle = 0;
     black_tile_detected = false;
   }
-
+  
   pinMode(2, OUTPUT);
   pinMode(5, OUTPUT);
   pinMode(4, OUTPUT);
@@ -279,6 +280,7 @@ void pi_read_data() {
         //pi_send_tag("CP");
         //PI_SERIAL.println(float(returnColor() == 2));
 
+#ifndef SUPER_TEAM
         if (returnColor() == 2) {
           pi_send_tag("CP");
           PI_SERIAL.println("1.0");
@@ -289,6 +291,7 @@ void pi_read_data() {
           pi_send_tag("CP");
           PI_SERIAL.println("0.0");
         }
+#endif
 
         //Serial.println("sending wall data");
       }
@@ -351,12 +354,15 @@ int clear_oled_counter = 0;
 
 void loop() {
 
+#ifndef SUPER_TEAM
   bool* arr = get_tof_vals(wall_tresh);
 
   // //n e s w
   bool walls[4] = { arr[4], arr[2] && arr[3], arr[5], arr[0] && arr[1] };
   // not wrapped around and stuff
   oled_display_walls(walls);
+
+#endif
   //acceleration_position();
   //pi_read_data();
 
@@ -391,6 +397,8 @@ void loop() {
 #ifndef NO_PI
 #ifndef ALIGN_ANGLE
 
+// raw_right(90, SPEED, false);
+
 //  drive(100 * CM_TO_ENCODERS, 110);
 //  delay(1000);
 // returnColor();
@@ -399,12 +407,15 @@ void loop() {
 
 // UPDATE_BNO();
 // returnColor();
-// Serial.print(digitalRead(FRONT_LEFT));
+// UPDATE_BNO();
+// Serial.println(BNO_Z);
+// Serial.print(DIGITAL_READ(FRONT_LEFT));
 // Serial.print(" ");
-// Serial.print(digitalRead(FRONT_RIGHT));
+// Serial.print(DIGITAL_READ(FRONT_RIGHT));
 // Serial.println();
-UPDATE_BNO();
-Serial.println(BNO_Z);
+// UPDATE_BNO();
+// Serial.println(BNO_Z);
+returnColor();
 
 // for (int i = 0; i <= TOF_NUMBER; i++) {
 //   Serial.print(i);

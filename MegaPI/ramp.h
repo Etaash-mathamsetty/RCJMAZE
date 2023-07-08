@@ -108,6 +108,8 @@ bool handle_up_ramp(double start_pitch) {
 
     // use limit switches
 
+  #ifndef NO_LIMIT
+
     if (digitalRead(FRONT_LEFT)) {
       l_offset += 20;
     }
@@ -115,6 +117,7 @@ bool handle_up_ramp(double start_pitch) {
     if (digitalRead(FRONT_RIGHT)) {
       r_offset += 20;
     }
+  #endif
 
     forward(85.0 + bno_error + r_offset, 85.0 - bno_error + l_offset);
     UPDATE_BNO();
@@ -212,11 +215,13 @@ bool handle_down_ramp(double start_pitch) {
 
   // move until ramp
 
+  int32_t thorizontal = millis();
+
   while (BNO_Z - start_pitch >= -6.9 && tofCalibrated(4) >= 45) {
     UPDATE_BNO();
     forward(50);
 
-    if (returnColor(true) == 1) {
+    if (returnColor(true) == 1 || (int32_t) millis() - (int32_t) thorizontal > 7000) {
       
       while (/* motorR.getTicks() > 0 && */ motorL.getTicks() > -1.5 * CM_TO_ENCODERS && tofCalibrated(5) >= 60) {
         forward(-SPEED * 0.65);
@@ -238,7 +243,9 @@ bool handle_down_ramp(double start_pitch) {
 
   // move until not ramp
 
-  while (BNO_Z - start_pitch <= -6.7 && tofCalibrated(4) >= 90) {
+  int32_t tincline = millis();
+
+  while (BNO_Z - start_pitch <= -6.7 && tofCalibrated(4) >= 90 || (int32_t) millis() - (int32_t) tincline > 7000) {
     if (returnColor(true) == 1) {
       
       while(motorR.getTicks() > 0 && tofCalibrated(5) >= 90)
@@ -303,6 +310,7 @@ bool handle_down_ramp(double start_pitch) {
     }
 
     // use limit switches
+  #ifndef NO_LIMIT
 
     if (digitalRead(FRONT_LEFT)) {
       l_offset += 20;
@@ -311,6 +319,7 @@ bool handle_down_ramp(double start_pitch) {
     if (digitalRead(FRONT_RIGHT)) {
       r_offset += 20;
     }
+  #endif
 
     forward(80.0 + bno_error + r_offset, 80.0 - bno_error + l_offset);
 

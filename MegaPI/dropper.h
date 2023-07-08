@@ -16,7 +16,7 @@ bool kitDrop(int num, char side) {
 
   bool walls[4] = { arr[4], arr[2] || arr[3], arr[5], arr[0] || arr[1] };
 
-  if (millis() - tvictim > 10000) {
+  if (millis() - tvictim > 15000) {
     memset(seen_l, 0, sizeof(seen_l));
     memset(seen_r, 0, sizeof(seen_r));
   }
