@@ -198,6 +198,7 @@ if True:
                     Rb.SetDataValue("victim", [1.0])
                     print("S")
                 if(letter[0].upper() == 'U'):
+                    rescue += 1
                     Rb.SetDataValue("victim", [1.0])
                     print("U")
                 #print(letter)
@@ -215,16 +216,17 @@ if True:
                 h = bounding_rect[i][3]
                 if i % 3 == 0:
                     cv2.rectangle(org, (x,y), (x+w, y+h), (0,0,255), 3)
-                    rescue += 1
+                    rescue += 3
                     Rb.SetDataValue("victim", [1.0])
                     print("red")
                 elif i % 3 == 1:
                     cv2.rectangle(org, (x,y), (x+w, y+h), (0,255,0), 3)
+                    rescue += 1
                     Rb.SetDataValue("victim", [1.0])
                     print("green")
                 else:
                     cv2.rectangle(org, (x,y), (x+w, y+h), (0,255,255), 3)
-                    rescue += 1
+                    rescue += 2
                     Rb.SetDataValue("victim", [1.0])
                     print("yellow")
 
