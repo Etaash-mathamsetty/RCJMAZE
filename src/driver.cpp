@@ -1040,6 +1040,18 @@ namespace driver
 			std::this_thread::sleep_for(std::chrono::milliseconds(20));
 		}
 		
+		int num_tiles = 0;
+
+#ifdef SUPERTEAM
+		if(bot->map[bot->index].N)
+			num_tiles++;
+		if(bot->map[bot->index].E)
+			num_tiles++;
+		if(bot->map[bot->index].W)
+			num_tiles++;
+		if(bot->map[bot->index].S)
+			num_tiles++;
+#endif
 		for(int i = 0; i < 10; i++)
 			PythonScript::Exec(cv_py_file);
 			
@@ -1051,7 +1063,11 @@ namespace driver
 			bool left = (*Bridge::get_data_value("left"))[0];
 			int nrk = (*Bridge::get_data_value("NRK"))[0];
 
+#ifdef SUPERTEAM
+			if(victim && num_tiles == 3)
+#else
 			if(victim)
+#endif
 			{
 				int dir_left = (int)helper::prev_dir(bot->dir);
 				int dir_right = (int)helper::next_dir(bot->dir);
