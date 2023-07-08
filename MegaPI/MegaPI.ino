@@ -371,6 +371,19 @@ void loop() {
     pi_read_data();
   }
 
+  if (move_count > 11) {
+    while(true) {
+      analogWrite(5, 50);
+      analogWrite(2, 50);
+      analogWrite(4, 50);
+      delay(200);
+      analogWrite(5, 0);
+      analogWrite(2, 0);
+      analogWrite(4, 0);
+      delay(200);
+    }
+  }
+
   if (restart) {
     setup();
   }

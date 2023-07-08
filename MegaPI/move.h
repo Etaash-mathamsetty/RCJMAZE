@@ -37,7 +37,7 @@ void drive(const int32_t encoders, int speed, bool align = false) {
   // encoders = orig_encoders / cos(-orientationData.orientation.z * (2 * PI / 360));
 
 
-  while ((abs(motorR.getTicks()) < abs(encoders) && abs(motorL.getTicks()) < abs(encoders) && (tofCalibrated(4) >= 90)) || ramp_detect || down_ramp_detect) {
+  while ((abs(motorR.getTicks()) < abs(encoders) && abs(motorL.getTicks()) < abs(encoders) && (tofCalibrated(4) >= 100)) || ramp_detect || down_ramp_detect) {
     UPDATE_BNO();
 
 #ifndef NO_LIMIT
@@ -195,14 +195,30 @@ void drive(const int32_t encoders, int speed, bool align = false) {
 }
 
 void driveCM(float cm, int speed = 200, int tolerance = 10) {
+
+  switch (move_count) {
+    case 1: cm = tile_dist; break;
+    case 2: cm = tile_dist; break;
+    case 3: cm = tile_dist; break;
+    case 4: cm = tile_dist * 3; break;
+    case 5: cm = tile_dist; break;
+    case 6: cm = tile_dist * 3; break;
+    case 7: cm = tile_dist; break;
+    case 8: cm = tile_dist * 3; break;
+    case 9: cm = tile_dist; break;
+    case 10: cm = tile_dist; break;
+    case 11: cm = tile_dist; break;
+
+  }
+
   //kitDrop(1);
   double start_yaw = 0.0;
   bool alignment = false;
 
 
-  if ((_tofCalibrated(0) >= wall_tresh || _tofCalibrated(1) >= wall_tresh) && (_tofCalibrated(2) >= wall_tresh || _tofCalibrated(3) >= wall_tresh)) {
-    alignment = true;
-  }
+  // if ((_tofCalibrated(0) >= wall_tresh || _tofCalibrated(1) >= wall_tresh) && (_tofCalibrated(2) >= wall_tresh || _tofCalibrated(3) >= wall_tresh)) {
+  //   alignment = true;
+  // }
 
   UPDATE_BNO();
   if (abs(orientationData.orientation.z) < 12) {
@@ -279,7 +295,7 @@ void driveCM(float cm, int speed = 200, int tolerance = 10) {
   UPDATE_BNO();
 
   bool optimal_alignment = horizontalError >= tolerance && abs(orientationData.orientation.z) < 12;
-  if (optimal_alignment && left <= wall_tresh && right <= wall_tresh && abs(left - right) > 25) {
+  if (/* optimal_alignment && left <= wall_tresh && right <= wall_tresh && abs(left - right) > 25 */ false) {
 
     if (left < right) {
 
@@ -339,8 +355,8 @@ void driveCM(float cm, int speed = 200, int tolerance = 10) {
       // bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
       // raw_right(360-orientationData.orientation.x, SPEED);
     }
-  } else if (optimal_alignment && tofCalibrated(0) <= wall_tresh && tofCalibrated(1) <= wall_tresh && 
-            right >= wall_tresh && abs(left - target_dist_from_wall) > 30.0) {
+  } else if (/* optimal_alignment && tofCalibrated(0) <= wall_tresh && tofCalibrated(1) <= wall_tresh && 
+            right >= wall_tresh && abs(left - target_dist_from_wall) > 30.0 */ false) {
     oled_println("single left wall");
 
     double angle = 90.0;
@@ -385,8 +401,8 @@ void driveCM(float cm, int speed = 200, int tolerance = 10) {
       raw_left(90.0 - angle, SPEED, true);
     }
 
-  } else if (optimal_alignment && left >= wall_tresh && tofCalibrated(2) <= wall_tresh
-            && tofCalibrated(3) <= wall_tresh && abs(right - target_dist_from_wall) > 30.0) {
+  } else if ( /* optimal_alignment && left >= wall_tresh && tofCalibrated(2) <= wall_tresh
+            && tofCalibrated(3) <= wall_tresh && abs(right - target_dist_from_wall) > 30.0 */ false) {
     oled_println("single right wall");
     oled_print("Angle: ");
 
