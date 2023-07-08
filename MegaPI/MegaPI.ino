@@ -2,9 +2,9 @@
 //#define FAKE_SERIAL
 // #define DEBUG_DISPLAY
 // #define MOTORSOFF
-// #define TEST
+#define TEST
 // #define ALIGN_ANGLE
-// #define NO_PI //basic auto when no raspberry pi (brain stem mode)
+#define NO_PI //basic auto when no raspberry pi (brain stem mode)
 #define NO_LIMIT
 // #define NO_PID
 // #define TCS
@@ -412,6 +412,7 @@ void loop() {
 #ifndef NO_PI
 #ifndef ALIGN_ANGLE
 
+driveCM(30, SPEED);
 // raw_right(90, SPEED, false);
 
 //  drive(100 * CM_TO_ENCODERS, 110);
@@ -548,8 +549,6 @@ void loop() {
 
 
 #else
-
-#ifndef SUPER_TEAM
   static int clear_oled_counter = 0;
 
   bool* arr = get_tof_vals(wall_tresh);
@@ -576,9 +575,6 @@ void loop() {
     oled_clear();
     clear_oled_counter = 0;
   }
-#endif
-  driveCM
-
 #endif //TEST
 }
 

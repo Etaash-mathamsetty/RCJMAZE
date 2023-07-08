@@ -10,6 +10,7 @@ using namespace utils;
 void drive(const int32_t encoders, int speed, bool align = true) {
 #ifndef MOTORSOFF
 
+  Serial.println("DRIVING RIGHT NOW");
   addBoost(DRIVE_BOOST);
   UPDATE_BNO();
   resetTicks();
@@ -39,6 +40,8 @@ void drive(const int32_t encoders, int speed, bool align = true) {
 
   while ((abs(motorR.getTicks()) < abs(encoders) && abs(motorL.getTicks()) < abs(encoders) && (tofCalibrated(4) >= 100)) || ramp_detect || down_ramp_detect) {
     UPDATE_BNO();
+    Serial.println("INSIDE DRIVE LOOP");
+
 
 #ifndef NO_LIMIT
     if (DIGITAL_READ(FRONT_RIGHT) == HIGH && abs(BNO_Z) < 4) {
@@ -176,11 +179,14 @@ void drive(const int32_t encoders, int speed, bool align = true) {
       }
     } else {
       if (millis() - tstart < 5000) {
+        Serial.println(PID + error);
         forward(PID + error, PID - error);
       } else {
         forward(200 + error, 200 - error);
       }
     }
+    Serial.println("DROVE A BIT");
+
   }
 
   stopMotors();
@@ -192,6 +198,7 @@ void drive(const int32_t encoders, int speed, bool align = true) {
   delay(100);
   pi_send_forward_status(false, true);
 #endif
+  Serial.println("DRIVING NOT NOW");
 }
 
 void driveCM(float cm, int speed = 200, int tolerance = 10) {
@@ -199,23 +206,22 @@ void driveCM(float cm, int speed = 200, int tolerance = 10) {
   oled.setCursor(0,0);
   oled.print(move_count);
 
-#ifdef SUPER_TEAM
   switch (move_count) {
     case 6: cm = tile_dist * 2; break;
     case 4:
     case 8: cm = tile_dist * 3; break;
     default: cm = tile_dist; break;
+
   }
-#endif
 
   //kitDrop(1);
   double start_yaw = 0.0;
   bool alignment = false;
 
 
-  if ((_tofCalibrated(0) >= wall_tresh || _tofCalibrated(1) >= wall_tresh) && (_tofCalibrated(2) >= wall_tresh || _tofCalibrated(3) >= wall_tresh)) {
-    alignment = true;
-  }
+  // if ((_tofCalibrated(0) >= wall_tresh || _tofCalibrated(1) >= wall_tresh) && (_tofCalibrated(2) >= wall_tresh || _tofCalibrated(3) >= wall_tresh)) {
+  //   alignment = true;
+  // }
 
   UPDATE_BNO();
   if (abs(orientationData.orientation.z) < 12) {
@@ -230,11 +236,9 @@ void driveCM(float cm, int speed = 200, int tolerance = 10) {
   // ramp detection
 
   int invalid_count = 0;
-
-#ifndef SUPER_TEAM
+  #ifndef SUPER_TEAM
   int32_t tof_front = tofCalibrated(4);
   int32_t tof_ramp = tofCalibrated(6, 3, &invalid_count);
-
 
   if (tof_front > 220 && tof_front <= 530 && tof_ramp < 265  && tof_ramp > 130) {
     forwardTicks(SPEED * 0.65, 4 * CM_TO_ENCODERS);
@@ -281,8 +285,8 @@ void driveCM(float cm, int speed = 200, int tolerance = 10) {
 
   double angle = abs(atan((cm * 10.0) / horizontalError) * (180.0 / PI));
 
-  if (abs(angle) < 1) {
-    return;
+  if (abs(angle) == 0) {
+    angle += 0.0001;
   }
 
   if (abs(angle) == 180.0) {
