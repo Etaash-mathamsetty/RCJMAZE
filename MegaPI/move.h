@@ -7,7 +7,7 @@
 
 using namespace utils;
 
-void drive(const int32_t encoders, int speed, bool align = false) {
+void drive(const int32_t encoders, int speed, bool align = true) {
 #ifndef MOTORSOFF
 
   addBoost(DRIVE_BOOST);
