@@ -29,7 +29,7 @@ bool handle_up_ramp(double start_pitch) {
   while (BNO_Z - start_pitch <= 6.7 && tofCalibrated(4) >= 45) {
     UPDATE_BNO();
     forward(SPEED + 25);
-
+#ifdef AMS
     if (returnColor(true) == 1) {
       while(motorR.getTicks() > 0 && tofCalibrated(5) >= 90)
       {
@@ -42,6 +42,7 @@ bool handle_up_ramp(double start_pitch) {
       pi_send_ramp(0.0,0.0,0.0);
       return;
     }
+#endif
   }
 
   double old_x = motorR.getTicks();
@@ -50,6 +51,7 @@ bool handle_up_ramp(double start_pitch) {
 
   //move until not ramp
   while (BNO_Z - start_pitch >= 6.5 && tofCalibrated(4) >= 90) {  
+  #ifdef AMS
     if (returnColor(true) == 1) {
       while(motorR.getTicks() > 0 && tofCalibrated(5) >= 90)
       {
@@ -62,6 +64,7 @@ bool handle_up_ramp(double start_pitch) {
       pi_send_ramp(0.0,0.0,0.0);
       return;
     }
+  #endif
 
     UPDATE_BNO();
     double reading;
@@ -220,7 +223,7 @@ bool handle_down_ramp(double start_pitch) {
   while (BNO_Z - start_pitch >= -6.9 && tofCalibrated(4) >= 45) {
     UPDATE_BNO();
     forward(50);
-
+#ifdef AMS
     if (returnColor(true) == 1 || (int32_t) millis() - (int32_t) thorizontal > 7000) {
       
       while (/* motorR.getTicks() > 0 && */ motorL.getTicks() > -1.5 * CM_TO_ENCODERS && tofCalibrated(5) >= 60) {
@@ -233,6 +236,7 @@ bool handle_down_ramp(double start_pitch) {
       pi_send_ramp(0.0,0.0,0.0);
       return;
     }
+#endif
   }
 
   UPDATE_BNO();
@@ -246,6 +250,7 @@ bool handle_down_ramp(double start_pitch) {
   int32_t tincline = millis();
 
   while (BNO_Z - start_pitch <= -6.7 && tofCalibrated(4) >= 90 || (int32_t) millis() - (int32_t) tincline > 7000) {
+#ifdef AMS
     if (returnColor(true) == 1) {
       
       while(motorR.getTicks() > 0 && tofCalibrated(5) >= 90)
@@ -259,6 +264,7 @@ bool handle_down_ramp(double start_pitch) {
       pi_send_ramp(0.0,0.0,0.0);
       return;
     }
+#endif
 
     UPDATE_BNO();
 

@@ -5,13 +5,13 @@
 // #define TEST
 // #define ALIGN_ANGLE
 // #define NO_PI //basic auto when no raspberry pi (brain stem mode)
-// #define NO_LIMIT
+#define NO_LIMIT
 // #define NO_PID
 // #define TCS
 // #define TURN_TEST
 // #define LIGHT_MODE
-// #define SUPER_TEAM
-#define AMS
+#define SUPER_TEAM
+// #define AMS
 
 //define: debug display, motorsoff, test, comment out all others if you want to calibrate tofs
 
@@ -280,18 +280,18 @@ void pi_read_data() {
         //pi_send_tag("CP");
         //PI_SERIAL.println(float(returnColor() == 2));
 
-#ifndef SUPER_TEAM
-        if (returnColor() == 2) {
-          pi_send_tag("CP");
-          PI_SERIAL.println("1.0");
-          oled_clear();
-          stopMotors();
-          delay(200);
-        } else {
+// #ifndef SUPER_TEAM
+        // if (returnColor() == 2) {
+        //   pi_send_tag("CP");
+        //   PI_SERIAL.println("1.0");
+        //   oled_clear();
+        //   stopMotors();
+        //   delay(200);
+        // } else {
           pi_send_tag("CP");
           PI_SERIAL.println("0.0");
-        }
-#endif
+        // }
+// #endif
 
         //Serial.println("sending wall data");
       }
@@ -428,7 +428,7 @@ void loop() {
 // Serial.println();
 // UPDATE_BNO();
 // Serial.println(BNO_Z);
-returnColor();
+// returnColor();
 
 // for (int i = 0; i <= TOF_NUMBER; i++) {
 //   Serial.print(i);
