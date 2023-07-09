@@ -541,6 +541,8 @@ namespace driver
 		return data;
 	}
 
+	bool dropped_for_current_tile = false;
+
 	CREATE_DRIVER(void, get_sensor_data)
 	{
 		robot* bot = robot::get_instance();
@@ -548,8 +550,6 @@ namespace driver
 		CHECK(bot->map);
 		//PythonScript::CallPythonFunction<bool, bool>("VictimStrip", false);
 		//bot->map[bot->index].letter = (uint8_t)Bridge::get_data_value("letter")[0];
-		
-		int num_walls = 0;
 
 		for(int i = 0; i < 10; i++)
 			PythonScript::Exec(cv_py_file);
@@ -564,11 +564,6 @@ namespace driver
 			bot->map[bot->index].E = (bool)(*Bridge::get_data_value("W"))[1];
 			bot->map[bot->index].S = (bool)(*Bridge::get_data_value("W"))[2];
 			bot->map[bot->index].W = (bool)(*Bridge::get_data_value("W"))[3];
-			for(int i = 0; i < 4; i++)
-			{
-				if((bool)(*Bridge::get_data_value("W"))[i])
-					num_walls++;
-			}
 			Bridge::remove_data_value("W");
 			bot->map[bot->index].checkpoint = wait_for_data<bool>("CP");
 			if(bot->map[bot->index].checkpoint)
@@ -582,11 +577,7 @@ namespace driver
 				bool left = (*Bridge::get_data_value("left"))[0];
 				int nrk = (*Bridge::get_data_value("NRK"))[0];
 
-#ifdef SUPERTEAM
-				if(victim && num_walls == 3)
-#else
 				if(victim)
-#endif
 				{
 					int dir_left = (int)helper::prev_dir(bot->dir);
 					int dir_right = (int)helper::next_dir(bot->dir);
@@ -599,6 +590,7 @@ namespace driver
 						if(ret)
 						{
 							bot->map[bot->index].vic |= (1 << dir_left) & 0b1111;
+							dropped_for_current_tile = true;
 							//dropped = true;
 						}
 					}
@@ -610,6 +602,7 @@ namespace driver
 						if(ret)
 						{
 							bot->map[bot->index].vic |= (1 << dir_right) & 0b1111;
+							dropped_for_current_tile = true;
 							//dropped = true;
 						}
 					}					
@@ -658,7 +651,9 @@ namespace driver
 			}
 		}
 
+#ifndef SUPERTEAM
 		save_victims();
+#endif
 	}
 
 	void set_mov_indexes(int delta, bool up_ramp, bool down_ramp, int ramp_len, int ramp_height, bool victim)
@@ -680,7 +675,7 @@ namespace driver
 		{
 			set_ramp_wall();
 			bot->map[bot->index].bot = false;
-            		bot->map[bot->index].ramp = 0b01;
+            bot->map[bot->index].ramp = 0b01;
 			bot->map[bot->index].vis = true;
 
 			floor_num += ramp_height;
@@ -704,7 +699,7 @@ namespace driver
 		{
 			set_ramp_wall();
 			bot->map[bot->index].bot = false;
-            		bot->map[bot->index].ramp = 0b10;
+            bot->map[bot->index].ramp = 0b10;
 			bot->map[bot->index].vis = true;
 
 			floor_num -= ramp_height;
@@ -832,6 +827,8 @@ namespace driver
 #endif
 			//std::this_thread::sleep_for(std::chrono::milliseconds(5));
 		}
+
+		dropped_for_current_tile = false;
 
 		int ramp = 0;
 		int ramp_len = 0;
@@ -984,7 +981,9 @@ namespace driver
 
 		fail_count = 0;
 
+#ifndef SUPERTEAM
 		save_victims();
+#endif
 		return true;
 	}
 
@@ -1040,18 +1039,6 @@ namespace driver
 			std::this_thread::sleep_for(std::chrono::milliseconds(20));
 		}
 		
-		int num_tiles = 0;
-
-#ifdef SUPERTEAM
-		if(bot->map[bot->index].N)
-			num_tiles++;
-		if(bot->map[bot->index].E)
-			num_tiles++;
-		if(bot->map[bot->index].W)
-			num_tiles++;
-		if(bot->map[bot->index].S)
-			num_tiles++;
-#endif
 		for(int i = 0; i < 10; i++)
 			PythonScript::Exec(cv_py_file);
 			
@@ -1063,16 +1050,12 @@ namespace driver
 			bool left = (*Bridge::get_data_value("left"))[0];
 			int nrk = (*Bridge::get_data_value("NRK"))[0];
 
-#ifdef SUPERTEAM
-			if(victim && num_tiles == 3)
-#else
 			if(victim)
-#endif
 			{
 				int dir_left = (int)helper::prev_dir(bot->dir);
 				int dir_right = (int)helper::next_dir(bot->dir);
 
-				if(left && !(bot->map[bot->index].vic & (1 << dir_left)))
+				if(left && !(bot->map[bot->index].vic & (1 << dir_left)) && !dropped_for_current_tile)
 				{
 					//west relative
 					bool ret = drop_vic(nrk, left);
@@ -1083,7 +1066,7 @@ namespace driver
 					}
 					
 				}
-				else if(!(bot->map[bot->index].vic & (1 << dir_right)))
+				else if(!(bot->map[bot->index].vic & (1 << dir_right)) && !dropped_for_current_tile)
 				{
 					//east relative
 					bool ret = drop_vic(nrk, left);
