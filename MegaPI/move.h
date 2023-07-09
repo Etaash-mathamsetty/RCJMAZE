@@ -134,6 +134,7 @@ void drive(const int32_t encoders, int speed, bool align = true) {
           if (restart)
             return;
           oled_println("detected");
+          BT.println(3);
           tstart = millis();
         }
     }
@@ -179,9 +180,14 @@ void drive(const int32_t encoders, int speed, bool align = true) {
       }
     } else {
       if (millis() - tstart < 5000) {
-        Serial.println(PID + error);
+        Serial.print(PID);
+        Serial.print(" ");
+        Serial.println(PID);
         forward(PID + error, PID - error);
       } else {
+        Serial.print(200);
+        Serial.print(" ");
+        Serial.println(200);
         forward(200 + error, 200 - error);
       }
     }
@@ -208,10 +214,28 @@ void driveCM(float cm, int speed = 200, int tolerance = 10) {
 
   switch (move_count) {
     case 6: cm = tile_dist * 2; break;
-    case 4:
+    case 4: 
     case 8: cm = tile_dist * 3; break;
     default: cm = tile_dist; break;
+  }
 
+  char ch = '';
+  int count = 0;
+
+  switch(move_count) {
+    case 4:
+    case 5:
+    case 8:
+    case 9: 
+      while (!BT.available()) {
+        stopMotors();
+        delay(10);
+      }
+      while (BT.available()) {
+        ch = BT.read();
+      }
+      kitDrop(ch - '0', 'l');
+      delay(100);
   }
 
   //kitDrop(1);

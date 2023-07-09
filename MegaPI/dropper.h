@@ -134,11 +134,11 @@ bool kitDrop(int num, char side) {
     analogWrite(5, 50);
     analogWrite(2, 50);
     analogWrite(4, 50);
-    delay(400);
+    delay(200);
     analogWrite(5, 0);
     analogWrite(2, 0);
     analogWrite(4, 0);
-    delay(400);
+    delay(200);
   } 
   // delay(3000);
   analogWrite(5, 0);
@@ -150,24 +150,24 @@ bool kitDrop(int num, char side) {
   else
     seen_r[num] = side;
 
-  oled.clearDisplay();
-  oled.setCursor(0,0);
+  // oled.clearDisplay();
+  // oled.setCursor(0,0);
 
-  for (int i = 0; i < ARRAY_SIZE(seen_l); i++) {
-    oled.print(seen_l[i]);
-    oled.print(" ");
-  }
-  oled.println();
-  oled.println(move_count);
-  oled.println();
+  // for (int i = 0; i < ARRAY_SIZE(seen_l); i++) {
+  //   oled.print(seen_l[i]);
+  //   oled.print(" ");
+  // }
+  // oled.println();
+  // oled.println(move_count);
+  // oled.println();
 
-  for(int i = 0; i < ARRAY_SIZE(seen_r); i++) {
-    oled.print(seen_r[i]);
-    oled.print(" ");
-  }
-  oled.println();
-  oled.println(move_count);
-  oled.println();
+  // for(int i = 0; i < ARRAY_SIZE(seen_r); i++) {
+  //   oled.print(seen_r[i]);
+  //   oled.print(" ");
+  // }
+  // oled.println();
+  // oled.println(move_count);
+  // oled.println();
 
   return true;
 }

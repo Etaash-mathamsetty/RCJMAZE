@@ -25,6 +25,8 @@
 #define PI_SERIAL Serial2
 #endif
 
+#define BT Serial3
+
 #define ARRAY_SIZE(arr) (sizeof(arr) / sizeof(arr[0]))
 
 #define BNO_X orientationData.orientation.x
@@ -78,7 +80,7 @@ const double KP_TURN = 1.5;
 const double KI_TURN = 0.00003;
 const double KD_TURN = 0.243;
 const int DRIVE_BOOST = 40;
-const int TURN_BOOST = 105;
+const int TURN_BOOST = 140;
 const int ALIGN_TURN_BOOST = 70;
 
 

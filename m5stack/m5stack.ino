@@ -2,25 +2,24 @@
 #include <BLEServer.h>
 #include <BLEUtils.h>
 #include <BLE2902.h>
-#include <string.h>
 
-#define BUFFER 64
+// #include <Adafruit_NeoPixel.h>
+
+#define LED_PIN    2
+#define LED_COUNT 1
 #define PI_SERIAL Serial1
 
-BLEServer *pServer = NULL;
-BLECharacteristic * pTxCharacteristic;
+// Declare our NeoPixel strip object:
+// Adafruit_NeoPixel strip(LED_COUNT, LED_PIN, NEO_GRB + NEO_KHZ800);
+
+BLEServer* pServer = NULL;
+BLECharacteristic* pCharacteristic = NULL;
 bool deviceConnected = false;
 bool oldDeviceConnected = false;
-uint8_t txValue[BUFFER] = "";
+uint32_t value = 0;
 
-// See the following for generating UUIDs:
-// https://www.uuidgenerator.net/
-
-#define SERVICE_UUID           "6E400001-B5A3-F393-E0A9-E50E24DCCA9E" // UART service UUID
-#define CHARACTERISTIC_UUID_RX "6E400002-B5A3-F393-E0A9-E50E24DCCA9E"
-#define CHARACTERISTIC_UUID_TX "6E400003-B5A3-F393-E0A9-E50E24DCCA9E"
-
-using namespace std;
+#define SERVICE_UUID        "7ee34376-1def-11ee-be56-0242ac120002"
+#define CHARACTERISTIC_UUID "9819da3a-1def-11ee-be56-0242ac120002"
 
 
 class MyServerCallbacks: public BLEServerCallbacks {
@@ -38,23 +37,18 @@ class MyCallbacks: public BLECharacteristicCallbacks {
       std::string rxValue = pCharacteristic->getValue();
 
       if (rxValue.length() > 0) {
-        Serial.println("*********");
-        Serial.print("Received Value: ");
         for (int i = 0; i < rxValue.length(); i++)
-          Serial.print(rxValue[i]);
-
-        Serial.println();
-        Serial.println("*********");
+          Serial.println(rxValue[i]);
+          PI_SERIAL.println(rxValue[i]);
       }
     }
 };
-
 
 void setup() {
   Serial.begin(115200);
 
   // Create the BLE Device
-  BLEDevice::init("BLE UART");
+  BLEDevice::init("STM7_DEVICE1");
 
   // Create the BLE Server
   pServer = BLEDevice::createServer();
@@ -63,72 +57,48 @@ void setup() {
   // Create the BLE Service
   BLEService *pService = pServer->createService(SERVICE_UUID);
 
-  // Create a BLE Characteristic
-  pTxCharacteristic = pService->createCharacteristic(
-                    CHARACTERISTIC_UUID_TX,
-                    BLECharacteristic::PROPERTY_NOTIFY
-                  );
-                      
-  pTxCharacteristic->addDescriptor(new BLE2902());
-
-  BLECharacteristic * pRxCharacteristic = pService->createCharacteristic(
-                       CHARACTERISTIC_UUID_RX,
-                      BLECharacteristic::PROPERTY_WRITE
+  pCharacteristic = pService->createCharacteristic(
+                      CHARACTERISTIC_UUID,
+                      BLECharacteristic::PROPERTY_READ   |
+                      BLECharacteristic::PROPERTY_WRITE  |
+                      BLECharacteristic::PROPERTY_NOTIFY |
+                      BLECharacteristic::PROPERTY_INDICATE
                     );
 
-  pRxCharacteristic->setCallbacks(new MyCallbacks());
+  pCharacteristic->addDescriptor(new BLE2902());
+  pCharacteristic->setCallbacks(new MyCallbacks());
 
-  // Start the service
   pService->start();
 
-  // Start advertising
-  pServer->getAdvertising()->start();
+  BLEAdvertising *pAdvertising = BLEDevice::getAdvertising();
+  pAdvertising->addServiceUUID(SERVICE_UUID);
+  pAdvertising->setScanResponse(false);
+  pAdvertising->setMinPreferred(0x0);
+  BLEDevice::startAdvertising();
   Serial.println("Waiting a client connection to notify...");
 }
 
 void loop() {
-
-  //以下修正箇所　COMからデータを読み取り、BLEに送信
-  if (deviceConnected == true)
-  {
-    if(Serial.available() != 0)
-    {
-      size_t bufSize = Serial.read(txValue, Serial.available());
-      // Serial.println(txValue);
-      pTxCharacteristic->setValue(txValue, bufSize);
-      pTxCharacteristic->notify();
+  if (deviceConnected) {
+    // strip.setPixelColor(0, 0, 100, 255);
+    // strip.show();
+    if (PI_SERIAL.available() != 0) {
+      char sendData = PI_SERIAL.read();
+      pCharacteristic->setValue((uint8_t*)&sendData, 1);
+      pCharacteristic->notify();
     }
-
-    delay(10); // bluetooth stack will go into congestion, if too many packets are sent
+    delay(2);
+  } else {
+    // strip.setPixelColor(0, 255, 0, 0);
+    // strip.show();
   }
 
-  char ch;
-  string data = "";
-  
-  if (PI_SERIAL.available()) {
-    while (PI_SERIAL.available() && ch != '\n') {
-      ch = PI_SERIAL.read();
-      data += ch;
-      delay(10);
-    }
-
-    for (char c : data) {
-      Ser
-    }
-    Serial.println(data);
+  if (!deviceConnected && oldDeviceConnected) {
+    delay(500);
+    pServer->startAdvertising();
+    oldDeviceConnected = deviceConnected;
   }
-  //ここまで
-
-    // disconnecting
-    if (!deviceConnected && oldDeviceConnected) {
-        delay(500); // give the bluetooth stack the chance to get things ready
-        pServer->startAdvertising(); // restart advertising
-        Serial.println("start advertising");
-        oldDeviceConnected = deviceConnected;
-    }
-    // connecting
-    if (deviceConnected && !oldDeviceConnected) {
-    // do stuff here on connecting
-        oldDeviceConnected = deviceConnected;
-    }
+  if (deviceConnected && !oldDeviceConnected) {
+    oldDeviceConnected = deviceConnected;
+  }
 }

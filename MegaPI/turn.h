@@ -49,9 +49,9 @@ void backup_align(int speed, int time) {
 
 void raw_right(double relative_angle, int speed, bool alignment) {
 
-if (abs(relative_angle) < 1) {
-  return;
-}
+  if (abs(relative_angle) < 1) {
+    return;
+  }
 
 #ifndef MOTORSOFF
   if (alignment) {
@@ -189,6 +189,8 @@ if (abs(relative_angle) < 1) {
 }
 
 void right(int relative_angle, int speed, bool turn_status = true) {
+  stopMotors();
+  delay(100);
   bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
 
   // double orientation = orientationData.orientation.x;
@@ -240,7 +242,7 @@ void right(int relative_angle, int speed, bool turn_status = true) {
   }
 
   stopMotors();
-  // delay(300);
+  delay(300);
 }
 
 void raw_left(double relative_angle, int speed, bool alignment) {
@@ -379,6 +381,8 @@ void raw_left(double relative_angle, int speed, bool alignment) {
 }
 
 void left(int relative_angle, int speed, bool turn_status = true) {
+  stopMotors();
+  delay(100);
   bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
 
   // int offset = relative_angle - (int)(orientationData.orientation.x) % relative_angle;
@@ -427,7 +431,7 @@ void left(int relative_angle, int speed, bool turn_status = true) {
   stopMotors();
 
   // stopMotors();
-  delay(300);
+  //delay(300);
 }
 
 void turn(char char_end_direction) {

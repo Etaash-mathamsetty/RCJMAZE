@@ -2,9 +2,9 @@
 //#define FAKE_SERIAL
 // #define DEBUG_DISPLAY
 // #define MOTORSOFF
-#define TEST
+// #define TEST
 // #define ALIGN_ANGLE
-#define NO_PI //basic auto when no raspberry pi (brain stem mode)
+// #define NO_PI //basic auto when no raspberry pi (brain stem mode)
 #define NO_LIMIT
 // #define NO_PID
 // #define TCS
@@ -368,6 +368,8 @@ void loop() {
   //acceleration_position();
   //pi_read_data();
 
+  // driveCM(30, SPEED);
+
   while (PI_SERIAL.available()) {
     //pi_read_vision();
     pi_read_data();
@@ -402,7 +404,7 @@ void loop() {
   }
 #endif
 
-  delay(10);
+  delay(300);
 }
 #else
 
@@ -413,6 +415,7 @@ void loop() {
 #ifndef ALIGN_ANGLE
 
 driveCM(30, SPEED);
+delay(1000);
 // raw_right(90, SPEED, false);
 
 //  drive(100 * CM_TO_ENCODERS, 110);
