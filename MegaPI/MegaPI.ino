@@ -53,6 +53,7 @@ void setup() {
   //buzzer pin 
 
   restart = false;
+  BT.begin(115200);
   PI_SERIAL.begin(115200);
   Serial.begin(9600);
   setMotors(&motorR, &motorL);
@@ -237,7 +238,8 @@ void pi_read_data() {
 
         pi_send_drop_status(true, false);
 
-        bool ret = kitDrop(num, 'l');
+        bool ret = true; //kitDrop(num, 'l');
+        BT.println(num);
 
         left_dropped |= ret;
 
@@ -256,7 +258,8 @@ void pi_read_data() {
 
         pi_send_drop_status(true, false);
 
-        bool ret = kitDrop(num, 'r');
+        bool ret = true; //kitDrop(num, 'r');
+        BT.println(num);
 
         right_dropped |= ret;
         
@@ -414,9 +417,23 @@ void loop() {
 #ifndef NO_PI
 #ifndef ALIGN_ANGLE
 
-driveCM(30, SPEED);
-delay(1000);
+// driveCM(30, SPEED);
+// delay(1000);
 // raw_right(90, SPEED, false);
+// Serial.println("waiting");
+
+// while (!BT.available()) {
+//   delay(10);
+// }
+
+while (BT.available()) {
+  char ch = BT.read();
+  Serial.println(ch);
+  // Serial.println("printed");
+}
+// Serial.println("running");
+BT.println("hi");
+delay(10);
 
 //  drive(100 * CM_TO_ENCODERS, 110);
 //  delay(1000);

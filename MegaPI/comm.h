@@ -64,7 +64,7 @@ void pi_send_drop_status(bool status, bool success)
   PI_SERIAL.println((double)success);
 }
 
-void pi_read_vision(double* left_vic_ticks, double* right_vic_ticks, double dist_percent) {
+int pi_read_vision(double* left_vic_ticks, double* right_vic_ticks, double dist_percent) {
   String data = "";
   char ch = 0;
   int num = 0;
@@ -100,7 +100,8 @@ void pi_read_vision(double* left_vic_ticks, double* right_vic_ticks, double dist
 
         pi_send_drop_status(true, false);
 
-        bool ret = kitDrop(num, 'l');
+        bool ret = true; //kitDrop(num, 'l');
+        BT.println(num);
 
         cur_cmd.remove(0);
 
@@ -125,7 +126,8 @@ void pi_read_vision(double* left_vic_ticks, double* right_vic_ticks, double dist
 
         pi_send_drop_status(true, false);
 
-        bool ret = kitDrop(num, 'r');
+        bool ret = true; // kitDrop(num, 'r');
+        BT.println(num);
 
         cur_cmd.remove(0);
 
@@ -143,10 +145,11 @@ void pi_read_vision(double* left_vic_ticks, double* right_vic_ticks, double dist
       delay(200);
       restart = true;
       empty_serial_buffer();
-      return;
+      return 0;
     }
   }
 
+  return num;
   //get_tof_vals(wall_tresh);
 }
 

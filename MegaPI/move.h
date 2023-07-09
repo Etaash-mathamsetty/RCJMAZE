@@ -121,11 +121,21 @@ void drive(const int32_t encoders, int speed, bool align = true) {
     // Serial.println(speed * (double)(abs(encoders) - abs(motor1.getTicks()))/abs(encoders));
     UPDATE_BNO();
 
+    bool read = false;
+
     if (abs(BNO_Z - start_pitch) < 5) {
         while (PI_SERIAL.available()) {
           stopMotors();
           delay(100);
-          pi_read_vision(&ticks_left_bdrop, &ticks_right_bdrop, dist_percent);
+          int num = pi_read_vision(&ticks_left_bdrop, &ticks_right_bdrop, dist_percent);
+
+          if (num != 0 && sent_vic[num] == false) {
+            delay(100);
+            BT.println(num);
+            sent_vic[num] = true;
+            delay(100);
+          }
+          break;
           // oled.clear();
           // oled.print("lbdrop::");
           // oled.println(ticks_left_bdrop);
@@ -134,8 +144,18 @@ void drive(const int32_t encoders, int speed, bool align = true) {
           if (restart)
             return;
           oled_println("detected");
-          BT.println(3);
           tstart = millis();
+          read = true;
+        }
+        if (!read) {
+          delay(100);
+
+          if (sent_vic[0] == false) {
+            BT.println(0);
+          }
+
+          sent_vic[0] = true;
+          delay(100);
         }
     }
     else
@@ -208,34 +228,48 @@ void drive(const int32_t encoders, int speed, bool align = true) {
 }
 
 void driveCM(float cm, int speed = 200, int tolerance = 10) {
+
   oled.clearDisplay();
   oled.setCursor(0,0);
-  oled.print(move_count);
+  oled.print("MOVE COUNT: ");
+  oled.println(move_count);
+  oled.print("OLD MOVE COUNT: ");
+  oled.println(old_move_count);
 
   switch (move_count) {
+    case 1: empty_serial_buffer();
     case 6: cm = tile_dist * 2; break;
     case 4: 
     case 8: cm = tile_dist * 3; break;
     default: cm = tile_dist; break;
   }
 
-  char ch = '';
+  char ch = '0';
   int count = 0;
 
-  switch(move_count) {
-    case 4:
-    case 5:
-    case 8:
-    case 9: 
-      while (!BT.available()) {
-        stopMotors();
-        delay(10);
-      }
-      while (BT.available()) {
-        ch = BT.read();
-      }
-      kitDrop(ch - '0', 'l');
-      delay(100);
+  if (old_move_count != move_count) {
+    switch(move_count) {
+      case 4:
+      case 5:
+      case 8:
+      case 9: 
+        while (!BT.available()) {
+          stopMotors();
+          delay(10);
+        }
+        while (BT.available()) {
+          ch = BT.read();
+          if ('0' <= ch && ch <= '3') {
+            oled.clearDisplay();
+            oled.setCursor(0, 0);
+            oled.println(ch - '0');
+            delay(100);
+            kitDrop(ch - '0', 'l');
+            delay(1000);
+          }
+        }
+    }
+
   }
 
   //kitDrop(1);
@@ -523,5 +557,6 @@ void driveCM(float cm, int speed = 200, int tolerance = 10) {
 
   // memset(seen_l, 0, sizeof(seen_l));
   // memset(seen_r, 0, sizeof(seen_r));
+  old_move_count = move_count;
   move_count++;
 }

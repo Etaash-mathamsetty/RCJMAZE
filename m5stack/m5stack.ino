@@ -3,14 +3,14 @@
 #include <BLEUtils.h>
 #include <BLE2902.h>
 
-// #include <Adafruit_NeoPixel.h>
+#include <Adafruit_NeoPixel.h>
 
 #define LED_PIN    2
 #define LED_COUNT 1
-#define PI_SERIAL Serial1
+#define PI_SERIAL Serial
 
 // Declare our NeoPixel strip object:
-// Adafruit_NeoPixel strip(LED_COUNT, LED_PIN, NEO_GRB + NEO_KHZ800);
+Adafruit_NeoPixel strip(LED_COUNT, LED_PIN, NEO_GRB + NEO_KHZ800);
 
 BLEServer* pServer = NULL;
 BLECharacteristic* pCharacteristic = NULL;
@@ -18,9 +18,8 @@ bool deviceConnected = false;
 bool oldDeviceConnected = false;
 uint32_t value = 0;
 
-#define SERVICE_UUID        "7ee34376-1def-11ee-be56-0242ac120002"
-#define CHARACTERISTIC_UUID "9819da3a-1def-11ee-be56-0242ac120002"
-
+#define SERVICE_UUID        "fe77e1f2-1e06-11ee-be56-0242ac120002"
+#define CHARACTERISTIC_UUID "060254ca-1e07-11ee-be56-0242ac120002"
 
 class MyServerCallbacks: public BLEServerCallbacks {
     void onConnect(BLEServer* pServer) {
@@ -39,16 +38,18 @@ class MyCallbacks: public BLECharacteristicCallbacks {
       if (rxValue.length() > 0) {
         for (int i = 0; i < rxValue.length(); i++)
           Serial.println(rxValue[i]);
-          PI_SERIAL.println(rxValue[i]);
       }
     }
 };
 
 void setup() {
+
+  // PI_SERIAL.begin(9600);
   Serial.begin(115200);
 
+
   // Create the BLE Device
-  BLEDevice::init("STM7_DEVICE1");
+  BLEDevice::init("DEV1");
 
   // Create the BLE Server
   pServer = BLEDevice::createServer();
@@ -79,26 +80,40 @@ void setup() {
 }
 
 void loop() {
+
+  // Serial.println("running!!!!!");
+
+
+  // while (!PI_SERIAL.available()) {
+  //   delay(10);
+  // }
+
+  // while (PI_SERIAL.available()) {
+  //   char ch = PI_SERIAL.read();
+  //   Serial.println(ch);
+  // }
+
   if (deviceConnected) {
-    // strip.setPixelColor(0, 0, 100, 255);
-    // strip.show();
-    if (PI_SERIAL.available() != 0) {
-      char sendData = PI_SERIAL.read();
+    strip.setPixelColor(0, 0, 100, 255);
+    strip.show();
+    if (Serial.available() != 0) {
+      char sendData = Serial.read();
       pCharacteristic->setValue((uint8_t*)&sendData, 1);
       pCharacteristic->notify();
     }
     delay(2);
   } else {
-    // strip.setPixelColor(0, 255, 0, 0);
-    // strip.show();
+    strip.setPixelColor(0, 255, 0, 0);
+    strip.show();
   }
 
   if (!deviceConnected && oldDeviceConnected) {
-    delay(500);
+    delay(100);
     pServer->startAdvertising();
     oldDeviceConnected = deviceConnected;
   }
   if (deviceConnected && !oldDeviceConnected) {
+    Serial.println("Connected");
     oldDeviceConnected = deviceConnected;
   }
 }

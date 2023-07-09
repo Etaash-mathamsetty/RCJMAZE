@@ -8,6 +8,11 @@
 using namespace utils;
 
 bool kitDrop(int num, char side) {
+
+  if (num == 0) {
+    return true;
+  }
+
   static int columnNum = 1;
   static int numDropped = 0;
   const int offset_for_stack[3] = { 10, 7, 0 };

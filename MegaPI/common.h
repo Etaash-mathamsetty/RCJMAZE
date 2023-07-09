@@ -52,6 +52,9 @@ U8X8_SSD1306_128X64_NONAME_SW_I2C oled(OLED_CLK, OLED_DATA);
 #define oled_clear()
 #endif
 
+// already sent victims
+bool sent_vic[4] = { 0 };
+
 typedef unsigned int uint;
 
 Adafruit_BNO055 bno;
@@ -126,7 +129,8 @@ volatile char seen_l[4] = { 0 };
 volatile char seen_r[4] = { 0 };
 
 // move count for debug
-volatile int move_count = 1;
+volatile int move_count = 0;
+volatile int old_move_count = 0;
 
 // timer for resetting victim
 volatile int32_t tvictim = 10000000;
